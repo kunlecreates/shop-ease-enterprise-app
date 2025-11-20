@@ -1,0 +1,13 @@
+# CODEOWNERS file: assign reviewers for each service
+# Lines are matched from top to bottom; the last matching pattern takes precedence.
+
+# Service owners
+/services/order-service/    @kunlecreates
+/services/user-service/     @kunlecreates
+/services/product-service/  @kunlecreates
+/services/notification-service/ @kunlecreates
+/services/test-utils/       @kunlecreates
+
+# Default owners for infra and workflows
+/.github/workflows/         @kunlecreates
+/.github/                   @kunlecreates

@@ -3,8 +3,13 @@ name: Integration Tests
 on:
   push:
     branches: [ main, master ]
+    # Ignore service folder changes; per-service integration workers will run instead
+    paths-ignore:
+      - 'services/**'
   pull_request:
     branches: [ main, master ]
+    paths-ignore:
+      - 'services/**'
 
 jobs:
   prepare:

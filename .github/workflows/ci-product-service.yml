@@ -1,0 +1,29 @@
+name: CI — product-service
+
+on:
+  push:
+    paths:
+      - 'services/product-service/**'
+  pull_request:
+    paths:
+      - 'services/product-service/**'
+
+jobs:
+  test:
+    name: Product Service (Node) Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install and run tests
+        working-directory: services/product-service
+        run: |
+          npm ci
+          npm test --if-present

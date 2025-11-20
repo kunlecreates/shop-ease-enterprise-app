@@ -3,8 +3,13 @@ name: CI
 on:
   push:
     branches: [ main, master ]
+    # Ignore changes under services/ because per-service workflows handle them
+    paths-ignore:
+      - 'services/**'
   pull_request:
     branches: [ main, master ]
+    paths-ignore:
+      - 'services/**'
 
 jobs:
   test:

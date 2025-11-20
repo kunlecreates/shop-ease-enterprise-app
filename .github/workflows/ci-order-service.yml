@@ -1,0 +1,46 @@
+name: CI — order-service
+
+on:
+  push:
+    paths:
+      - 'services/order-service/**'
+  pull_request:
+    paths:
+      - 'services/order-service/**'
+
+jobs:
+  test:
+    name: Order Service Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Build & install test-utils (for shared test migrations)
+        run: |
+          if [ -f ./services/test-utils/pom.xml ]; then
+            mvn -B -f ./services/test-utils/pom.xml install
+          fi
+
+      - name: Cache Maven
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: maven-${{ runner.os }}-order-${{ hashFiles('services/order-service/**/pom.xml') }}
+          restore-keys: |
+            maven-${{ runner.os }}-order-
+
+      - name: Ensure Docker available (Testcontainers)
+        run: |
+          docker --version || true
+
+      - name: Run Maven tests
+        working-directory: services/order-service
+        run: |
+          mvn -B -Dapi.version=1.44 test
