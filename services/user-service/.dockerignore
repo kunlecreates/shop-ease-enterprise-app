@@ -1,0 +1,19 @@
+# Ignore VCS
+.git
+.gitignore
+
+# Build output
+target/
+
+# IDE / editor
+.idea/
+.vscode/
+
+# OS files
+*.swp
+*.swo
+*.DS_Store
+
+# Env / secrets
+.env
+.env.*

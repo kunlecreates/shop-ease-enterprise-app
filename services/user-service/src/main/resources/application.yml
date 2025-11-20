@@ -1,0 +1,25 @@
+server:
+  port: 8081
+spring:
+  application:
+    name: user-service
+  datasource:
+    url: jdbc:oracle:thin:@${ORACLE_HOST:oracle}:${ORACLE_PORT:1521}/${ORACLE_PDB:FREEPDB1}
+    username: ${ORACLE_USER:USER_SVC_APP}
+    password: ${ORACLE_PASSWORD:CHANGE_ME}
+    driver-class-name: oracle.jdbc.OracleDriver
+  flyway:
+    enabled: true
+    locations: classpath:db/migration/sql
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+otel:
+  exporter:
+    otlp:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://otel-collector:4317}
+logging:
+  level:
+    root: INFO

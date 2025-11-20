@@ -1,0 +1,25 @@
+server:
+  port: 8083
+spring:
+  application:
+    name: order-service
+  datasource:
+    url: jdbc:sqlserver://${MSSQL_HOST:mssql}:${MSSQL_PORT:1433};databaseName=${MSSQL_DB:order_svc};encrypt=true;trustServerCertificate=true
+    username: ${MSSQL_USER:order_app}
+    password: ${MSSQL_PASSWORD:CHANGE_ME}
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+  flyway:
+    enabled: true
+    locations: classpath:db/migration/sql
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+otel:
+  exporter:
+    otlp:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://otel-collector:4317}
+logging:
+  level:
+    root: INFO

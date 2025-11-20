@@ -1,0 +1,91 @@
+name: Integration Tests
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  prepare:
+    name: Prepare shared test artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Build & install test-utils
+        run: |
+          mvn -B -f ./services/test-utils/pom.xml install
+
+  service-tests:
+    name: Run tests for services
+    needs: prepare
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [order-service, user-service, product-service, notification-service]
+      max-parallel: 4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup caches
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.m2/repository
+            ~/.npm
+            ~/.cache/pip
+          key: ${{ runner.os }}-build-${{ matrix.service }}-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ matrix.service }}-
+
+      - name: Job-level environment setup
+        run: |
+          # Example: if the service requires local secrets or helper containers,
+          # they can be started or environment variables exported here.
+          # This block intentionally minimal; extend per-service as needed.
+          case "${{ matrix.service }}" in
+            order-service|user-service)
+              echo "Java service: ensure Docker available for Testcontainers"
+              docker --version || true
+              ;;
+            product-service)
+              echo "Product service: no extra setup by default"
+              ;;
+            notification-service)
+              echo "Notification service: may require SMTP test container in future"
+              ;;
+          esac
+
+
+      - name: Run tests for ${{ matrix.service }}
+        run: |
+          set -e
+          SERVICE_DIR="./services/${{ matrix.service }}"
+          echo "Checking $SERVICE_DIR"
+          if [ -f "$SERVICE_DIR/pom.xml" ]; then
+            echo "Detected Maven service. Running mvn test"
+            mvn -B -f "$SERVICE_DIR" -Dapi.version=1.44 test
+          elif [ -f "$SERVICE_DIR/package.json" ]; then
+            echo "Detected Node service. Installing and running npm test"
+            pushd "$SERVICE_DIR"
+            npm ci
+            npm test --silent || { echo 'npm test failed'; exit 1; }
+            popd
+          elif [ -f "$SERVICE_DIR/requirements.txt" ] || [ -f "$SERVICE_DIR/pyproject.toml" ]; then
+            echo "Detected Python service. Running pytest"
+            python3 -m pip install --upgrade pip
+            python3 -m pip install -r "$SERVICE_DIR/requirements.txt" || true
+            pytest "$SERVICE_DIR" || { echo 'pytest failed'; exit 1; }
+          else
+            echo "No known test runner for $SERVICE_DIR; skipping"
+          fi
+

@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+##############################################################################
+# Simplified Maven Wrapper Script (Phase 1)                                 #
+# For full functionality, regenerate with: mvn -N wrapper -Dmaven=3.9.9      #
+##############################################################################
+if command -v mvn >/dev/null 2>&1; then
+  mvn "$@"
+else
+  echo "Apache Maven not found. Install Maven or generate full wrapper." >&2
+  exit 1
+fi

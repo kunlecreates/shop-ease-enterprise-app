@@ -1,0 +1,5 @@
+org.kunlecreates.order:order-service:jar:0.1.0-SNAPSHOT
+\- org.testcontainers:testcontainers:jar:1.19.8:test
+   +- com.github.docker-java:docker-java-api:jar:3.3.6:test
+   \- com.github.docker-java:docker-java-transport-zerodep:jar:3.3.6:test
+      \- com.github.docker-java:docker-java-transport:jar:3.3.6:test

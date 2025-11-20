@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    name: Test ${{ matrix.service }}
+    strategy:
+      matrix:
+        service: [product-service, user-service, order-service, notification-service]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java (for Java services)
+        if: "contains(matrix.service, 'user-service') || contains(matrix.service, 'order-service')"
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Cache Maven
+        if: "contains(matrix.service, 'user-service') || contains(matrix.service, 'order-service')"
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: maven-${{ runner.os }}-build-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            maven-${{ runner.os }}-build-
+
+      - name: Run Java tests
+        if: "contains(matrix.service, 'user-service') || contains(matrix.service, 'order-service')"
+        working-directory: services/${{ matrix.service }}
+        run: |
+          mvn -B -V test
+
+      - name: Setup Node.js (for product-service)
+        if: "matrix.service == 'product-service'"
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Run Node tests
+        if: "matrix.service == 'product-service'"
+        working-directory: services/product-service
+        run: |
+          npm ci
+          npm test --if-present
+
+      - name: Setup Python (for notification-service)
+        if: "matrix.service == 'notification-service'"
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Cache pip
+        if: "matrix.service == 'notification-service'"
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ runner.os }}-${{ hashFiles('services/notification-service/**/requirements*.txt') }}
+
+      - name: Run Python tests
+        if: "matrix.service == 'notification-service'"
+        working-directory: services/notification-service
+        env:
+          PYTHONPATH: .
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pytest -q
+
+  vendor-integration:
+    name: "Optional: Vendor Integration (manual)"
+    runs-on: ubuntu-latest
+    if: ${{ false }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Maven with vendor profile
+        working-directory: services/order-service
+        run: mvn -B -V test -Pvendor

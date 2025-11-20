@@ -1,0 +1,20 @@
+global:
+  imagePullPolicy: IfNotPresent
+  otel:
+    collectorEndpoint: http://otel-collector:4317
+services:
+  user:
+    image: user-service
+    tag: latest
+  product:
+    image: product-service
+    tag: latest
+  order:
+    image: order-service
+    tag: latest
+  notification:
+    image: notification-service
+    tag: latest
+frontend:
+  image: shopease-frontend
+  tag: latest
