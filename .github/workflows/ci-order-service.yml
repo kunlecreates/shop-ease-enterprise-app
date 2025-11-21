@@ -49,4 +49,4 @@ jobs:
 
       - name: Run Maven tests
         run: |
-          ./services/order-service/mvnw -B -Dapi.version=1.44 -pl services/order-service test
+          ./services/order-service/mvnw -B -Dapi.version=1.44 -f services/order-service/pom.xml test
