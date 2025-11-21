@@ -52,6 +52,8 @@ jobs:
         if: "contains(matrix.service, 'user-service') || contains(matrix.service, 'order-service')"
         working-directory: services/${{ matrix.service }}
         run: |
+          echo "Cleaning service target directory if present"
+          rm -rf target || true
           mvn -B -V test
 
       - name: Setup Node.js (product-service)

@@ -27,7 +27,7 @@ jobs:
 
       - name: Build & install test-utils
         run: |
-          mvn -B -f ./services/test-utils/pom.xml install
+          mvn -B -DskipTests -f ./services/test-utils/pom.xml install
 
   service-tests:
     name: Run tests for services
@@ -36,7 +36,7 @@ jobs:
     strategy:
       matrix:
         service: [order-service, user-service, product-service, notification-service]
-      max-parallel: 4
+      max-parallel: 2
     steps:
       - name: Checkout
         uses: actions/checkout@v4
