@@ -24,7 +24,7 @@ import org.springframework.test.context.ContextConfiguration;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Testcontainers
-@SpringBootTest(properties = "spring.flyway.enabled=false")
+@SpringBootTest
 @ContextConfiguration(initializers = FlywayTestInitializer.class)
 @Import(TestContainersConfig.class)
 public class OrderServiceTestcontainersIT {
