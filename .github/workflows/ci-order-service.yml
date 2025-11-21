@@ -31,7 +31,8 @@ jobs:
       - name: Build & install test-utils (for shared test migrations)
         run: |
           if [ -f ./services/test-utils/pom.xml ]; then
-            ./services/order-service/mvnw -B -DskipTests -pl services/test-utils install
+            # Run Maven against the test-utils POM directly to install artifact into local repo
+            mvn -B -DskipTests -f services/test-utils/pom.xml install
           fi
 
       - name: Cache Maven
