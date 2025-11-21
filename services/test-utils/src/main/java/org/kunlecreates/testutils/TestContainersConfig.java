@@ -58,6 +58,19 @@ public class TestContainersConfig {
                 return;
             }
 
+            // Log DB metadata for diagnostics before running Flyway
+            try {
+                try (var conn = dataSource.getConnection()) {
+                    var meta = conn.getMetaData();
+                    System.out.println("[TestContainersConfig] DB Product: " + meta.getDatabaseProductName());
+                    System.out.println("[TestContainersConfig] DB Product Version: " + meta.getDatabaseProductVersion());
+                    System.out.println("[TestContainersConfig] Driver Name: " + meta.getDriverName());
+                    System.out.println("[TestContainersConfig] Driver Version: " + meta.getDriverVersion());
+                }
+            } catch (Exception ex) {
+                System.out.println("[TestContainersConfig] Failed to read DB metadata: " + ex.getMessage());
+            }
+
             Flyway custom = Flyway.configure()
                     .dataSource(dataSource)
                     .locations("classpath:db/shared-migration", "classpath:db/migration")
