@@ -25,11 +25,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Import(TestContainersConfig.class)
 public class OrderServiceTestcontainersIT {
 
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:14-alpine")
+        @Container
+        static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:14-alpine")
             .withDatabaseName("ordersdb")
             .withUsername("test")
-            .withPassword("test");
+            .withPassword("test")
+            // Reduce Postgres memory usage to avoid OOM in CI runners.
+            // These settings lower shared buffers and work_mem so the DB
+            // can start within the limited RAM provided by GitHub Actions.
+            .withCommand("postgres", "-c", "fsync=off", "-c", "shared_buffers=32MB", "-c", "work_mem=4MB");
 
     @DynamicPropertySource
     static void overrideProperties(DynamicPropertyRegistry registry) {
