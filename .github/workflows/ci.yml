@@ -29,6 +29,13 @@ jobs:
           distribution: temurin
           java-version: '21'
 
+      - name: Build & install test-utils (for shared test migrations)
+        if: "contains(matrix.service, 'user-service') || contains(matrix.service, 'order-service')"
+        run: |
+          if [ -f ./services/test-utils/pom.xml ]; then
+            mvn -B -DskipTests -f ./services/test-utils/pom.xml install
+          fi
+
       - name: Cache Maven
         if: "contains(matrix.service, 'user-service') || contains(matrix.service, 'order-service')"
         uses: actions/cache@v4
