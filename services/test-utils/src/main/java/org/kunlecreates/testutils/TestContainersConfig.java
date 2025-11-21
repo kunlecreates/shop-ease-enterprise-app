@@ -44,6 +44,21 @@ public class TestContainersConfig {
             }
 
             if (!ready) {
+                // If DB never became ready, attempt to print metadata for diagnostics
+                // before invoking Flyway once. This helps CI logs show what the
+                // JDBC driver reports even when readiness polling times out.
+                try {
+                    try (var conn = dataSource.getConnection()) {
+                        var meta = conn.getMetaData();
+                        System.out.println("[TestContainersConfig] DB Product: " + meta.getDatabaseProductName());
+                        System.out.println("[TestContainersConfig] DB Product Version: " + meta.getDatabaseProductVersion());
+                        System.out.println("[TestContainersConfig] Driver Name: " + meta.getDriverName());
+                        System.out.println("[TestContainersConfig] Driver Version: " + meta.getDriverVersion());
+                    }
+                } catch (Exception ex) {
+                    System.out.println("[TestContainersConfig] (readiness timeout) Failed to read DB metadata: " + ex.getMessage());
+                }
+
                 // If DB never became ready, let Flyway try once to produce a clearer failure.
                 // This will fail fast in CI and provide diagnostics.
                 Flyway custom = Flyway.configure()
