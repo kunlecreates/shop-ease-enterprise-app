@@ -34,6 +34,7 @@ jobs:
     needs: prepare
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         service: [order-service, user-service, product-service, notification-service]
       max-parallel: 2
@@ -86,19 +87,35 @@ jobs:
             npm test --silent || { echo 'npm test failed'; exit 1; }
             popd
           elif [ -f "$SERVICE_DIR/requirements.txt" ] || [ -f "$SERVICE_DIR/pyproject.toml" ]; then
-            echo "Detected Python service. Running pytest"
-            python3 -m pip install --upgrade pip
-            python3 -m pip install -r "$SERVICE_DIR/requirements.txt" || true
-              # Run pytest but treat "no tests collected" (exit code 5) as success
-              pytest "$SERVICE_DIR" || {
-                rc=$?
-                if [ $rc -eq 5 ]; then
-                  echo "No tests collected for $SERVICE_DIR; continuing."
-                else
-                  echo 'pytest failed'; exit $rc;
-                fi
-              }
+            echo "Detected Python service. Running pytest with diagnostics"
+            set -o pipefail
+            echo "python:" $(python3 --version)
+            echo "pip:" $(python3 -m pip --version)
+            python3 -m pip install --upgrade pip || echo "pip upgrade failed"
+            if [ -f "$SERVICE_DIR/requirements.txt" ]; then
+              python3 -m pip install -r "$SERVICE_DIR/requirements.txt" || echo "pip install returned non-zero (continuing for debug)"
+            fi
+            # Run pytest, capture logs and junit xml for debugging. Treat exit code 5 (no tests) as success.
+            rc=0
+            pytest --maxfail=1 --junitxml=pytest-results.xml "$SERVICE_DIR" > pytest.log 2>&1 || rc=$?
+            if [ "$rc" -eq 5 ]; then
+              echo "No tests collected for $SERVICE_DIR; continuing."
+              rc=0
+            fi
+            if [ "$rc" -ne 0 ]; then
+              echo "pytest failed with exit code $rc"
+              cat pytest.log || true
+              exit $rc
+            fi
           else
             echo "No known test runner for $SERVICE_DIR; skipping"
           fi
+      - name: Upload pytest artifacts (notification-service)
+        if: ${{ matrix.service == 'notification-service' }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: pytest-${{ matrix.service }}
+          path: |
+            pytest-results.xml
+            pytest.log
 
