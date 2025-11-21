@@ -1,6 +1,8 @@
 package org.kunlecreates.testutils;
 
 import org.flywaydb.core.Flyway;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.boot.autoconfigure.flyway.FlywayMigrationStrategy;
@@ -14,7 +16,7 @@ import java.lang.reflect.InvocationHandler;
 
 @TestConfiguration
 public class TestContainersConfig {
-
+    private static final Logger log = LoggerFactory.getLogger(TestContainersConfig.class);
     /**
      * Shared Flyway migration strategy for tests. This loads shared migrations
      * from `classpath:db/shared-migration` first, then service migrations from
@@ -56,13 +58,13 @@ public class TestContainersConfig {
                 try {
                     try (var conn = dataSource.getConnection()) {
                         var meta = conn.getMetaData();
-                        System.out.println("[TestContainersConfig] DB Product: " + meta.getDatabaseProductName());
-                        System.out.println("[TestContainersConfig] DB Product Version: " + meta.getDatabaseProductVersion());
-                        System.out.println("[TestContainersConfig] Driver Name: " + meta.getDriverName());
-                        System.out.println("[TestContainersConfig] Driver Version: " + meta.getDriverVersion());
+                        log.info("[TestContainersConfig] (timeout) DB Product: {}", meta.getDatabaseProductName());
+                        log.info("[TestContainersConfig] (timeout) DB Product Version: {}", meta.getDatabaseProductVersion());
+                        log.info("[TestContainersConfig] (timeout) Driver Name: {}", meta.getDriverName());
+                        log.info("[TestContainersConfig] (timeout) Driver Version: {}", meta.getDriverVersion());
                     }
                 } catch (Exception ex) {
-                    System.out.println("[TestContainersConfig] (readiness timeout) Failed to read DB metadata: " + ex.getMessage());
+                    log.warn("[TestContainersConfig] (readiness timeout) Failed to read DB metadata: {}", ex.getMessage());
                 }
 
                 // If DB never became ready, let Flyway try once to produce a clearer failure.
@@ -83,24 +85,25 @@ public class TestContainersConfig {
             try {
                 try (var conn = dataSource.getConnection()) {
                     var meta = conn.getMetaData();
-                    System.out.println("[TestContainersConfig] DB Product: " + meta.getDatabaseProductName());
-                    System.out.println("[TestContainersConfig] DB Product Version: " + meta.getDatabaseProductVersion());
-                    System.out.println("[TestContainersConfig] Driver Name: " + meta.getDriverName());
-                    System.out.println("[TestContainersConfig] Driver Version: " + meta.getDriverVersion());
+                    log.info("[TestContainersConfig] DB Product: {}", meta.getDatabaseProductName());
+                    log.info("[TestContainersConfig] DB Product Version: {}", meta.getDatabaseProductVersion());
+                    log.info("[TestContainersConfig] Driver Name: {}", meta.getDriverName());
+                    log.info("[TestContainersConfig] Driver Version: {}", meta.getDriverVersion());
                 }
             } catch (Exception ex) {
-                System.out.println("[TestContainersConfig] Failed to read DB metadata: " + ex.getMessage());
+                log.warn("[TestContainersConfig] Failed to read DB metadata: {}", ex.getMessage());
             }
 
+            final ClassLoader cl = Thread.currentThread().getContextClassLoader();
             DataSource sanitized = (DataSource) Proxy.newProxyInstance(
-                    DataSource.class.getClassLoader(),
+                    cl,
                     new Class[]{DataSource.class},
                     (proxy, method, args1) -> {
-                        // Intercept getConnection() to wrap the returned Connection
-                        if ("getConnection".equals(method.getName()) && (args1 == null || args1.length == 0)) {
+                        // Intercept getConnection() variants to wrap the returned Connection
+                        if ("getConnection".equals(method.getName())) {
                             Connection conn = (Connection) method.invoke(dataSource, args1);
                             return Proxy.newProxyInstance(
-                                    Connection.class.getClassLoader(),
+                                    cl,
                                     new Class[]{Connection.class},
                                     (connProxy, connMethod, connArgs) -> {
                                         if ("getMetaData".equals(connMethod.getName())) {
@@ -117,13 +120,12 @@ public class TestContainersConfig {
                                                 if ("getDatabaseProductVersion".equals(mm.getName())) return finalVersion;
                                                 return mm.invoke(meta, a);
                                             };
-                                            return Proxy.newProxyInstance(DatabaseMetaData.class.getClassLoader(), new Class[]{DatabaseMetaData.class}, metaHandler);
+                                            return Proxy.newProxyInstance(cl, new Class[]{DatabaseMetaData.class}, metaHandler);
                                         }
                                         return connMethod.invoke(conn, connArgs);
                                     }
                             );
                         }
-                        // For getConnection(username,password) we delegate directly
                         return method.invoke(dataSource, args1);
                     }
             );
