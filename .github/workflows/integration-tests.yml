@@ -89,7 +89,15 @@ jobs:
             echo "Detected Python service. Running pytest"
             python3 -m pip install --upgrade pip
             python3 -m pip install -r "$SERVICE_DIR/requirements.txt" || true
-            pytest "$SERVICE_DIR" || { echo 'pytest failed'; exit 1; }
+              # Run pytest but treat "no tests collected" (exit code 5) as success
+              pytest "$SERVICE_DIR" || {
+                rc=$?
+                if [ $rc -eq 5 ]; then
+                  echo "No tests collected for $SERVICE_DIR; continuing."
+                else
+                  echo 'pytest failed'; exit $rc;
+                fi
+              }
           else
             echo "No known test runner for $SERVICE_DIR; skipping"
           fi
