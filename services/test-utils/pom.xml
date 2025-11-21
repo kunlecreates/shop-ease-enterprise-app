@@ -22,6 +22,12 @@
 
     <dependencies>
         <!-- Compile-time dependencies required by TestContainersConfig.java -->
+        <!-- SLF4J API for logging used in TestContainersConfig -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>2.0.9</version>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-test</artifactId>
