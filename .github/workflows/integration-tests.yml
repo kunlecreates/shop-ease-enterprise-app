@@ -113,3 +113,13 @@ jobs:
             echo "No known test runner for $SERVICE_DIR; skipping"
           fi
 
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.service }}-artifacts
+          path: |
+            services/${{ matrix.service }}/pytest-results.xml
+            services/${{ matrix.service }}/pytest.log
+            services/${{ matrix.service }}/target/surefire-reports/**
+
