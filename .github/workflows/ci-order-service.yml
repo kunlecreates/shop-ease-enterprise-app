@@ -22,16 +22,16 @@ jobs:
           distribution: temurin
           java-version: '21'
 
-      - name: Make Maven wrapper executable
+      - name: Make service Maven wrapper executable
         run: |
-          if [ -f ./mvnw ]; then
-            chmod +x ./mvnw || true
+          if [ -f ./services/order-service/mvnw ]; then
+            chmod +x ./services/order-service/mvnw || true
           fi
 
       - name: Build & install test-utils (for shared test migrations)
         run: |
           if [ -f ./services/test-utils/pom.xml ]; then
-            ./mvnw -B -DskipTests -pl services/test-utils install
+            ./services/order-service/mvnw -B -DskipTests -pl services/test-utils install
           fi
 
       - name: Cache Maven
@@ -48,4 +48,4 @@ jobs:
 
       - name: Run Maven tests
         run: |
-          ./mvnw -B -Dapi.version=1.44 -pl services/order-service test
+          ./services/order-service/mvnw -B -Dapi.version=1.44 -pl services/order-service test
