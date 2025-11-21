@@ -53,7 +53,6 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            ~/.m2/repository
             ~/.npm
             ~/.cache/pip
           key: ${{ runner.os }}-build-${{ matrix.service }}-${{ hashFiles('**/pom.xml') }}
