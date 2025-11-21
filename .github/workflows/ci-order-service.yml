@@ -35,13 +35,10 @@ jobs:
             mvn -B -DskipTests -f services/test-utils/pom.xml install
           fi
 
-      - name: Cache Maven
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository
-          key: maven-${{ runner.os }}-order-${{ hashFiles('services/order-service/**/pom.xml') }}
-          restore-keys: |
-            maven-${{ runner.os }}-order-
+      # NOTE: Avoid caching the entire ~/.m2/repository here because it can
+      # overwrite artifacts installed earlier in the job (e.g. test-utils installed
+      # by the Build & install test-utils step). This prevents missing-class
+      # compilation errors during integration test runs.
 
       - name: Ensure Docker available (Testcontainers)
         run: |
