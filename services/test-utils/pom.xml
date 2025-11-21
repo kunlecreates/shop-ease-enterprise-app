@@ -35,11 +35,6 @@
             <artifactId>flyway-core</artifactId>
             <version>10.6.0</version>
         </dependency>
-        <!-- Spring JDBC used for fallback manual script execution when Flyway cannot auto-detect DB -->
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-jdbc</artifactId>
-        </dependency>
     </dependencies>
     <build>
         <resources>

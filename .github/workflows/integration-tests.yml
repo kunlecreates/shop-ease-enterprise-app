@@ -36,6 +36,13 @@ jobs:
         run: |
           mvn -B -f ./services/test-utils/pom.xml install
 
+      - name: Upload built test-utils to share with matrix jobs
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-utils-m2
+          path: ~/.m2/repository/org/kunlecreates/test-utils
+
   service-tests:
     name: Run tests for services
     needs: prepare
@@ -77,9 +84,21 @@ jobs:
               ;;
           esac
 
+      - name: Download built test-utils from prepare job
+        uses: actions/download-artifact@v4
+        with:
+          name: test-utils-m2
+          path: ./.m2/repository/org/kunlecreates/test-utils
+
 
       - name: Run tests for ${{ matrix.service }}
         run: |
+          # If prepare job produced test-utils, copy it into this runner's local Maven repo
+          if [ -d ./.m2/repository/org/kunlecreates/test-utils ]; then
+            echo "Found test-utils in workspace cache; installing into ~/.m2"
+            mkdir -p $HOME/.m2/repository/org/kunlecreates || true
+            cp -a ./.m2/repository/org/kunlecreates/test-utils $HOME/.m2/repository/org/kunlecreates/ || true
+          fi
           set -e
           SERVICE_DIR="./services/${{ matrix.service }}"
           echo "Checking $SERVICE_DIR"

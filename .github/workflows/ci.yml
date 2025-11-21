@@ -16,7 +16,7 @@ jobs:
     name: Test ${{ matrix.service }}
     strategy:
       matrix:
-        service: [product-service, user-service, order-service, notification-service, frontend]
+        service: [product-service, user-service, order-service, notification-service]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -28,16 +28,6 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-
-      - name: Build & install test-utils (for shared test migrations)
-        if: "contains(matrix.service, 'user-service') || contains(matrix.service, 'order-service')"
-        run: |
-          # Clean any previous build artifacts to avoid permission issues
-          echo "Cleaning leftover target directories (if any)"
-          find ./services -maxdepth 2 -type d -name target -print -exec rm -rf {} + || true
-          if [ -f ./services/test-utils/pom.xml ]; then
-            mvn -B -DskipTests -f ./services/test-utils/pom.xml install
-          fi
 
       - name: Cache Maven
         if: "contains(matrix.service, 'user-service') || contains(matrix.service, 'order-service')"
@@ -52,42 +42,21 @@ jobs:
         if: "contains(matrix.service, 'user-service') || contains(matrix.service, 'order-service')"
         working-directory: services/${{ matrix.service }}
         run: |
-          echo "Cleaning service target directory if present"
-          rm -rf target || true
           mvn -B -V test
 
-      - name: Setup Node.js (product-service)
+      - name: Setup Node.js (for product-service)
         if: "matrix.service == 'product-service'"
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          # No automatic npm cache here to avoid cache path resolution
-          # issues in CI when lockfiles are missing or path patterns do not resolve.
+          cache: 'npm'
 
-      - name: Setup Node.js (frontend)
-        if: "matrix.service == 'frontend'"
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          # No cache for frontend (no lockfile); reduces cache-related failures
-
-      - name: Run Node tasks
-        if: "matrix.service == 'product-service' || matrix.service == 'frontend'"
+      - name: Run Node tests
+        if: "matrix.service == 'product-service'"
+        working-directory: services/product-service
         run: |
-          if [ "${{ matrix.service }}" = "product-service" ]; then
-            cd services/product-service
-            npm ci
-            npm test --if-present
-          elif [ "${{ matrix.service }}" = "frontend" ]; then
-            cd frontend
-            # If a lockfile exists prefer `npm ci`; otherwise fall back to `npm install`.
-            if [ -f package-lock.json ] || [ -f yarn.lock ]; then
-              npm ci
-            else
-              npm install
-            fi
-            npm run build --if-present
-          fi
+          npm ci
+          npm test --if-present
 
       - name: Setup Python (for notification-service)
         if: "matrix.service == 'notification-service'"
@@ -109,23 +78,8 @@ jobs:
           PYTHONPATH: .
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt || true
-          # Run pytest; treat "no tests collected" (exit code 5) as success
-          pytest -q || {
-            rc=$?
-            if [ "$rc" -eq 5 ]; then
-              echo "No pytest tests collected for services/${{ matrix.service }}; continuing."
-            else
-              echo "pytest failed with exit code $rc"; exit $rc
-            fi
-          }
-
-      - name: Build Docker Image (frontend)
-        if: "matrix.service == 'frontend'"
-        run: |
-          docker build -t ghcr.io/${{ github.repository }}/frontend:$(echo $GITHUB_SHA | cut -c1-7) frontend
-        env:
-          SERVICE: ${{ matrix.service }}
+          pip install -r requirements.txt
+          pytest -q
 
   vendor-integration:
     name: "Optional: Vendor Integration (manual)"
