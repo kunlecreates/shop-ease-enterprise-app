@@ -97,6 +97,19 @@ jobs:
           name: test-utils-m2
           path: ./.m2/repository/org/kunlecreates/test-utils
 
+      - name: Ensure test-utils available in local Maven repo
+        run: |
+          # If prepare uploaded an artifact we copied it into workspace and now install into the runner's ~/.m2
+          if [ -d ./.m2/repository/org/kunlecreates/test-utils ]; then
+            mkdir -p "$HOME/.m2/repository/org/kunlecreates" || true
+            cp -a ./.m2/repository/org/kunlecreates/test-utils "$HOME/.m2/repository/org/kunlecreates/" || true
+          fi
+          # If still missing (cache may have overwritten the install), build & install test-utils locally if the sources exist
+          if [ ! -f "$HOME/.m2/repository/org/kunlecreates/test-utils/0.1.0/test-utils-0.1.0.jar" ] && [ -f ./services/test-utils/pom.xml ]; then
+            echo "test-utils jar not present in local repo; building/installing from sources"
+            mvn -B -DskipTests -f ./services/test-utils/pom.xml install || true
+          fi
+
 
       - name: Run tests for ${{ matrix.service }}
         run: |
