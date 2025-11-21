@@ -67,9 +67,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-          # Frontend uses package.json (no lockfile present in repo)
-          cache-dependency-path: frontend/package.json
+          # No cache for frontend (no lockfile); reduces cache-related failures
 
       - name: Run Node tasks
         if: "matrix.service == 'product-service' || matrix.service == 'frontend'"
