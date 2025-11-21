@@ -145,6 +145,13 @@ jobs:
             if [ -f requirements.txt ]; then
               python3 -m pip install -r requirements.txt || echo "pip install returned non-zero (continuing for debug)"
             fi
+            # Ensure package imports resolve: include service dir on PYTHONPATH
+            export PYTHONPATH="$(pwd)":$PYTHONPATH
+            # Diagnostic: print python sys.path to logs to aid debugging
+            python3 - <<PY
+import sys
+print('PYTHONPATH=', sys.path)
+PY
             # Run pytest with junit xml and capture logs; treat exit code 5 (no tests) as success
             rc=0
             pytest --maxfail=1 --junitxml=pytest-results.xml . > pytest.log 2>&1 || rc=$?
