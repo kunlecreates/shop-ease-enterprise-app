@@ -112,7 +112,7 @@ jobs:
           fi
       - name: Upload pytest artifacts (notification-service)
         if: ${{ matrix.service == 'notification-service' }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: pytest-${{ matrix.service }}
           path: |
