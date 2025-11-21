@@ -17,11 +17,14 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import org.springframework.context.annotation.Import;
 import org.kunlecreates.testutils.TestContainersConfig;
+import org.kunlecreates.testutils.FlywayTestInitializer;
+import org.springframework.test.context.ContextConfiguration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Testcontainers
-@SpringBootTest
+@SpringBootTest(properties = "spring.flyway.enabled=false")
+@ContextConfiguration(initializers = FlywayTestInitializer.class)
 @Import(TestContainersConfig.class)
 public class OrderServiceTestcontainersIT {
 
