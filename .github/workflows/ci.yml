@@ -59,8 +59,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: services/product-service/package-lock.json
+          # No automatic npm cache here to avoid cache path resolution
+          # issues in CI when lockfiles are missing or path patterns do not resolve.
 
       - name: Setup Node.js (frontend)
         if: "matrix.service == 'frontend'"
