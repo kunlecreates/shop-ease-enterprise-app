@@ -26,12 +26,6 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '21'
-
       - name: Build & install test-utils
         run: |
           mvn -B -f ./services/test-utils/pom.xml install
@@ -147,8 +141,7 @@ jobs:
             fi
             # Ensure package imports resolve: include service dir on PYTHONPATH
             export PYTHONPATH="$(pwd)":$PYTHONPATH
-            # Diagnostic: print python sys.path to logs to aid debugging
-            python3 -c "import sys; print('PYTHONPATH=', sys.path)"
+            # Diagnostic removed: python sys.path printing was temporary
             # Run pytest with junit xml and capture logs; treat exit code 5 (no tests) as success
             rc=0
             pytest --maxfail=1 --junitxml=pytest-results.xml . > pytest.log 2>&1 || rc=$?
