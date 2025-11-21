@@ -49,4 +49,9 @@ jobs:
 
       - name: Run Maven tests
         run: |
+          set -x
+          # Diagnostics to help CI log inspection
+          pwd
+          ls -la services || true
+          ls -la services/order-service || true
           ./services/order-service/mvnw -B -Dapi.version=1.44 -f services/order-service/pom.xml test
