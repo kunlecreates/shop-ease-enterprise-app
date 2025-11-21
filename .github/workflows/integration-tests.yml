@@ -50,7 +50,7 @@ jobs:
     strategy:
       matrix:
         service: [order-service, user-service, product-service, notification-service]
-      max-parallel: 2
+      max-parallel: 1
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -83,6 +83,13 @@ jobs:
               echo "Notification service: may require SMTP test container in future"
               ;;
           esac
+
+      - name: Set up JDK 21 for Java services
+        if: ${{ matrix.service == 'order-service' || matrix.service == 'user-service' }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
 
       - name: Download built test-utils from prepare job
         uses: actions/download-artifact@v4
