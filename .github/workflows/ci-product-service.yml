@@ -25,5 +25,10 @@ jobs:
       - name: Install and run tests
         working-directory: services/product-service
         run: |
-          npm ci
+          # Prefer npm ci when a lockfile exists, otherwise fall back to npm install
+          if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then
+            npm ci
+          else
+            npm install
+          fi
           npm test --if-present

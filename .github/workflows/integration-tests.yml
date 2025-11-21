@@ -83,7 +83,12 @@ jobs:
           elif [ -f "$SERVICE_DIR/package.json" ]; then
             echo "Detected Node service. Installing and running npm test"
             pushd "$SERVICE_DIR"
-            npm ci
+            # Prefer npm ci when a lockfile exists, otherwise fall back to npm install
+            if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then
+              npm ci
+            else
+              npm install
+            fi
             npm test --silent || { echo 'npm test failed'; exit 1; }
             popd
           elif [ -f "$SERVICE_DIR/requirements.txt" ] || [ -f "$SERVICE_DIR/pyproject.toml" ]; then

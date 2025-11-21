@@ -30,9 +30,6 @@ jobs:
 
       - name: Build & install test-utils (for shared test migrations)
         run: |
-          # Clean leftover build artifacts to avoid permission issues from previous runs
-          echo "Cleaning leftover target directories (if any)"
-          find ./services -maxdepth 2 -type d -name target -print -exec rm -rf {} + || true
           if [ -f ./services/test-utils/pom.xml ]; then
             # Run Maven against the test-utils POM directly to install artifact into local repo
             mvn -B -DskipTests -f services/test-utils/pom.xml install
@@ -48,7 +45,10 @@ jobs:
 
       - name: Ensure Docker available (Testcontainers)
         run: |
+          echo "Docker diagnostics"
           docker --version || true
+          # show info to help debug Testcontainers connectivity in CI
+          docker info || true
 
       - name: Run Maven verify (runs Failsafe integration tests)
         run: |
@@ -57,5 +57,18 @@ jobs:
           pwd
           ls -la services || true
           ls -la services/order-service || true
+          # show Docker again before running integration tests
+          docker --version || true
+          docker info || true
           # Run the full verify lifecycle so integration tests named *IT are executed by Failsafe
           ./services/order-service/mvnw -B -Dapi.version=1.44 -f services/order-service/pom.xml verify
+
+      - name: Upload Maven test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: order-service-maven-artifacts
+          path: |
+            services/order-service/target/failsafe-reports/**
+            services/order-service/target/surefire-reports/**
+            services/order-service/target/*.log
