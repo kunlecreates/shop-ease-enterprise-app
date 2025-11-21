@@ -5,6 +5,12 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.boot.autoconfigure.flyway.FlywayMigrationStrategy;
 import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
+import java.util.Objects;
+import java.lang.reflect.Proxy;
+import java.lang.reflect.InvocationHandler;
 
 @TestConfiguration
 public class TestContainersConfig {
@@ -86,8 +92,44 @@ public class TestContainersConfig {
                 System.out.println("[TestContainersConfig] Failed to read DB metadata: " + ex.getMessage());
             }
 
+            DataSource sanitized = (DataSource) Proxy.newProxyInstance(
+                    DataSource.class.getClassLoader(),
+                    new Class[]{DataSource.class},
+                    (proxy, method, args1) -> {
+                        // Intercept getConnection() to wrap the returned Connection
+                        if ("getConnection".equals(method.getName()) && (args1 == null || args1.length == 0)) {
+                            Connection conn = (Connection) method.invoke(dataSource, args1);
+                            return Proxy.newProxyInstance(
+                                    Connection.class.getClassLoader(),
+                                    new Class[]{Connection.class},
+                                    (connProxy, connMethod, connArgs) -> {
+                                        if ("getMetaData".equals(connMethod.getName())) {
+                                            DatabaseMetaData meta = (DatabaseMetaData) connMethod.invoke(conn, connArgs);
+                                            String product = Objects.toString(meta.getDatabaseProductName(), "");
+                                            String version = Objects.toString(meta.getDatabaseProductVersion(), "");
+                                            if (product.toLowerCase().startsWith("postgresql")) {
+                                                product = "PostgreSQL";
+                                            }
+                                            final String finalProduct = product;
+                                            final String finalVersion = version;
+                                            InvocationHandler metaHandler = (m, mm, a) -> {
+                                                if ("getDatabaseProductName".equals(mm.getName())) return finalProduct;
+                                                if ("getDatabaseProductVersion".equals(mm.getName())) return finalVersion;
+                                                return mm.invoke(meta, a);
+                                            };
+                                            return Proxy.newProxyInstance(DatabaseMetaData.class.getClassLoader(), new Class[]{DatabaseMetaData.class}, metaHandler);
+                                        }
+                                        return connMethod.invoke(conn, connArgs);
+                                    }
+                            );
+                        }
+                        // For getConnection(username,password) we delegate directly
+                        return method.invoke(dataSource, args1);
+                    }
+            );
+
             Flyway custom = Flyway.configure()
-                    .dataSource(dataSource)
+                    .dataSource(sanitized)
                     .locations("classpath:db/shared-migration", "classpath:db/migration")
                     .load();
             try {
