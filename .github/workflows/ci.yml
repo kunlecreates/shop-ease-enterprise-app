@@ -16,7 +16,7 @@ jobs:
     name: Test ${{ matrix.service }}
     strategy:
       matrix:
-        service: [product-service, user-service, order-service, notification-service]
+        service: [product-service, user-service, order-service, notification-service, frontend]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -54,19 +54,25 @@ jobs:
         run: |
           mvn -B -V test
 
-      - name: Setup Node.js (for product-service)
-        if: "matrix.service == 'product-service'"
+      - name: Setup Node.js (for product-service and frontend)
+        if: "matrix.service == 'product-service' || matrix.service == 'frontend'"
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
 
-      - name: Run Node tests
-        if: "matrix.service == 'product-service'"
-        working-directory: services/product-service
+      - name: Run Node tasks
+        if: "matrix.service == 'product-service' || matrix.service == 'frontend'"
         run: |
-          npm ci
-          npm test --if-present
+          if [ "${{ matrix.service }}" = "product-service" ]; then
+            cd services/product-service
+            npm ci
+            npm test --if-present
+          elif [ "${{ matrix.service }}" = "frontend" ]; then
+            cd frontend
+            npm ci
+            npm run build --if-present
+          fi
 
       - name: Setup Python (for notification-service)
         if: "matrix.service == 'notification-service'"
@@ -90,6 +96,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pytest -q
+
+      - name: Build Docker Image (frontend)
+        if: "matrix.service == 'frontend'"
+        run: |
+          docker build -t ghcr.io/${{ github.repository }}/frontend:$(echo $GITHUB_SHA | cut -c1-7) frontend
+        env:
+          SERVICE: ${{ matrix.service }}
 
   vendor-integration:
     name: "Optional: Vendor Integration (manual)"
