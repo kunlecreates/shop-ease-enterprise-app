@@ -7,6 +7,7 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.context.annotation.Import;
 import org.testcontainers.containers.PostgreSQLContainer;
+import java.time.Duration;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.kunlecreates.order.application.OrderService;
@@ -29,10 +30,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class OrderServiceTestcontainersIT {
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:14-alpine")
+        static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:14-alpine")
             .withDatabaseName("ordersdb")
             .withUsername("test")
-            .withPassword("test");
+            .withPassword("test")
+            // increase container shared memory to reduce OOMs on constrained CI runners
+            .withCreateContainerCmdModifier(cmd -> cmd.getHostConfig().withShmSize(268435456L))
+            // give Postgres more time to initialize on busy CI runners
+            .withStartupTimeout(Duration.ofMinutes(3));
 
     @DynamicPropertySource
     static void overrideProperties(DynamicPropertyRegistry registry) {
