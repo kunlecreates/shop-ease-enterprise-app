@@ -30,6 +30,9 @@ jobs:
 
       - name: Build & install test-utils (for shared test migrations)
         run: |
+          # Clean leftover build artifacts to avoid permission issues from previous runs
+          echo "Cleaning leftover target directories (if any)"
+          find ./services -maxdepth 2 -type d -name target -print -exec rm -rf {} + || true
           if [ -f ./services/test-utils/pom.xml ]; then
             # Run Maven against the test-utils POM directly to install artifact into local repo
             mvn -B -DskipTests -f services/test-utils/pom.xml install
