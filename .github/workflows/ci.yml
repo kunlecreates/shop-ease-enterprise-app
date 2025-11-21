@@ -78,7 +78,12 @@ jobs:
             npm test --if-present
           elif [ "${{ matrix.service }}" = "frontend" ]; then
             cd frontend
-            npm ci
+            # If a lockfile exists prefer `npm ci`; otherwise fall back to `npm install`.
+            if [ -f package-lock.json ] || [ -f yarn.lock ]; then
+              npm ci
+            else
+              npm install
+            fi
             npm run build --if-present
           fi
 
