@@ -20,5 +20,10 @@ helm-charts/ (Umbrella Helm chart skeleton)
 - Observability wiring (OTel collectors)
 - Deployment manifests expansion
 
+## Developer workflows
+
+For a concise developer guide (sparse-checkout, running a single service locally, Testcontainers notes, and CI structure), see `DEVELOPER_WORKFLOWS.md` at the repository root.
+
+
 ## Security
 No secrets committed. All runtime credentials must be injected via environment (Kubernetes Secrets / GitHub Actions). Placeholders like `CHANGE_ME` indicate required secret provisioning.
