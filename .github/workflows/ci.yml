@@ -29,6 +29,12 @@ jobs:
           distribution: temurin
           java-version: '21'
 
+      - name: Build & install test-utils (for shared test migrations)
+        if: "contains(matrix.service, 'user-service') || contains(matrix.service, 'order-service')"
+        run: |
+          # Install the shared test-utils module so service tests can depend on it
+          mvn -B -V -DskipTests install -pl services/test-utils -am
+
       # NOTE: we intentionally do not cache the entire ~/.m2/repository here.
       # Caching the full local Maven repo can clobber artifacts that are installed
       # during the workflow (e.g. services/test-utils). Keep CI stable by avoiding
