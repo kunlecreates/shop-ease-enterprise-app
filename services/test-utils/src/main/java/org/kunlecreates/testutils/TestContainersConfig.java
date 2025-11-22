@@ -97,6 +97,18 @@ public class TestContainersConfig {
             // Use an explicit DataSource wrapper that sanitizes DatabaseMetaData
             DataSource sanitized = new SanitizingDataSource(dataSource);
 
+            // Log sanitized metadata obtained from the wrapped DataSource to ensure
+            // Flyway will see the normalized product name in CI logs.
+            try {
+                try (var conn = sanitized.getConnection()) {
+                    var meta = conn.getMetaData();
+                    log.info("[TestContainersConfig] Sanitized DB Product: {}", meta.getDatabaseProductName());
+                    log.info("[TestContainersConfig] Sanitized DB Product Version: {}", meta.getDatabaseProductVersion());
+                }
+            } catch (Exception ex) {
+                log.warn("[TestContainersConfig] Failed to read sanitized DB metadata: {}", ex.getMessage());
+            }
+
             Flyway custom = Flyway.configure()
                     .dataSource(sanitized)
                     .locations("classpath:db/shared-migration", "classpath:db/migration")
