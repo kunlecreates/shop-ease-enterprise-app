@@ -8,17 +8,55 @@
     <packaging>jar</packaging>
     <name>Test Utilities (shared test resources)</name>
     <description>Shared test utilities and resources (migrations) for integration tests.</description>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.3.5</version>
+        <relativePath />
+    </parent>
+
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
     </properties>
+
     <dependencies>
-        <!-- No runtime dependencies; provides resources only -->
+        <!-- Compile-time dependencies required by TestContainersConfig.java -->
+        <!-- SLF4J API for logging used in TestContainersConfig -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>2.0.9</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-test</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-autoconfigure</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+            <version>11.17.1</version>
+        </dependency>
+        <!-- Database plugin so Flyway recognizes PostgreSQL at runtime -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+            <version>11.17.1</version>
+        </dependency>
     </dependencies>
     <build>
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
+                <excludes>
+                    <!-- exclude the V1 migration to avoid version collision with service migrations
+                         keep higher-version shared migrations (V2+) in the jar instead -->
+                    <exclude>db/shared-migration/V1__orders.sql</exclude>
+                </excludes>
             </resource>
         </resources>
     </build>

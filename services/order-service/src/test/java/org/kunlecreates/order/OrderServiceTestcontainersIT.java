@@ -7,9 +7,11 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.context.annotation.Import;
 import org.testcontainers.containers.PostgreSQLContainer;
+import java.time.Duration;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.kunlecreates.order.application.OrderService;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.kunlecreates.order.domain.Order;
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -17,19 +19,26 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import org.springframework.context.annotation.Import;
 import org.kunlecreates.testutils.TestContainersConfig;
+import org.kunlecreates.testutils.FlywayTestInitializer;
+import org.springframework.test.context.ContextConfiguration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Testcontainers
 @SpringBootTest
+@ContextConfiguration(initializers = FlywayTestInitializer.class)
 @Import(TestContainersConfig.class)
 public class OrderServiceTestcontainersIT {
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:14-alpine")
+        static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:14-alpine")
             .withDatabaseName("ordersdb")
             .withUsername("test")
-            .withPassword("test");
+            .withPassword("test")
+            // increase container shared memory to reduce OOMs on constrained CI runners
+            .withCreateContainerCmdModifier(cmd -> cmd.getHostConfig().withShmSize(268435456L))
+            // give Postgres more time to initialize on busy CI runners
+            .withStartupTimeout(Duration.ofMinutes(3));
 
     @DynamicPropertySource
     static void overrideProperties(DynamicPropertyRegistry registry) {
@@ -46,9 +55,16 @@ public class OrderServiceTestcontainersIT {
     @Autowired
     OrderService orderService;
 
+    @Autowired
+    JdbcTemplate jdbcTemplate;
+
     @Test
     void createAndFind_withPostgres() {
-        Order o = orderService.createOrder(2L, "CREATED", 42.00);
+        // Ensure a user exists for the order: insert a test user and use the generated id.
+        jdbcTemplate.update("INSERT INTO users (email, password_hash) VALUES (?, ?)", "it-user@example.com", "test-hash");
+        Long userId = jdbcTemplate.queryForObject("SELECT id FROM users WHERE email = ?", new Object[]{"it-user@example.com"}, Long.class);
+
+        Order o = orderService.createOrder(userId, "CREATED", 42.00);
         assertThat(o.getId()).isNotNull();
         assertThat(orderService.findById(o.getId())).isPresent();
     }
