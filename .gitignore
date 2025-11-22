@@ -26,6 +26,11 @@ pnpm-lock.yaml
 # Logs
 *.log
 
+# Local CI and artifact folders
+.logs/
+gh-artifacts/
+org/
+
 # Misc
 /.env
 /.env.local

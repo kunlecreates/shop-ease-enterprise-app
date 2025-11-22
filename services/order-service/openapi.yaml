@@ -1,0 +1,30 @@
+openapi: 3.0.3
+info:
+  title: Order Service API (Phase 2)
+  version: 0.1.0
+paths:
+  /api/orders:
+    post:
+      summary: Place an order (checkout)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: integer
+                total:
+                  type: number
+      responses:
+        '201':
+          description: Order placed
+        '400':
+          description: Bad request
+  /api/cart:
+    put:
+      summary: Add/update cart items (placeholder)
+      responses:
+        '200':
+          description: Ok
