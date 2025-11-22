@@ -12,6 +12,8 @@ jobs:
   test:
     name: Order Service Tests
     runs-on: ubuntu-latest
+    env:
+      DOCKER_API_VERSION: '1.52'
     steps:
       - name: Checkout
         uses: actions/checkout@v4

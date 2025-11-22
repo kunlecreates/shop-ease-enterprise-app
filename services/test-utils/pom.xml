@@ -41,6 +41,12 @@
             <artifactId>flyway-core</artifactId>
             <version>11.17.1</version>
         </dependency>
+        <!-- Database plugin so Flyway recognizes PostgreSQL at runtime -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+            <version>11.17.1</version>
+        </dependency>
     </dependencies>
     <build>
         <resources>

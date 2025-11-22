@@ -39,6 +39,8 @@ jobs:
         working-directory: services/${{ matrix.service }}
         run: |
           mvn -B -V test
+        env:
+          DOCKER_API_VERSION: '1.52'
 
       - name: Setup Node.js (for product-service)
         if: "matrix.service == 'product-service'"

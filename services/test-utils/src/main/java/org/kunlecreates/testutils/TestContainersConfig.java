@@ -6,6 +6,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.boot.autoconfigure.flyway.FlywayMigrationStrategy;
+import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.lang.Nullable;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -122,6 +124,24 @@ public class TestContainersConfig {
             } catch (org.flywaydb.core.api.FlywayException fe) {
                 // Re-throw with additional context so CI logs are clearer
                 throw new RuntimeException("Flyway migration failed (after DB readiness wait): " + fe.getMessage(), fe);
+            }
+        };
+    }
+
+    /**
+     * Ensure any DataSource created by Spring is wrapped with our
+     * SanitizingDataSource so that all consumers (including auto-configured
+     * Flyway) observe normalized DatabaseMetaData.
+     */
+    @Bean
+    public static BeanPostProcessor dataSourceSanitizer() {
+        return new BeanPostProcessor() {
+            @Override
+            public @Nullable Object postProcessAfterInitialization(@Nullable Object bean, String beanName) {
+                if (bean instanceof DataSource && !(bean instanceof SanitizingDataSource)) {
+                    return new SanitizingDataSource((DataSource) bean);
+                }
+                return bean;
             }
         };
     }
