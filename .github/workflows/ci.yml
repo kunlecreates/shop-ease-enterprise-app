@@ -48,6 +48,8 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
+          # Tell setup-node where the dependency lockfile lives so cache works
+          cache-dependency-path: services/product-service/package-lock.json
 
       - name: Run Node tests
         if: "matrix.service == 'product-service'"

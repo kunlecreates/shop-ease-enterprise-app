@@ -21,6 +21,8 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
+          # point to the service's lockfile so setup-node can locate it for caching
+          cache-dependency-path: services/product-service/package-lock.json
 
       - name: Install and run tests
         working-directory: services/product-service
