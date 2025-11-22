@@ -11,6 +11,7 @@ import java.time.Duration;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.kunlecreates.order.application.OrderService;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.kunlecreates.order.domain.Order;
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -54,9 +55,16 @@ public class OrderServiceTestcontainersIT {
     @Autowired
     OrderService orderService;
 
+    @Autowired
+    JdbcTemplate jdbcTemplate;
+
     @Test
     void createAndFind_withPostgres() {
-        Order o = orderService.createOrder(2L, "CREATED", 42.00);
+        // Ensure a user exists for the order: insert a test user and use the generated id.
+        jdbcTemplate.update("INSERT INTO users (email, password_hash) VALUES (?, ?)", "it-user@example.com", "test-hash");
+        Long userId = jdbcTemplate.queryForObject("SELECT id FROM users WHERE email = ?", new Object[]{"it-user@example.com"}, Long.class);
+
+        Order o = orderService.createOrder(userId, "CREATED", 42.00);
         assertThat(o.getId()).isNotNull();
         assertThat(orderService.findById(o.getId())).isPresent();
     }
