@@ -52,6 +52,11 @@
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
+                <excludes>
+                    <!-- exclude the V1 migration to avoid version collision with service migrations
+                         keep higher-version shared migrations (V2+) in the jar instead -->
+                    <exclude>db/shared-migration/V1__orders.sql</exclude>
+                </excludes>
             </resource>
         </resources>
     </build>

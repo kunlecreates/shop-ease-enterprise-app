@@ -8,7 +8,7 @@ Completed items
   - `OrderService.processCheckout` implemented and wired to `PaymentService` abstraction.
   - `MockPaymentService` added and logs using SLF4J.
   - Unit tests added: success and payment-failure cases in `services/order-service/src/test/java/...`.
-  - Flyway test migration for `ORDERS` added: `services/test-utils/src/main/resources/db/shared-migration/V1__orders.sql`.
+  - Flyway test migration for `ORDERS` added: `services/test-utils/src/main/resources/db/shared-migration/V2__orders.sql`.
   - Minimal OpenAPI skeleton: `services/order-service/openapi.yaml`.
   - Phase 2 acceptance file: `services/order-service/PHASE2-ACCEPTANCE.md`.
 
