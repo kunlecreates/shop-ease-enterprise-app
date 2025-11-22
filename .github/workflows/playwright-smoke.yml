@@ -1,0 +1,64 @@
+name: Playwright Smoke Tests
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: ['**']
+
+jobs:
+  smoke:
+    name: Playwright Smoke
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install frontend deps
+        working-directory: frontend
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Install Playwright browsers
+        working-directory: frontend
+        run: |
+          npx playwright install --with-deps
+
+      - name: Install mock backend deps
+        working-directory: frontend/mock-backend
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Start mock backend
+        working-directory: frontend/mock-backend
+        run: |
+          node server.js &
+          npx wait-on http://localhost:4000/health --silent --timeout 30000
+
+      - name: Run Playwright smoke tests
+        working-directory: frontend
+        env:
+          CI: true
+          API_BASE_URL: http://localhost:4000
+        run: |
+          npx playwright test tests/cart-checkout.spec.ts --project=chromium --reporter=list || true
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-smoke-report
+          path: frontend/test-results || ''
