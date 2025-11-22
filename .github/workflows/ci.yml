@@ -33,7 +33,10 @@ jobs:
         if: "contains(matrix.service, 'user-service') || contains(matrix.service, 'order-service')"
         run: |
           # Install the shared test-utils module so service tests can depend on it
-          mvn -B -V -DskipTests install -pl services/test-utils -am
+          # Build and install the test-utils module directly (use -f so Maven doesn't
+          # require the top-level reactor to include the module). This is more robust
+          # across different checkout/checkout-depth/sparse scenarios in Actions.
+          mvn -B -V -DskipTests -f services/test-utils/pom.xml install
 
       # NOTE: we intentionally do not cache the entire ~/.m2/repository here.
       # Caching the full local Maven repo can clobber artifacts that are installed
