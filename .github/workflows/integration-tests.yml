@@ -47,7 +47,10 @@ jobs:
     strategy:
       matrix:
         service: [order-service, user-service, product-service, notification-service]
-      max-parallel: 1
+      # Allow running two service matrix jobs concurrently to reduce runtime
+      # and the chance that a single service (the first in the list) appears
+      # to always run for infra/global changes.
+      max-parallel: 2
     steps:
       - name: Checkout
         uses: actions/checkout@v4
