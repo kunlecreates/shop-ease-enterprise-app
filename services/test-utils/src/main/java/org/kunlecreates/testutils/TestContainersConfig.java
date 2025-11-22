@@ -94,41 +94,8 @@ public class TestContainersConfig {
                 log.warn("[TestContainersConfig] Failed to read DB metadata: {}", ex.getMessage());
             }
 
-            final ClassLoader cl = Thread.currentThread().getContextClassLoader();
-            DataSource sanitized = (DataSource) Proxy.newProxyInstance(
-                    cl,
-                    new Class[]{DataSource.class},
-                    (proxy, method, args1) -> {
-                        // Intercept getConnection() variants to wrap the returned Connection
-                        if ("getConnection".equals(method.getName())) {
-                            Connection conn = (Connection) method.invoke(dataSource, args1);
-                            return Proxy.newProxyInstance(
-                                    cl,
-                                    new Class[]{Connection.class},
-                                    (connProxy, connMethod, connArgs) -> {
-                                        if ("getMetaData".equals(connMethod.getName())) {
-                                            DatabaseMetaData meta = (DatabaseMetaData) connMethod.invoke(conn, connArgs);
-                                            String product = Objects.toString(meta.getDatabaseProductName(), "");
-                                            String version = Objects.toString(meta.getDatabaseProductVersion(), "");
-                                            if (product.toLowerCase().startsWith("postgresql")) {
-                                                product = "PostgreSQL";
-                                            }
-                                            final String finalProduct = product;
-                                            final String finalVersion = version;
-                                            InvocationHandler metaHandler = (m, mm, a) -> {
-                                                if ("getDatabaseProductName".equals(mm.getName())) return finalProduct;
-                                                if ("getDatabaseProductVersion".equals(mm.getName())) return finalVersion;
-                                                return mm.invoke(meta, a);
-                                            };
-                                            return Proxy.newProxyInstance(cl, new Class[]{DatabaseMetaData.class}, metaHandler);
-                                        }
-                                        return connMethod.invoke(conn, connArgs);
-                                    }
-                            );
-                        }
-                        return method.invoke(dataSource, args1);
-                    }
-            );
+            // Use an explicit DataSource wrapper that sanitizes DatabaseMetaData
+            DataSource sanitized = new SanitizingDataSource(dataSource);
 
             Flyway custom = Flyway.configure()
                     .dataSource(sanitized)
