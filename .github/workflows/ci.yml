@@ -12,90 +12,21 @@ on:
       - 'services/**'
 
 jobs:
-  test:
-    name: Test ${{ matrix.service }}
-    strategy:
-      matrix:
-        service: [product-service, user-service, order-service, notification-service]
+  repo-checks:
+    name: Repo Checks (quick validate)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Java (for Java services)
-        if: "contains(matrix.service, 'user-service') || contains(matrix.service, 'order-service')"
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
 
-      - name: Build & install test-utils (for shared test migrations)
-        if: "contains(matrix.service, 'user-service') || contains(matrix.service, 'order-service')"
+      - name: Maven validate (skip tests)
         run: |
-          # Install the shared test-utils module so service tests can depend on it
-          # Build and install the test-utils module directly (use -f so Maven doesn't
-          # require the top-level reactor to include the module). This is more robust
-          # across different checkout/checkout-depth/sparse scenarios in Actions.
-          mvn -B -V -DskipTests -f services/test-utils/pom.xml install
-
-      # NOTE: we intentionally do not cache the entire ~/.m2/repository here.
-      # Caching the full local Maven repo can clobber artifacts that are installed
-      # during the workflow (e.g. services/test-utils). Keep CI stable by avoiding
-      # a global repo restore; per-service workflows may cache narrower paths if needed.
-
-      - name: Run Java tests
-        if: "contains(matrix.service, 'user-service') || contains(matrix.service, 'order-service')"
-        working-directory: services/${{ matrix.service }}
-        run: |
-          mvn -B -V test
-        env:
-          DOCKER_API_VERSION: '1.52'
-
-      - name: Setup Node.js (for product-service)
-        if: "matrix.service == 'product-service'"
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          # Tell setup-node where the dependency lockfile lives so cache works
-          cache-dependency-path: services/product-service/package-lock.json
-
-      - name: Run Node tests
-        if: "matrix.service == 'product-service'"
-        working-directory: services/product-service
-        run: |
-          npm ci
-          npm test --if-present
-
-      - name: Setup Python (for notification-service)
-        if: "matrix.service == 'notification-service'"
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.12'
-
-      - name: Cache pip
-        if: "matrix.service == 'notification-service'"
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: pip-${{ runner.os }}-${{ hashFiles('services/notification-service/**/requirements*.txt') }}
-
-      - name: Run Python tests
-        if: "matrix.service == 'notification-service'"
-        working-directory: services/notification-service
-        env:
-          PYTHONPATH: .
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pytest -q
-
-  vendor-integration:
-    name: "Optional: Vendor Integration (manual)"
-    runs-on: ubuntu-latest
-    if: ${{ false }}
-    steps:
-      - uses: actions/checkout@v4
-      - name: Run Maven with vendor profile
-        working-directory: services/order-service
-        run: mvn -B -V test -Pvendor
+          # Quick repository-level validation. Integration tests and service matrices
+          # are consolidated into `integration-tests.yml` to avoid duplicated runs.
+          mvn -B -V -DskipTests validate

@@ -28,11 +28,18 @@ jobs:
             chmod +x ./services/user-service/mvnw || true
           fi
 
-      - name: Build & install test-utils (for shared test migrations)
+      - name: Ensure test-utils (install if missing)
         run: |
-          if [ -f ./services/test-utils/pom.xml ]; then
-            # Run Maven against the test-utils POM directly to install artifact into local repo
-            mvn -B -DskipTests -f services/test-utils/pom.xml install
+          # If test-utils artifact already exists in local Maven repo, skip rebuild.
+          if [ -f "$HOME/.m2/repository/org/kunlecreates/test-utils/0.1.0/test-utils-0.1.0.jar" ]; then
+            echo "test-utils found in local Maven repo; skipping build"
+          else
+            echo "test-utils not found; building and installing from sources"
+            if [ -f ./services/test-utils/pom.xml ]; then
+              mvn -B -DskipTests -f services/test-utils/pom.xml install
+            else
+              echo "test-utils sources not present in checkout; continuing without install"
+            fi
           fi
 
       # NOTE: Avoid caching the entire ~/.m2/repository here because it can
