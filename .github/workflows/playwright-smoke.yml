@@ -52,7 +52,17 @@ jobs:
         working-directory: frontend/mock-backend
         run: |
           node server.js &
-          npx wait-on http://localhost:4000/health --silent --timeout 30000
+          # Allow more time for the mock backend to initialize on busy runners
+          npx wait-on http://localhost:4000/health --silent --timeout 300000
+
+      - name: Debug containers immediately after start
+        run: |
+          echo '--- docker ps (immediately after backend start) ---'
+          docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Image}}" || true
+          echo '--- shop-api (if present) last 200 lines ---'
+          docker logs --tail 200 shop-api || echo 'no shop-api logs available'
+          echo '--- pg (if present) last 200 lines ---'
+          docker logs --tail 200 pg || echo 'no pg logs available'
 
       - name: Run Playwright smoke tests
         working-directory: frontend
