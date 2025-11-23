@@ -116,11 +116,11 @@ jobs:
         run: |
           mkdir -p playwright-debug-artifacts/logs
             set -euxo pipefail
-            echo 'Copying source logs (source -> dest)'
-            echo "source: $GITHUB_WORKSPACE/frontend/test-results/logs"
-            ls -la "$GITHUB_WORKSPACE/frontend/test-results" || true
+            echo 'Copying source live-logs (source -> dest)'
+            echo "source: $GITHUB_WORKSPACE/playwright-debug-artifacts/live-logs"
+            ls -la "$GITHUB_WORKSPACE/playwright-debug-artifacts" || true
             # Copy logs and report; surface any errors instead of silencing them
-            cp -av "$GITHUB_WORKSPACE/frontend/test-results/logs/." playwright-debug-artifacts/logs/ || echo "cp logs exit:$?"
+            cp -av "$GITHUB_WORKSPACE/playwright-debug-artifacts/live-logs/." playwright-debug-artifacts/logs/ || echo "cp logs exit:$?"
             cp -av "$GITHUB_WORKSPACE/frontend/test-results/playwright-report" playwright-debug-artifacts/ || echo "cp report exit:$?"
             echo '--- consolidated artifact list (top-level) ---'
             ls -la playwright-debug-artifacts || true
