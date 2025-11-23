@@ -22,21 +22,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Log into GitHub Container Registry (PAT)
-        if: ${{ secrets.GHCR_PAT }}
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_PAT }}
+      - name: Prepare registry credentials
+        run: |
+          # Avoid using 'secrets' directly in step-level `if:` expressions (workflow parser rejects it).
+          # Choose GHCR PAT if provided, otherwise fall back to GITHUB_TOKEN.
+          if [ -n "${{ secrets.GHCR_PAT }}" ]; then
+            echo "Using provided GHCR_PAT"
+            echo "REGISTRY_PASSWORD=${{ secrets.GHCR_PAT }}" >> "$GITHUB_ENV"
+          else
+            echo "GHCR_PAT not provided; falling back to GITHUB_TOKEN"
+            echo "REGISTRY_PASSWORD=${{ secrets.GITHUB_TOKEN }}" >> "$GITHUB_ENV"
+          fi
 
-      - name: Log into GitHub Container Registry (GITHUB_TOKEN fallback)
-        if: ${{ !secrets.GHCR_PAT }}
+      - name: Log into GitHub Container Registry
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ env.REGISTRY_PASSWORD }}
 
       - name: Use Node.js 20
         uses: actions/setup-node@v4
