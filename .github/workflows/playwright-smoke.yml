@@ -54,16 +54,17 @@ jobs:
         working-directory: frontend
         run: |
           mkdir -p "$GITHUB_WORKSPACE/frontend/test-results/logs"
-          # Persist frontend dev server stdout/stderr to a log file so CI artifacts include it
-          npm run dev > "$GITHUB_WORKSPACE/frontend/test-results/logs/frontend-dev.log" 2>&1 &
+          # Start frontend dev server with nohup so output is reliably captured
+          nohup bash -lc "npm run dev" > "$GITHUB_WORKSPACE/frontend/test-results/logs/frontend-dev.log" 2>&1 &
+          # Wait for the dev server to be available
           npx wait-on http://localhost:3000 --silent --timeout 45000
 
       - name: Start mock backend
         working-directory: frontend/mock-backend
         run: |
           mkdir -p "$GITHUB_WORKSPACE/frontend/test-results/logs"
-          # Persist mock backend stdout/stderr to a log file so CI artifacts include it
-          node server.js > "$GITHUB_WORKSPACE/frontend/test-results/logs/mock-backend.log" 2>&1 &
+          # Start mock backend with nohup so output is reliably captured
+          nohup bash -lc "node server.js" > "$GITHUB_WORKSPACE/frontend/test-results/logs/mock-backend.log" 2>&1 &
           # Allow more time for the mock backend to initialize on busy runners
           npx wait-on http://localhost:4000/health --silent --timeout 300000
 
@@ -147,6 +148,20 @@ jobs:
           echo '--- playwright-debug-artifacts contents ---'
           ls -la "$GITHUB_WORKSPACE/playwright-debug-artifacts" || true
           ls -la "$GITHUB_WORKSPACE/playwright-debug-artifacts/logs" || true
+
+      - name: Final diagnostic (list and tail expected logs)
+        if: always()
+        run: |
+          echo '--- ls frontend/test-results ---'
+          ls -la "$GITHUB_WORKSPACE/frontend/test-results" || true
+          echo '--- ls frontend/test-results/logs ---'
+          ls -la "$GITHUB_WORKSPACE/frontend/test-results/logs" || true
+          echo '--- tail frontend-dev.log ---'
+          tail -n 200 "$GITHUB_WORKSPACE/frontend/test-results/logs/frontend-dev.log" || echo 'no frontend-dev.log'
+          echo '--- tail mock-backend.log ---'
+          tail -n 200 "$GITHUB_WORKSPACE/frontend/test-results/logs/mock-backend.log" || echo 'no mock-backend.log'
+          echo '--- tail runner-system-info.txt ---'
+          tail -n 200 "$GITHUB_WORKSPACE/frontend/test-results/logs/runner-system-info.txt" || echo 'no runner-system-info.txt'
 
       - name: Upload Playwright report
         if: always()
