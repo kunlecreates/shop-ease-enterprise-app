@@ -19,19 +19,27 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install frontend deps
+      - name: Install frontend deps (including dev)
         working-directory: frontend
+        env:
+          NODE_ENV: development
         run: |
           if [ -f package-lock.json ]; then
-            npm ci
+            npm ci --include=dev
           else
-            npm install
+            npm install --include=dev
           fi
 
       - name: Install Playwright browsers
         working-directory: frontend
         run: |
           npx playwright install --with-deps
+
+      - name: Verify Playwright package present
+        working-directory: frontend
+        run: |
+          echo 'Checking for @playwright/test in frontend/node_modules'
+          node -e "try{console.log(require.resolve('@playwright/test'))}catch(e){console.error('MISSING:@playwright/test'); process.exit(0)}"
 
       - name: Install mock backend deps
         working-directory: frontend/mock-backend
