@@ -58,6 +58,23 @@ jobs:
             echo "Skipping mock backend because API_IMAGE is set"
           fi
 
+      - name: Validate `API_IMAGE` format (lowercase repository)
+        run: |
+          if [ -n "${{ secrets.API_IMAGE }}" ]; then
+            # Docker requires repository names to be lowercase. If the provided
+            # secret has uppercase characters, surface a clear error so the
+            # repository admin can fix the secret value.
+            if echo "${{ secrets.API_IMAGE }}" | grep -q '[A-Z]'; then
+              echo "ERROR: API_IMAGE contains uppercase characters. Docker repository names must be lowercase."
+              echo "Provided API_IMAGE (masked): ***"
+              echo "Please update the repository secret 'API_IMAGE' to a lowercase image reference (e.g. org/order-service:tag)."
+              exit 1
+            fi
+            echo "API_IMAGE looks lowercase; proceeding to pull"
+          else
+            echo "No API_IMAGE secret set; skipping docker pull and validation"
+          fi
+
       - name: Pull backend image (prebuilt) when available
         run: |
           if [ -n "${{ secrets.API_IMAGE }}" ]; then
