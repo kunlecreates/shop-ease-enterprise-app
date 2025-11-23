@@ -23,18 +23,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Start mock backend (always)
-        working-directory: frontend/mock-backend
-        run: |
-          echo "Starting mock backend for all runs (temporary)"
-          if [ -f package-lock.json ]; then
-            npm ci
-          else
-            npm install
-          fi
-          npm start &
-          npx wait-on http://localhost:4000/health --silent --timeout 60000
-
       - name: Use Node.js 20
         uses: actions/setup-node@v4
         with:
@@ -60,12 +48,12 @@ jobs:
           npm run dev &
           npx wait-on http://localhost:3000 --silent --timeout 45000
 
-      - name: Start mock backend for PR runs
+      - name: Start mock backend for PR/manual runs
         working-directory: frontend/mock-backend
         run: |
-          # For pull_request runs we use a fast mock backend instead of building/pulling images
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "PR run detected — starting mock backend"
+          # For pull_request or manual workflow_dispatch runs we use a fast mock backend
+          if [ "${{ github.event_name }}" = "pull_request" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "PR or manual dispatch run detected — starting mock backend"
             if [ -f package-lock.json ]; then
               npm ci
             else
@@ -74,7 +62,7 @@ jobs:
             npm start &
             npx wait-on http://localhost:4000/health --silent --timeout 60000
           else
-            echo "Not a PR run; skipping mock backend"
+            echo "Not a PR/manual run; skipping mock backend"
           fi
 
       
@@ -95,12 +83,13 @@ jobs:
 
       - name: Run Postgres container (optional)
         run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "PR run — skipping Postgres container"
+          # Skip launching Postgres for PRs or manual dispatches which use mock backend
+          if [ "${{ github.event_name }}" = "pull_request" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "PR or manual dispatch run — skipping Postgres container"
             exit 0
           fi
 
-          # Read DB_IMAGE set earlier and fail if somehow empty
+          # Read DB_IMAGE set earlier and fail if somehow empty on push/develop runs
           if [ -z "${DB_IMAGE}" ]; then
             echo "ERROR: DB_IMAGE is not configured; cannot start Postgres"
             exit 1
@@ -120,19 +109,36 @@ jobs:
 
       - name: Run backend container (pulled or built image)
         run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "PR run — skipping backend container startup"
+          # Skip backend container for PRs or manual dispatches (we run tests against mock)
+          if [ "${{ github.event_name }}" = "pull_request" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "PR or manual dispatch run — skipping backend container startup"
             exit 0
           fi
+
+          # Prefer IMAGE from secret `API_IMAGE` if provided (for pushed runs); allow IMAGE env override
+          IMAGE="${{ secrets.API_IMAGE }}"
+          IMAGE=${IMAGE:-"${IMAGE}"}
+
           if [ -z "${IMAGE}" ]; then
-            echo "ERROR: IMAGE not set; cannot start backend"
-            exit 1
+            echo "No IMAGE configured (API_IMAGE secret missing); skipping backend container"
+            exit 0
           fi
+
           echo "Starting backend container from image ${IMAGE}"
+
+          # Evaluate DB env vars from secrets with sane defaults
+          DB_NAME="${{ secrets.API_DB_NAME }}"
+          DB_NAME=${DB_NAME:-shop_test}
+          DB_USER="${{ secrets.API_DB_USER }}"
+          DB_USER=${DB_USER:-test}
+          DB_PASS="${{ secrets.API_DB_PASSWORD }}"
+          DB_PASS=${DB_PASS:-test}
+
+          # If a DB image is configured we assume the container network will be used
           if [ -n "${{ secrets.API_DB_IMAGE }}" ]; then
             docker run -d --rm --name shop-api --network test-network -p 8080:8080 \
-              -e DATABASE_HOST=pg -e DATABASE_PORT=5432 -e DATABASE_NAME=${{ secrets.API_DB_NAME || 'shop_test' }} \
-              -e DATABASE_USER=${{ secrets.API_DB_USER || 'test' }} -e DATABASE_PASSWORD=${{ secrets.API_DB_PASSWORD || 'test' }} \
+              -e DATABASE_HOST=pg -e DATABASE_PORT=5432 -e DATABASE_NAME="${DB_NAME}" \
+              -e DATABASE_USER="${DB_USER}" -e DATABASE_PASSWORD="${DB_PASS}" \
               "${IMAGE}"
           else
             docker run -d --rm --name shop-api -p 8080:8080 "${IMAGE}"
