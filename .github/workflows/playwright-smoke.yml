@@ -79,11 +79,26 @@ jobs:
           CI: true
           API_BASE_URL: http://localhost:4000
         run: |
-          npx playwright test tests/cart-checkout.spec.ts --project=chromium --reporter=list || true
+          # Let Playwright use the reporters from frontend/playwright.config.ts
+          npx playwright test tests/cart-checkout.spec.ts --project=chromium || true
+
+      - name: List Playwright test-results
+        working-directory: frontend
+        if: always()
+        run: |
+          echo '--- ls -R test-results (frontend/test-results) ---'
+          ls -la test-results || echo 'no test-results directory'
+          echo '--- ls -R test-results/playwright-report ---'
+          ls -la test-results/playwright-report || echo 'no playwright-report directory'
+          if [ -f test-results/playwright-report/index.html ]; then
+            echo '--- first 40 lines of index.html ---'
+            head -n 40 test-results/playwright-report/index.html
+          fi
 
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-smoke-report
-          path: frontend/test-results || ''
+          # Upload everything under frontend/test-results (recursively)
+          path: frontend/test-results/**
