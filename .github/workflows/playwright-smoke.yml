@@ -99,17 +99,18 @@ jobs:
               if docker pull "${{ secrets.API_IMAGE }}"; then
                 echo "IMAGE=${{ secrets.API_IMAGE }}" >> $GITHUB_ENV
                 echo "Pulled remote image successfully"
-              else
+                else
                 echo "Pull failed; building local image 'shop-api-ci' as fallback"
-                # The Dockerfile now builds the JAR inside the image (multi-stage),
-                # so we can build the image directly without pre-packaging the artifact.
-                docker build -t shop-api-ci ./services/order-service
+                # Build using the repository root as the build context so Maven
+                # can resolve multi-module dependencies (reactor). The Dockerfile
+                # path is provided relative to repo root.
+                docker build -t shop-api-ci -f services/order-service/Dockerfile .
                 echo "IMAGE=shop-api-ci" >> $GITHUB_ENV
               fi
             else
               echo "API_IMAGE not set; building local image 'shop-api-ci'"
               # The Dockerfile builds the service artifact; build the image directly.
-              docker build -t shop-api-ci ./services/order-service
+              docker build -t shop-api-ci -f services/order-service/Dockerfile .
               echo "IMAGE=shop-api-ci" >> $GITHUB_ENV
             fi
           fi
