@@ -56,6 +56,7 @@ jobs:
           npx wait-on http://localhost:4000/health --silent --timeout 300000
 
       - name: Debug containers immediately after start
+        if: github.event_name == 'push'
         run: |
           echo '--- docker ps (immediately after backend start) ---'
           docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Image}}" || true
