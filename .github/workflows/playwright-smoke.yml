@@ -53,15 +53,31 @@ jobs:
       - name: Start frontend dev server
         working-directory: frontend
         run: |
-          npm run dev &
+          mkdir -p test-results/logs
+          # Persist frontend dev server stdout/stderr to a log file so CI artifacts include it
+          npm run dev > test-results/logs/frontend-dev.log 2>&1 &
           npx wait-on http://localhost:3000 --silent --timeout 45000
 
       - name: Start mock backend
         working-directory: frontend/mock-backend
         run: |
-          node server.js &
+          mkdir -p ../test-results/logs
+          # Persist mock backend stdout/stderr to a log file so CI artifacts include it
+          node server.js > ../test-results/logs/mock-backend.log 2>&1 &
           # Allow more time for the mock backend to initialize on busy runners
           npx wait-on http://localhost:4000/health --silent --timeout 300000
+
+      - name: Capture Docker / container logs into artifact folder
+        if: always()
+        run: |
+          mkdir -p frontend/test-results/logs
+          echo '--- docker ps -a ---' > frontend/test-results/logs/docker-ps.txt || true
+          docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Image}}" >> frontend/test-results/logs/docker-ps.txt || true
+          # Capture logs for common container names used in local CI (shop-api, pg)
+          docker logs --tail 500 shop-api > frontend/test-results/logs/shop-api.log 2>&1 || true
+          docker logs --tail 500 pg > frontend/test-results/logs/pg.log 2>&1 || true
+          # Capture any other container logs (best-effort)
+          docker ps -a --format '{{.Names}}' | xargs -r -I{} sh -c 'docker logs --tail 200 {} > frontend/test-results/logs/{}.log 2>&1 || true'
 
       - name: Debug containers immediately after start
         if: github.event_name == 'push'
