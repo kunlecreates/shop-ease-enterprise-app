@@ -79,6 +79,14 @@ jobs:
           # Capture any other container logs (best-effort)
           docker ps -a --format '{{.Names}}' | xargs -r -I{} sh -c 'docker logs --tail 200 {} > frontend/test-results/logs/{}.log 2>&1 || true'
 
+      - name: Save `docker ps -a` explicitly to artifact folder
+        if: always()
+        run: |
+          mkdir -p frontend/test-results/logs
+          echo '--- docker ps -a (explicit capture) ---' > frontend/test-results/logs/docker-ps.txt || true
+          # Use --no-trunc and include container IDs for robust identification; fall back gracefully if docker missing
+          (docker ps -a --no-trunc --format 'table {{.Names}}\t{{.ID}}\t{{.Status}}\t{{.Image}}' >> frontend/test-results/logs/docker-ps.txt) || echo 'docker command unavailable on runner' >> frontend/test-results/logs/docker-ps.txt
+
       - name: Debug containers immediately after start
         if: github.event_name == 'push'
         run: |
