@@ -1,7 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
-  testDir: './frontend/tests',
+  // `working-directory` in the CI job is `frontend`, so make paths relative to that
+  testDir: './tests',
   timeout: 30 * 1000,
   expect: {
     timeout: 5000,
@@ -12,7 +13,7 @@ export default defineConfig({
   workers: process.env.CI ? 2 : undefined,
   reporter: [
     ['list'],
-    ['html', { outputFolder: 'frontend/test-results/playwright-report', open: 'never' }],
+    ['html', { outputFolder: 'test-results/playwright-report', open: 'never' }],
   ],
   use: {
     headless: true,
