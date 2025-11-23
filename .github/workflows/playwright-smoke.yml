@@ -9,6 +9,7 @@ on:
     branches:
       - develop
       - 'release/**'
+  workflow_dispatch:
 
 jobs:
   smoke:
@@ -193,6 +194,16 @@ jobs:
         run: |
           mkdir -p test-results
           npx playwright test tests/cart-checkout.spec.ts --project=chromium --reporter=list || true
+
+      - name: Dump container logs for debugging
+        if: always()
+        run: |
+          mkdir -p frontend/test-results
+          echo '--- dump: shop-api logs ---' > frontend/test-results/shop-api.log
+          docker logs shop-api >> frontend/test-results/shop-api.log 2>&1 || echo 'no shop-api logs available' >> frontend/test-results/shop-api.log
+          echo '--- dump: pg logs ---' > frontend/test-results/pg.log
+          docker logs pg >> frontend/test-results/pg.log 2>&1 || echo 'no pg logs available' >> frontend/test-results/pg.log
+          ls -la frontend/test-results || true
 
       - name: Collect Playwright report
         if: always()
