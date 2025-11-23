@@ -43,10 +43,12 @@ jobs:
           npm run dev &
           npx wait-on http://localhost:3000 --silent --timeout 45000
 
-      - name: Start mock backend when API_IMAGE is not set
+      - name: Start mock backend for PR runs
         working-directory: frontend/mock-backend
         run: |
-          if [ -z "${{ secrets.API_IMAGE }}" ]; then
+          # For pull_request runs we use a fast mock backend instead of building/pulling images
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "PR run detected — starting mock backend"
             if [ -f package-lock.json ]; then
               npm ci
             else
@@ -55,90 +57,119 @@ jobs:
             npm start &
             npx wait-on http://localhost:4000/health --silent --timeout 60000
           else
-            echo "Skipping mock backend because API_IMAGE is set"
+            echo "Not a PR run; skipping mock backend"
           fi
 
-      - name: Validate `API_IMAGE` format (lowercase repository)
+      - name: Debug environment (print key variables and docker images)
         run: |
-          if [ -n "${{ secrets.API_IMAGE }}" ]; then
-            # Docker requires repository names to be lowercase. If the provided
-            # secret has uppercase characters, surface a clear error so the
-            # repository admin can fix the secret value.
-            if echo "${{ secrets.API_IMAGE }}" | grep -q '[A-Z]'; then
-              echo "ERROR: API_IMAGE contains uppercase characters. Docker repository names must be lowercase."
-              echo "Provided API_IMAGE (masked): ***"
-              echo "Please update the repository secret 'API_IMAGE' to a lowercase image reference (e.g. org/order-service:tag)."
-              exit 1
+          echo "--- DEBUG: GitHub event/context ---"
+          echo "EVENT=${{ github.event_name }}"
+          echo "REF=${{ github.ref }}"
+          echo "RUN_ID=${{ github.run_id }}"
+          echo "--- DEBUG: Secrets (masked) ---"
+          echo "API_IMAGE='${{ secrets.API_IMAGE }}'"
+          echo "API_DB_IMAGE='${{ secrets.API_DB_IMAGE }}'"
+          echo "--- DEBUG: Env ---"
+          env | sort
+          echo "--- DEBUG: Workspace files ---"
+          ls -la frontend || true
+          ls -la frontend/test-results || true
+          echo "--- DEBUG: Docker images present on runner ---"
+          docker images --format '{{.Repository}}:{{.Tag}}\t{{.ID}}' || true
+
+
+      - name: Ensure backend image available (pull or build fallback)
+        run: |
+          # Only attempt to pull/build backend images for non-PR runs (push to develop/release)
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "PR run — skipping image pull/build; mock backend will be used"
+          else
+            # Determine an image to use for the backend. Preference order:
+            # 1) If API_IMAGE secret is set, try to pull it
+            # 2) If pull fails or API_IMAGE isn't set, build a local image from the repo
+            if [ -n "${{ secrets.API_IMAGE }}" ]; then
+              echo "Trying to pull '${{ secrets.API_IMAGE }}' from registry..."
+              if docker pull "${{ secrets.API_IMAGE }}"; then
+                echo "IMAGE=${{ secrets.API_IMAGE }}" >> $GITHUB_ENV
+                echo "Pulled remote image successfully"
+              else
+                echo "Pull failed; building local image 'shop-api-ci' as fallback"
+                docker build -t shop-api-ci ./services/order-service
+                echo "IMAGE=shop-api-ci" >> $GITHUB_ENV
+              fi
+            else
+              echo "API_IMAGE not set; building local image 'shop-api-ci'"
+              docker build -t shop-api-ci ./services/order-service
+              echo "IMAGE=shop-api-ci" >> $GITHUB_ENV
             fi
-            echo "API_IMAGE looks lowercase; proceeding to pull"
-          else
-            echo "No API_IMAGE secret set; skipping docker pull and validation"
-          fi
-
-      - name: Pull backend image (prebuilt) when available
-        run: |
-          if [ -n "${{ secrets.API_IMAGE }}" ]; then
-            echo "Pulling backend image from registry..."
-            docker pull "${{ secrets.API_IMAGE }}"
-          else
-            echo "No API_IMAGE secret set; skipping docker pull"
           fi
 
       - name: Pull DB image (optional)
         run: |
-          if [ -n "${{ secrets.API_DB_IMAGE }}" ]; then
-            echo "Pulling database image from registry..."
-            docker pull "${{ secrets.API_DB_IMAGE }}"
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "PR run — skipping DB image pull"
           else
-            echo "No API_DB_IMAGE secret set; skipping db pull"
+            if [ -n "${{ secrets.API_DB_IMAGE }}" ]; then
+              echo "Pulling database image from registry..."
+              docker pull "${{ secrets.API_DB_IMAGE }}"
+            else
+              echo "No API_DB_IMAGE secret set; skipping db pull"
+            fi
           fi
 
-      - name: Start test docker network (if using prebuilt image)
+      - name: Start test docker network
         run: |
-          if [ -n "${{ secrets.API_IMAGE }}" ]; then
-            docker network create test-network || true
-          else
-            echo "Skipping docker network creation"
-          fi
+          # Create a dedicated network for test containers; idempotent
+          docker network create test-network || true
 
       - name: Run Postgres container (optional)
         run: |
-          if [ -n "${{ secrets.API_DB_IMAGE }}" ]; then
-            echo "Starting Postgres for tests..."
-            docker run -d --rm --name pg --network test-network -e POSTGRES_USER=${{ secrets.API_DB_USER || 'test' }} -e POSTGRES_PASSWORD=${{ secrets.API_DB_PASSWORD || 'test' }} -e POSTGRES_DB=${{ secrets.API_DB_NAME || 'shop_test' }} -p 5432:5432 "${{ secrets.API_DB_IMAGE }}"
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "PR run — skipping Postgres container"
           else
-            echo "No API_DB_IMAGE provided; skipping Postgres run"
-          fi
-
-      - name: Run backend container (prebuilt)
-        run: |
-          if [ -n "${{ secrets.API_IMAGE }}" ]; then
-            echo "Starting backend container from image ${{ secrets.API_IMAGE }}"
             if [ -n "${{ secrets.API_DB_IMAGE }}" ]; then
-              docker run -d --rm --name shop-api --network test-network -p 8080:8080 \
-                -e DATABASE_HOST=pg -e DATABASE_PORT=5432 -e DATABASE_NAME=${{ secrets.API_DB_NAME || 'shop_test' }} \
-                -e DATABASE_USER=${{ secrets.API_DB_USER || 'test' }} -e DATABASE_PASSWORD=${{ secrets.API_DB_PASSWORD || 'test' }} \
-                "${{ secrets.API_IMAGE }}"
+              echo "Starting Postgres for tests..."
+              docker run -d --rm --name pg --network test-network -e POSTGRES_USER=${{ secrets.API_DB_USER || 'test' }} -e POSTGRES_PASSWORD=${{ secrets.API_DB_PASSWORD || 'test' }} -e POSTGRES_DB=${{ secrets.API_DB_NAME || 'shop_test' }} -p 5432:5432 "${{ secrets.API_DB_IMAGE }}"
             else
-              docker run -d --rm --name shop-api -p 8080:8080 "${{ secrets.API_IMAGE }}"
+              echo "No API_DB_IMAGE provided; skipping Postgres run"
             fi
-          else
-            echo "API_IMAGE not set; skipping backend docker run"
           fi
 
-      - name: Wait for backend health if prebuilt image used
+      - name: Run backend container (pulled or built image)
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "PR run — skipping backend container startup"
+            exit 0
+          fi
+          if [ -z "${IMAGE}" ]; then
+            echo "ERROR: IMAGE not set; cannot start backend"
+            exit 1
+          fi
+          echo "Starting backend container from image ${IMAGE}"
+          if [ -n "${{ secrets.API_DB_IMAGE }}" ]; then
+            docker run -d --rm --name shop-api --network test-network -p 8080:8080 \
+              -e DATABASE_HOST=pg -e DATABASE_PORT=5432 -e DATABASE_NAME=${{ secrets.API_DB_NAME || 'shop_test' }} \
+              -e DATABASE_USER=${{ secrets.API_DB_USER || 'test' }} -e DATABASE_PASSWORD=${{ secrets.API_DB_PASSWORD || 'test' }} \
+              "${IMAGE}"
+          else
+            docker run -d --rm --name shop-api -p 8080:8080 "${IMAGE}"
+          fi
+
+      - name: Wait for backend health if backend container started
         working-directory: frontend
         run: |
-          if [ -n "${{ secrets.API_IMAGE }}" ]; then
+          # If we started a backend image (IMAGE is set), wait for its health endpoint.
+          if [ -n "${IMAGE}" ]; then
             echo "Waiting for backend health endpoint..."
             npx wait-on http://localhost:8080/health --silent --timeout 120000
           else
-            echo "No prebuilt backend used; skipping health wait"
+            echo "No backend container started; skipping health wait"
           fi
 
       - name: Configure API_BASE_URL
         run: |
-          if [ -n "${{ secrets.API_IMAGE }}" ]; then
+          # Prefer the backend container (port 8080) if started; otherwise use the mock backend on 4000
+          if [ -n "${IMAGE}" ]; then
             echo "API_BASE_URL=http://localhost:8080" >> $GITHUB_ENV
           else
             echo "API_BASE_URL=http://localhost:4000" >> $GITHUB_ENV
