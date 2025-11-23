@@ -130,6 +130,7 @@ jobs:
         with:
           name: playwright-smoke-report
           path: frontend/test-results
+<<<<<<< Updated upstream
 
       - name: Cleanup test containers
         if: always()
@@ -139,3 +140,5 @@ jobs:
           echo "Stopping pg (if running)" || true
           docker stop pg || true
           docker network rm test-network || true
+=======
+>>>>>>> Stashed changes
