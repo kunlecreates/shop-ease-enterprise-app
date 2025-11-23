@@ -2,8 +2,15 @@
 ### an externally-built artifact. This makes CI fallback builds reliable.
 
 # Builder: use an official Maven image with JDK 21 to build the service
-FROM maven:3.9.6-jdk-21 AS builder
+FROM eclipse-temurin:21-jdk AS builder
 WORKDIR /workspace
+
+# Install Maven in the builder image to avoid depending on a specific
+# pre-built `maven:` image tag that may not be present on all registries.
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && \
+	apt-get install -y --no-install-recommends maven && \
+	rm -rf /var/lib/apt/lists/*
 
 # Copy the repository into the build context. We intentionally copy the whole
 # workspace so multi-module Maven builds and relative parent POM references
