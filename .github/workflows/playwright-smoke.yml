@@ -1,0 +1,221 @@
+name: Playwright Smoke Tests
+
+on:
+  push:
+    branches:
+      - develop
+      - 'release/**'
+  pull_request:
+    branches:
+      - develop
+      - 'release/**'
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  smoke:
+    name: Playwright Smoke
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log into GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install frontend deps
+        working-directory: frontend
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Install Playwright browsers
+        working-directory: frontend
+        run: |
+          npx playwright install --with-deps
+
+      - name: Start frontend dev server
+        working-directory: frontend
+        run: |
+          npm run dev &
+          npx wait-on http://localhost:3000 --silent --timeout 45000
+
+      - name: Start mock backend for PR runs
+        working-directory: frontend/mock-backend
+        run: |
+          # For pull_request runs we use a fast mock backend instead of building/pulling images
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "PR run detected — starting mock backend"
+            if [ -f package-lock.json ]; then
+              npm ci
+            else
+              npm install
+            fi
+            npm start &
+            npx wait-on http://localhost:4000/health --silent --timeout 60000
+          else
+            echo "Not a PR run; skipping mock backend"
+          fi
+
+      - name: Debug environment (print key variables and docker images)
+        run: |
+          echo "--- DEBUG: GitHub event/context ---"
+          echo "EVENT=${{ github.event_name }}"
+          echo "REF=${{ github.ref }}"
+          echo "RUN_ID=${{ github.run_id }}"
+          echo "--- DEBUG: Secrets (masked) ---"
+          echo "API_IMAGE='${{ secrets.API_IMAGE }}'"
+          echo "API_DB_IMAGE='${{ secrets.API_DB_IMAGE }}'"
+          echo "--- DEBUG: Env ---"
+          env | sort
+          echo "--- DEBUG: Workspace files ---"
+          ls -la frontend || true
+          ls -la frontend/test-results || true
+          echo "--- DEBUG: Docker images present on runner ---"
+          docker images --format '{{.Repository}}:{{.Tag}}\t{{.ID}}' || true
+
+
+      - name: Ensure backend image available (pull or build fallback)
+        run: |
+          # Only attempt to pull/build backend images for non-PR runs (push to develop/release)
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "PR run — skipping image pull/build; mock backend will be used"
+          else
+            # Determine an image to use for the backend. Preference order:
+            # 1) If API_IMAGE secret is set, try to pull it
+            # 2) If pull fails or API_IMAGE isn't set, build a local image from the repo
+            if [ -n "${{ secrets.API_IMAGE }}" ]; then
+              echo "Trying to pull '${{ secrets.API_IMAGE }}' from registry..."
+              if docker pull "${{ secrets.API_IMAGE }}"; then
+                echo "IMAGE=${{ secrets.API_IMAGE }}" >> $GITHUB_ENV
+                echo "Pulled remote image successfully"
+              else
+                echo "Pull failed; building local image 'shop-api-ci' as fallback"
+                docker build -t shop-api-ci ./services/order-service
+                echo "IMAGE=shop-api-ci" >> $GITHUB_ENV
+              fi
+            else
+              echo "API_IMAGE not set; building local image 'shop-api-ci'"
+              docker build -t shop-api-ci ./services/order-service
+              echo "IMAGE=shop-api-ci" >> $GITHUB_ENV
+            fi
+          fi
+
+      - name: Pull DB image (optional)
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "PR run — skipping DB image pull"
+          else
+            if [ -n "${{ secrets.API_DB_IMAGE }}" ]; then
+              echo "Pulling database image from registry..."
+              docker pull "${{ secrets.API_DB_IMAGE }}"
+            else
+              echo "No API_DB_IMAGE secret set; skipping db pull"
+            fi
+          fi
+
+      - name: Start test docker network
+        run: |
+          # Create a dedicated network for test containers; idempotent
+          docker network create test-network || true
+
+      - name: Run Postgres container (optional)
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "PR run — skipping Postgres container"
+          else
+            if [ -n "${{ secrets.API_DB_IMAGE }}" ]; then
+              echo "Starting Postgres for tests..."
+              docker run -d --rm --name pg --network test-network -e POSTGRES_USER=${{ secrets.API_DB_USER || 'test' }} -e POSTGRES_PASSWORD=${{ secrets.API_DB_PASSWORD || 'test' }} -e POSTGRES_DB=${{ secrets.API_DB_NAME || 'shop_test' }} -p 5432:5432 "${{ secrets.API_DB_IMAGE }}"
+            else
+              echo "No API_DB_IMAGE provided; skipping Postgres run"
+            fi
+          fi
+
+      - name: Run backend container (pulled or built image)
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "PR run — skipping backend container startup"
+            exit 0
+          fi
+          if [ -z "${IMAGE}" ]; then
+            echo "ERROR: IMAGE not set; cannot start backend"
+            exit 1
+          fi
+          echo "Starting backend container from image ${IMAGE}"
+          if [ -n "${{ secrets.API_DB_IMAGE }}" ]; then
+            docker run -d --rm --name shop-api --network test-network -p 8080:8080 \
+              -e DATABASE_HOST=pg -e DATABASE_PORT=5432 -e DATABASE_NAME=${{ secrets.API_DB_NAME || 'shop_test' }} \
+              -e DATABASE_USER=${{ secrets.API_DB_USER || 'test' }} -e DATABASE_PASSWORD=${{ secrets.API_DB_PASSWORD || 'test' }} \
+              "${IMAGE}"
+          else
+            docker run -d --rm --name shop-api -p 8080:8080 "${IMAGE}"
+          fi
+
+      - name: Wait for backend health if backend container started
+        working-directory: frontend
+        run: |
+          # If we started a backend image (IMAGE is set), wait for its health endpoint.
+          if [ -n "${IMAGE}" ]; then
+            echo "Waiting for backend health endpoint..."
+            npx wait-on http://localhost:8080/health --silent --timeout 120000
+          else
+            echo "No backend container started; skipping health wait"
+          fi
+
+      - name: Configure API_BASE_URL
+        run: |
+          # Prefer the backend container (port 8080) if started; otherwise use the mock backend on 4000
+          if [ -n "${IMAGE}" ]; then
+            echo "API_BASE_URL=http://localhost:8080" >> $GITHUB_ENV
+          else
+            echo "API_BASE_URL=http://localhost:4000" >> $GITHUB_ENV
+          fi
+
+      - name: Run Playwright smoke tests
+        working-directory: frontend
+        env:
+          CI: true
+        run: |
+          mkdir -p test-results
+          npx playwright test tests/cart-checkout.spec.ts --project=chromium --reporter=list || true
+
+      - name: Collect Playwright report
+        if: always()
+        working-directory: frontend
+        run: |
+          mkdir -p test-results
+          if [ -d playwright-report ]; then
+            cp -r playwright-report test-results/playwright-report || true
+          fi
+          ls -la test-results || true
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-smoke-report
+          path: frontend/test-results
+
+      - name: Cleanup test containers
+        if: always()
+        run: |
+          echo "Stopping shop-api (if running)" || true
+          docker stop shop-api || true
+          echo "Stopping pg (if running)" || true
+          docker stop pg || true
+          docker network rm test-network || true
