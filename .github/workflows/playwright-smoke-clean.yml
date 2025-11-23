@@ -25,7 +25,7 @@ jobs:
         env:
           NODE_ENV: development
         run: |
-          mkdir -p "$GITHUB_WORKSPACE/frontend/test-results/logs"
+          mkdir -p "$GITHUB_WORKSPACE/playwright-debug-artifacts/live-logs"
           if [ -f package-lock.json ]; then
             npm ci --include=dev
           else
@@ -49,25 +49,25 @@ jobs:
       - name: Start frontend dev server (background)
         working-directory: frontend
         run: |
-          mkdir -p "$GITHUB_WORKSPACE/frontend/test-results/logs"
-          nohup bash -lc "npm run dev" > "$GITHUB_WORKSPACE/frontend/test-results/logs/frontend-dev.log" 2>&1 &
+          mkdir -p "$GITHUB_WORKSPACE/playwright-debug-artifacts/live-logs"
+          nohup bash -lc "npm run dev" > "$GITHUB_WORKSPACE/playwright-debug-artifacts/live-logs/frontend-dev.log" 2>&1 &
           npx wait-on http://localhost:3000 --silent --timeout 45000
-          echo '--- frontend logs ---'
-          ls -la "$GITHUB_WORKSPACE/frontend/test-results/logs" || true
+          echo '--- frontend live-logs ---'
+          ls -la "$GITHUB_WORKSPACE/playwright-debug-artifacts/live-logs" || true
 
       - name: Start mock backend (background)
         working-directory: frontend/mock-backend
         run: |
-          mkdir -p "$GITHUB_WORKSPACE/frontend/test-results/logs"
-          nohup bash -lc "node server.js" > "$GITHUB_WORKSPACE/frontend/test-results/logs/mock-backend.log" 2>&1 &
+          mkdir -p "$GITHUB_WORKSPACE/playwright-debug-artifacts/live-logs"
+          nohup bash -lc "node server.js" > "$GITHUB_WORKSPACE/playwright-debug-artifacts/live-logs/mock-backend.log" 2>&1 &
           npx wait-on http://localhost:4000/health --silent --timeout 300000
-          echo '--- mock-backend logs ---'
-          ls -la "$GITHUB_WORKSPACE/frontend/test-results/logs" || true
+          echo '--- mock-backend live-logs ---'
+          ls -la "$GITHUB_WORKSPACE/playwright-debug-artifacts/live-logs" || true
 
       - name: Start Postgres (docker) and run Flyway migrations (best-effort)
         if: always()
         run: |
-          mkdir -p "$GITHUB_WORKSPACE/frontend/test-results/logs"
+          mkdir -p "$GITHUB_WORKSPACE/playwright-debug-artifacts/live-logs"
           echo 'Starting Postgres container for CI (ci-pg)'
           docker network create ci-net 2>/dev/null || true
           docker run -d --name ci-pg --net ci-net -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=test postgres:15 || true
@@ -75,31 +75,31 @@ jobs:
           for i in {1..30}; do
             docker exec ci-pg pg_isready -U postgres >/dev/null 2>&1 && break || sleep 2
           done
-          echo 'Attempting Flyway migrate (best-effort) and saving output to $GITHUB_WORKSPACE/frontend/test-results/logs/pg.log'
+          echo 'Attempting Flyway migrate (best-effort) and saving output to $GITHUB_WORKSPACE/playwright-debug-artifacts/live-logs/pg.log'
           # If repository contains SQL migrations under db/ or services/*/migrations, mount them; otherwise attempt migrate (may be no-op)
-          docker run --rm --net ci-net -v "$PWD/db:/flyway/sql" flyway/flyway -url=jdbc:postgresql://ci-pg:5432/test -user=postgres -password=postgres migrate > "$GITHUB_WORKSPACE/frontend/test-results/logs/pg.log" 2>&1 || true
+          docker run --rm --net ci-net -v "$PWD/db:/flyway/sql" flyway/flyway -url=jdbc:postgresql://ci-pg:5432/test -user=postgres -password=postgres migrate > "$GITHUB_WORKSPACE/playwright-debug-artifacts/live-logs/pg.log" 2>&1 || true
           # Always capture postgres container logs
-          docker logs --tail 500 ci-pg > "$GITHUB_WORKSPACE/frontend/test-results/logs/pg-container.log" 2>&1 || true
-          echo '--- postgres logs after flyway ---'
-          ls -la "$GITHUB_WORKSPACE/frontend/test-results/logs" || true
-          tail -n +1 "$GITHUB_WORKSPACE/frontend/test-results/logs/pg.log" | sed -n '1,200p' || true
+          docker logs --tail 500 ci-pg > "$GITHUB_WORKSPACE/playwright-debug-artifacts/live-logs/pg-container.log" 2>&1 || true
+          echo '--- postgres live-logs after flyway ---'
+          ls -la "$GITHUB_WORKSPACE/playwright-debug-artifacts/live-logs" || true
+          tail -n +1 "$GITHUB_WORKSPACE/playwright-debug-artifacts/live-logs/pg.log" | sed -n '1,200p' || true
 
       - name: Runner diagnostics and container logs (best-effort)
         if: always()
         run: |
-          mkdir -p "$GITHUB_WORKSPACE/frontend/test-results/logs"
-          echo '--- which docker ---' > "$GITHUB_WORKSPACE/frontend/test-results/logs/runner-system-info.txt" || true
-          which docker >> "$GITHUB_WORKSPACE/frontend/test-results/logs/runner-system-info.txt" 2>&1 || true
-          docker version >> "$GITHUB_WORKSPACE/frontend/test-results/logs/runner-system-info.txt" 2>&1 || true
-          ps aux | grep node >> "$GITHUB_WORKSPACE/frontend/test-results/logs/runner-system-info.txt" 2>&1 || true
-          ss -ltnp >> "$GITHUB_WORKSPACE/frontend/test-results/logs/runner-system-info.txt" 2>&1 || true
-          lsof -i -P -n >> "$GITHUB_WORKSPACE/frontend/test-results/logs/runner-system-info.txt" 2>&1 || true
-          env | grep -E 'GITHUB_WORKSPACE|GITHUB_RUN_ID|CI|NODE' >> "$GITHUB_WORKSPACE/frontend/test-results/logs/runner-system-info.txt" 2>&1 || true
-          docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Image}}" > "$GITHUB_WORKSPACE/frontend/test-results/logs/docker-ps.txt" || true
-          docker logs --tail 500 shop-api > "$GITHUB_WORKSPACE/frontend/test-results/logs/shop-api.log" 2>&1 || true
-          docker logs --tail 500 ci-pg > "$GITHUB_WORKSPACE/frontend/test-results/logs/pg-container.log" 2>&1 || true
-          echo '--- runner log list ---'
-          ls -la "$GITHUB_WORKSPACE/frontend/test-results/logs" || true
+          mkdir -p "$GITHUB_WORKSPACE/playwright-debug-artifacts/live-logs"
+          echo '--- which docker ---' > "$GITHUB_WORKSPACE/playwright-debug-artifacts/live-logs/runner-system-info.txt" || true
+          which docker >> "$GITHUB_WORKSPACE/playwright-debug-artifacts/live-logs/runner-system-info.txt" 2>&1 || true
+          docker version >> "$GITHUB_WORKSPACE/playwright-debug-artifacts/live-logs/runner-system-info.txt" 2>&1 || true
+          ps aux | grep node >> "$GITHUB_WORKSPACE/playwright-debug-artifacts/live-logs/runner-system-info.txt" 2>&1 || true
+          ss -ltnp >> "$GITHUB_WORKSPACE/playwright-debug-artifacts/live-logs/runner-system-info.txt" 2>&1 || true
+          lsof -i -P -n >> "$GITHUB_WORKSPACE/playwright-debug-artifacts/live-logs/runner-system-info.txt" 2>&1 || true
+          env | grep -E 'GITHUB_WORKSPACE|GITHUB_RUN_ID|CI|NODE' >> "$GITHUB_WORKSPACE/playwright-debug-artifacts/live-logs/runner-system-info.txt" 2>&1 || true
+          docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Image}}" > "$GITHUB_WORKSPACE/playwright-debug-artifacts/live-logs/docker-ps.txt" || true
+          docker logs --tail 500 shop-api > "$GITHUB_WORKSPACE/playwright-debug-artifacts/live-logs/shop-api.log" 2>&1 || true
+          docker logs --tail 500 ci-pg > "$GITHUB_WORKSPACE/playwright-debug-artifacts/live-logs/pg-container.log" 2>&1 || true
+          echo '--- runner live-log list ---'
+          ls -la "$GITHUB_WORKSPACE/playwright-debug-artifacts/live-logs" || true
 
       - name: Run Playwright smoke tests
         working-directory: frontend
@@ -107,8 +107,8 @@ jobs:
           CI: true
           API_BASE_URL: http://localhost:4000
         run: |
-          echo '--- before playwright: list logs ---'
-          ls -la "$GITHUB_WORKSPACE/frontend/test-results/logs" || true
+          echo '--- before playwright: list live-logs ---'
+          ls -la "$GITHUB_WORKSPACE/playwright-debug-artifacts/live-logs" || true
           npx playwright test tests/cart-checkout.spec.ts --project=chromium || true
 
       - name: Consolidate debug artifacts (guarantee preserved)
