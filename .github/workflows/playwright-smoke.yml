@@ -101,17 +101,14 @@ jobs:
                 echo "Pulled remote image successfully"
               else
                 echo "Pull failed; building local image 'shop-api-ci' as fallback"
-                # Install shared test-utils so the order-service test-scoped dependency is resolvable
-                mvn -B -DskipTests -f services/test-utils/pom.xml install
-                mvn -B -DskipTests -f services/order-service/pom.xml package
+                # The Dockerfile now builds the JAR inside the image (multi-stage),
+                # so we can build the image directly without pre-packaging the artifact.
                 docker build -t shop-api-ci ./services/order-service
                 echo "IMAGE=shop-api-ci" >> $GITHUB_ENV
               fi
             else
               echo "API_IMAGE not set; building local image 'shop-api-ci'"
-              # Ensure shared test-utils is installed into the local maven repo first
-              mvn -B -DskipTests -f services/test-utils/pom.xml install
-              mvn -B -DskipTests -f services/order-service/pom.xml package
+              # The Dockerfile builds the service artifact; build the image directly.
               docker build -t shop-api-ci ./services/order-service
               echo "IMAGE=shop-api-ci" >> $GITHUB_ENV
             fi
