@@ -124,16 +124,25 @@ jobs:
             fi
           fi
 
-      - name: Pull DB image (optional)
+      - name: Configure DB image (pull or default)
         run: |
+          # Determine DB image to use. For PR runs we skip DB entirely.
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "PR run — skipping DB image pull"
+            echo "PR run — skipping DB image configuration"
+            echo "DB_IMAGE=" >> $GITHUB_ENV
           else
             if [ -n "${{ secrets.API_DB_IMAGE }}" ]; then
-              echo "Pulling database image from registry..."
-              docker pull "${{ secrets.API_DB_IMAGE }}"
+              echo "Using provided API_DB_IMAGE='${{ secrets.API_DB_IMAGE }}' — attempting pull..."
+              if docker pull "${{ secrets.API_DB_IMAGE }}"; then
+                echo "DB_IMAGE=${{ secrets.API_DB_IMAGE }}" >> $GITHUB_ENV
+                echo "Pulled DB image successfully"
+              else
+                echo "Failed to pull provided DB image; falling back to official 'postgres:15'"
+                echo "DB_IMAGE=postgres:15" >> $GITHUB_ENV
+              fi
             else
-              echo "No API_DB_IMAGE secret set; skipping db pull"
+              echo "No API_DB_IMAGE specified; using official 'postgres:15'"
+              echo "DB_IMAGE=postgres:15" >> $GITHUB_ENV
             fi
           fi
 
@@ -146,14 +155,26 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             echo "PR run — skipping Postgres container"
-          else
-            if [ -n "${{ secrets.API_DB_IMAGE }}" ]; then
-              echo "Starting Postgres for tests..."
-              docker run -d --rm --name pg --network test-network -e POSTGRES_USER=${{ secrets.API_DB_USER || 'test' }} -e POSTGRES_PASSWORD=${{ secrets.API_DB_PASSWORD || 'test' }} -e POSTGRES_DB=${{ secrets.API_DB_NAME || 'shop_test' }} -p 5432:5432 "${{ secrets.API_DB_IMAGE }}"
-            else
-              echo "No API_DB_IMAGE provided; skipping Postgres run"
-            fi
+            exit 0
           fi
+
+          # Read DB_IMAGE set earlier and fail if somehow empty
+          if [ -z "${DB_IMAGE}" ]; then
+            echo "ERROR: DB_IMAGE is not configured; cannot start Postgres"
+            exit 1
+          fi
+
+          # Evaluate DB credentials with sensible defaults
+          DB_USER="${{ secrets.API_DB_USER }}"
+          DB_USER=${DB_USER:-test}
+          DB_PASS="${{ secrets.API_DB_PASSWORD }}"
+          DB_PASS=${DB_PASS:-test}
+          DB_NAME="${{ secrets.API_DB_NAME }}"
+          DB_NAME=${DB_NAME:-shop_test}
+
+          echo "Starting Postgres container from image ${DB_IMAGE}"
+          docker run -d --rm --name pg --network test-network \
+            -e POSTGRES_USER=${DB_USER} -e POSTGRES_PASSWORD=${DB_PASS} -e POSTGRES_DB=${DB_NAME} -p 5432:5432 "${DB_IMAGE}"
 
       - name: Run backend container (pulled or built image)
         run: |
