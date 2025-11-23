@@ -61,6 +61,7 @@ jobs:
         run: |
           echo "Pulling backend image from registry..."
           docker pull "${{ secrets.API_IMAGE }}"
+
       - name: Pull DB image (optional)
         if: ${{ secrets.API_DB_IMAGE != '' }}
         run: |
@@ -114,23 +115,12 @@ jobs:
           mkdir -p test-results
           npx playwright test tests/cart-checkout.spec.ts --project=chromium --reporter=list || true
 
-      - name: Collect Playwright report
-        if: always()
-        working-directory: frontend
-        run: |
-          mkdir -p test-results
-          if [ -d playwright-report ]; then
-            cp -r playwright-report test-results/playwright-report || true
-          fi
-          ls -la test-results || true
-
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-smoke-report
           path: frontend/test-results
-<<<<<<< Updated upstream
 
       - name: Cleanup test containers
         if: always()
@@ -140,5 +130,3 @@ jobs:
           echo "Stopping pg (if running)" || true
           docker stop pg || true
           docker network rm test-network || true
-=======
->>>>>>> Stashed changes
