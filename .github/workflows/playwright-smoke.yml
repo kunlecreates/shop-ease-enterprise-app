@@ -136,10 +136,24 @@ jobs:
             head -n 40 test-results/playwright-report/index.html
           fi
 
+      - name: Consolidate debug artifacts (guarantee preserved)
+        if: always()
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/playwright-debug-artifacts/logs"
+          # Copy any collected logs into a separate folder that Playwright won't clear
+          cp -a "$GITHUB_WORKSPACE/frontend/test-results/logs/." "$GITHUB_WORKSPACE/playwright-debug-artifacts/logs/" 2>/dev/null || true
+          # Also copy the HTML report for easy viewing
+          cp -a "$GITHUB_WORKSPACE/frontend/test-results/playwright-report" "$GITHUB_WORKSPACE/playwright-debug-artifacts/" 2>/dev/null || true
+          echo '--- playwright-debug-artifacts contents ---'
+          ls -la "$GITHUB_WORKSPACE/playwright-debug-artifacts" || true
+          ls -la "$GITHUB_WORKSPACE/playwright-debug-artifacts/logs" || true
+
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-smoke-report
-          # Upload everything under frontend/test-results (recursively)
-          path: frontend/test-results/**
+          # Upload everything under frontend/test-results and preserved debug artifacts
+          path: |
+            frontend/test-results/**
+            playwright-debug-artifacts/**
