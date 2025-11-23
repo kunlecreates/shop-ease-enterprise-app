@@ -108,12 +108,27 @@ jobs:
             echo "PR run — skipping image pull/build; mock backend will be used"
           else
             # Determine an image to use for the backend. Preference order:
-            # 1) If API_IMAGE secret is set, try to pull it
-            # 2) If pull fails or API_IMAGE isn't set, build a local image from the repo
-            if [ -n "${{ secrets.API_IMAGE }}" ]; then
-              echo "Trying to pull '${{ secrets.API_IMAGE }}' from registry..."
-              if docker pull "${{ secrets.API_IMAGE }}"; then
-                echo "IMAGE=${{ secrets.API_IMAGE }}" >> $GITHUB_ENV
+            # 1) If API_IMAGE secret is set and not a placeholder, try to pull it
+            # 2) If pull fails or API_IMAGE isn't set/placeholder, build a local image from the repo
+            API_IMAGE_RAW="${{ secrets.API_IMAGE }}"
+
+            is_placeholder() {
+              # Detect common placeholder patterns: empty, short, or containing typical placeholder tokens
+              local v="$1"
+              if [ -z "$v" ]; then
+                return 0
+              fi
+              # too short to be a valid image name
+              if [ ${#v} -lt 5 ]; then
+                return 0
+              fi
+              echo "$v" | grep -Ei "REPLACE|PLACEHOLDER|<|\*\*\*|example|your-image" >/dev/null 2>&1 && return 0 || return 1
+            }
+
+            if ! is_placeholder "$API_IMAGE_RAW"; then
+              echo "Attempting to pull API_IMAGE='$API_IMAGE_RAW' from registry..."
+              if docker pull "$API_IMAGE_RAW"; then
+                echo "IMAGE=$API_IMAGE_RAW" >> $GITHUB_ENV
                 echo "Pulled remote image successfully"
               else
                 echo "Pull failed; building local image 'shop-api-ci' as fallback"
@@ -121,7 +136,7 @@ jobs:
                 echo "IMAGE=shop-api-ci" >> $GITHUB_ENV
               fi
             else
-              echo "API_IMAGE not set; building local image 'shop-api-ci'"
+              echo "API_IMAGE is not set or appears to be a placeholder ('$API_IMAGE_RAW'); building local image 'shop-api-ci'"
               docker build -t shop-api-ci ./services/order-service
               echo "IMAGE=shop-api-ci" >> $GITHUB_ENV
             fi
@@ -134,17 +149,30 @@ jobs:
             echo "PR run — skipping DB image configuration"
             echo "DB_IMAGE=" >> $GITHUB_ENV
           else
-            if [ -n "${{ secrets.API_DB_IMAGE }}" ]; then
-              echo "Using provided API_DB_IMAGE='${{ secrets.API_DB_IMAGE }}' — attempting pull..."
-              if docker pull "${{ secrets.API_DB_IMAGE }}"; then
-                echo "DB_IMAGE=${{ secrets.API_DB_IMAGE }}" >> $GITHUB_ENV
+            DB_IMAGE_RAW="${{ secrets.API_DB_IMAGE }}"
+
+            is_placeholder() {
+              local v="$1"
+              if [ -z "$v" ]; then
+                return 0
+              fi
+              if [ ${#v} -lt 5 ]; then
+                return 0
+              fi
+              echo "$v" | grep -Ei "REPLACE|PLACEHOLDER|<|\*\*\*|example|your-image" >/dev/null 2>&1 && return 0 || return 1
+            }
+
+            if ! is_placeholder "$DB_IMAGE_RAW"; then
+              echo "Attempting to pull API_DB_IMAGE='$DB_IMAGE_RAW' from registry..."
+              if docker pull "$DB_IMAGE_RAW"; then
+                echo "DB_IMAGE=$DB_IMAGE_RAW" >> $GITHUB_ENV
                 echo "Pulled DB image successfully"
               else
                 echo "Failed to pull provided DB image; falling back to official 'postgres:15'"
                 echo "DB_IMAGE=postgres:15" >> $GITHUB_ENV
               fi
             else
-              echo "No API_DB_IMAGE specified; using official 'postgres:15'"
+              echo "API_DB_IMAGE is not set or appears to be a placeholder ('$DB_IMAGE_RAW'); using official 'postgres:15'"
               echo "DB_IMAGE=postgres:15" >> $GITHUB_ENV
             fi
           fi
