@@ -56,13 +56,22 @@ RUN set -eux; \
 
 # Runtime image: slim JRE
 FROM eclipse-temurin:21-jre-alpine AS runtime
+
+# Copy the built JAR from the builder stage into the runtime image
 WORKDIR /app
+
+# Runtime JVM options and server port (ensure container and workflow agree on 8080)
 ENV JAVA_OPTS="-XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"
+ENV SERVER_PORT=8080
 
 # Copy the built JAR from the builder stage into the runtime image
 COPY --from=builder /workspace/artifacts/app.jar app.jar
 
 # Use a non-root user where possible
 USER 1000
-EXPOSE 8083
-ENTRYPOINT ["sh","-c","java $JAVA_OPTS -jar app.jar"]
+
+# The application listens on port 8080 in CI and the workflow maps host:8080->container:8080
+EXPOSE 8080
+
+# Start the JVM and pass the server port explicitly to avoid mismatched EXPOSE vs runtime binding
+ENTRYPOINT ["sh","-c","java $JAVA_OPTS -Dserver.port=${SERVER_PORT} -jar app.jar"]
