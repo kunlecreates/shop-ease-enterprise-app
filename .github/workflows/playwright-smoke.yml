@@ -78,6 +78,13 @@ jobs:
           docker images --format '{{.Repository}}:{{.Tag}}\t{{.ID}}' || true
 
 
+      - name: Setup Java and Maven
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'maven'
+
       - name: Ensure backend image available (pull or build fallback)
         run: |
           # Only attempt to pull/build backend images for non-PR runs (push to develop/release)
@@ -94,11 +101,13 @@ jobs:
                 echo "Pulled remote image successfully"
               else
                 echo "Pull failed; building local image 'shop-api-ci' as fallback"
+                mvn -B -DskipTests package -f ./services/order-service/pom.xml
                 docker build -t shop-api-ci ./services/order-service
                 echo "IMAGE=shop-api-ci" >> $GITHUB_ENV
               fi
             else
               echo "API_IMAGE not set; building local image 'shop-api-ci'"
+              mvn -B -DskipTests package -f ./services/order-service/pom.xml
               docker build -t shop-api-ci ./services/order-service
               echo "IMAGE=shop-api-ci" >> $GITHUB_ENV
             fi
