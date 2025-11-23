@@ -101,13 +101,17 @@ jobs:
                 echo "Pulled remote image successfully"
               else
                 echo "Pull failed; building local image 'shop-api-ci' as fallback"
-                mvn -B -DskipTests -pl services/order-service -am package
+                # Install shared test-utils so the order-service test-scoped dependency is resolvable
+                mvn -B -DskipTests -f services/test-utils/pom.xml install
+                mvn -B -DskipTests -f services/order-service/pom.xml package
                 docker build -t shop-api-ci ./services/order-service
                 echo "IMAGE=shop-api-ci" >> $GITHUB_ENV
               fi
             else
               echo "API_IMAGE not set; building local image 'shop-api-ci'"
-              mvn -B -DskipTests -pl services/order-service -am package
+              # Ensure shared test-utils is installed into the local maven repo first
+              mvn -B -DskipTests -f services/test-utils/pom.xml install
+              mvn -B -DskipTests -f services/order-service/pom.xml package
               docker build -t shop-api-ci ./services/order-service
               echo "IMAGE=shop-api-ci" >> $GITHUB_ENV
             fi
