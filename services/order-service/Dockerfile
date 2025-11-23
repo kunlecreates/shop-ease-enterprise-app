@@ -31,8 +31,16 @@ COPY . /workspace
 # the runtime stage can always pick it up.
 RUN set -eux; \
 	if [ -f /workspace/pom.xml ]; then \
+		# If a top-level reactor POM exists, build the reactor (includes all modules)
 		mvn -B -DskipTests -f /workspace/pom.xml package; \
 	elif [ -f /workspace/services/order-service/pom.xml ]; then \
+		# If building from the repo root (common in CI), some sibling modules
+		# (e.g., services/test-utils) may be required as dependencies. Install
+		# known local test modules into the local Maven repo first so the
+		# service module can resolve them during its package phase.
+		if [ -f /workspace/services/test-utils/pom.xml ]; then \
+			mvn -B -DskipTests -f /workspace/services/test-utils/pom.xml install; \
+		fi; \
 		mvn -B -DskipTests -f /workspace/services/order-service/pom.xml package; \
 	else \
 		echo "No recognizable POM found in build context" >&2; exit 1; \
