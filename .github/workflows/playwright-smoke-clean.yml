@@ -50,12 +50,21 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Run all integration tests (maven failsafe across reactor)
+      - name: Run integration tests per Maven module under `services/`
         run: |
           set -euo pipefail
-          echo 'Running repository-wide integration tests (maven failsafe via verify)'
-          # Run verify to execute integration tests (Failsafe plugin). Unit tests are skipped to save time.
-          mvn -B -V -DskipTests verify
+          echo 'Discovering Maven modules under services/ and running verify (integration tests)'
+          found=0
+          for dir in services/*; do
+            if [ -f "$dir/pom.xml" ]; then
+              found=1
+              echo "Running mvn verify in $dir"
+              (cd "$dir" && mvn -B -V -DskipTests verify) || { echo "mvn verify failed in $dir"; exit 1; }
+            fi
+          done
+          if [ "$found" -eq 0 ]; then
+            echo 'No Maven modules found under services/; nothing to run.'
+          fi
 
       - name: Upload integration test reports (if any)
         if: always()
