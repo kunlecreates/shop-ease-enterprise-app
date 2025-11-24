@@ -37,7 +37,7 @@ jobs:
 
   
   integration-tests:
-    name: Order Service Integration Tests (Testcontainers)
+    name: Service Integration Tests (per-module mvn verify)
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -227,7 +227,66 @@ jobs:
           CI: true
           API_BASE_URL: http://localhost:4000
         run: |
-          npx playwright test tests/cart-checkout.spec.ts --project=chromium || true
+          mkdir -p "$GITHUB_WORKSPACE/playwright-debug-artifacts/live-logs"
+          echo 'Running Playwright smoke tests (output streamed to live-logs/playwright-cli.log)'
+          # Use a compact console reporter and still generate the HTML report.
+          # Pipe CLI output to a file to avoid flooding the workflow logs.
+          # Use the JSON reporter as well so we have machine-readable output.
+          # Redirect output to a log file (do not tee to console) to avoid flooding workflow logs.
+          npx playwright test tests/cart-checkout.spec.ts --project=chromium --workers=1 --reporter=dot,json,html > "$GITHUB_WORKSPACE/playwright-debug-artifacts/live-logs/playwright-cli.log" 2>&1 || true
+          # Playwright writes the HTML report to 'playwright-report' by default. Copy report locations we commonly see into the debug-artifacts area.
+          if [ -d "playwright-report" ]; then
+            cp -a playwright-report "$GITHUB_WORKSPACE/playwright-debug-artifacts/playwright-report" || true
+          fi
+          if [ -d "test-results/playwright-report" ]; then
+            cp -a test-results/playwright-report "$GITHUB_WORKSPACE/playwright-debug-artifacts/playwright-report" || true
+          fi
+
+      - name: Summarize Playwright HTML report (safe, small output)
+        if: always()
+        run: |
+          set -euo pipefail
+          OUTDIR="$GITHUB_WORKSPACE/playwright-debug-artifacts/logs/playwright-report-summary"
+          mkdir -p "$OUTDIR"
+          # prefer copied report in debug-artifacts, fallback to common locations
+          if [ -f "$GITHUB_WORKSPACE/playwright-debug-artifacts/playwright-report/index.html" ]; then
+            REPORT_HTML="$GITHUB_WORKSPACE/playwright-debug-artifacts/playwright-report/index.html"
+          elif [ -f "$GITHUB_WORKSPACE/frontend/test-results/playwright-report/index.html" ]; then
+            REPORT_HTML="$GITHUB_WORKSPACE/frontend/test-results/playwright-report/index.html"
+          else
+            REPORT_HTML=""
+          fi
+          if [ -z "$REPORT_HTML" ] || [ ! -f "$REPORT_HTML" ]; then
+            echo 'No Playwright HTML report found to summarize' > "$OUTDIR/notice.txt"
+            exit 0
+          fi
+          export REPORT_HTML="$REPORT_HTML"
+          export OUTDIR="$OUTDIR"
+            # Use helper script to safely summarize the HTML report without printing large data
+            python3 scripts/summarize_playwright_report.py "$REPORT_HTML" "$OUTDIR" || true
+
+      - name: Copy Playwright report.json into artifacts (if present)
+        if: always()
+        run: |
+          # Copy Playwright json report into the consolidated logs folder so it is uploaded.
+          mkdir -p "$GITHUB_WORKSPACE/playwright-debug-artifacts/logs"
+          if [ -f "$GITHUB_WORKSPACE/playwright-debug-artifacts/playwright-report/report.json" ]; then
+            cp "$GITHUB_WORKSPACE/playwright-debug-artifacts/playwright-report/report.json" "$GITHUB_WORKSPACE/playwright-debug-artifacts/logs/report.json" || true
+          elif [ -f "$GITHUB_WORKSPACE/frontend/test-results/playwright-report/report.json" ]; then
+            cp "$GITHUB_WORKSPACE/frontend/test-results/playwright-report/report.json" "$GITHUB_WORKSPACE/playwright-debug-artifacts/logs/report.json" || true
+          else
+            echo 'no report.json found to copy' > "$GITHUB_WORKSPACE/playwright-debug-artifacts/logs/report-not-found.txt" || true
+          fi
+
+      - name: Echo compact Playwright summary to logs
+        if: always()
+        run: |
+          SUMMARY_FILE="$GITHUB_WORKSPACE/playwright-debug-artifacts/logs/playwright-report-summary/summary.json"
+          if [ -f "$SUMMARY_FILE" ]; then
+            python3 scripts/echo_playwright_summary.py "$SUMMARY_FILE"
+          else
+            echo 'Playwright summary: not found'
+          fi
 
       - name: Consolidate debug artifacts (guarantee preserved)
         if: always()
@@ -260,4 +319,4 @@ jobs:
           name: playwright-smoke-report-clean
           path: |
             playwright-debug-artifacts/**
-            frontend/**
+            frontend/test-results/playwright-report/**
