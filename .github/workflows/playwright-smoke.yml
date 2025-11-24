@@ -1,0 +1,392 @@
+name: Playwright Smoke Tests
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: ['**']
+  workflow_dispatch: {}
+
+jobs:
+  smoke:
+    name: Playwright Smoke
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install frontend deps (including dev)
+        working-directory: frontend
+        env:
+          NODE_ENV: development
+        run: |
+          mkdir -p test-results/logs
+          if [ -f package-lock.json ]; then
+            npm ci --include=dev
+          else
+            npm install --include=dev
+          fi
+
+      - name: Install mock backend deps
+        working-directory: frontend/mock-backend
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      name: Playwright Smoke Tests
+
+      on:
+        push:
+          branches: ['**']
+        pull_request:
+          branches: ['**']
+        workflow_dispatch: {}
+
+      jobs:
+        smoke:
+          name: Playwright Smoke
+          runs-on: ubuntu-latest
+          steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Use Node.js 20
+              uses: actions/setup-node@v4
+              with:
+                node-version: '20'
+
+            - name: Install frontend deps (including dev)
+              working-directory: frontend
+              env:
+                NODE_ENV: development
+              run: |
+                mkdir -p test-results/logs
+                if [ -f package-lock.json ]; then
+                  npm ci --include=dev
+                else
+                  npm install --include=dev
+                fi
+
+            - name: Install mock backend deps
+              working-directory: frontend/mock-backend
+              run: |
+                if [ -f package-lock.json ]; then
+                  npm ci
+                else
+                  npm install
+                fi
+
+            - name: Install Playwright browsers
+              working-directory: frontend
+              run: |
+                npx playwright install --with-deps
+
+            - name: Start frontend dev server (background)
+              working-directory: frontend
+              run: |
+                mkdir -p test-results/logs
+                nohup bash -lc "npm run dev" > test-results/logs/frontend-dev.log 2>&1 &
+                echo "Waiting for frontend http://localhost:3000..."
+                npx wait-on http://localhost:3000 --silent --timeout 45000
+
+            - name: Start mock backend (background)
+              working-directory: frontend/mock-backend
+              run: |
+                mkdir -p ../frontend/test-results/logs
+                nohup bash -lc "node server.js" > ../frontend/test-results/logs/mock-backend.log 2>&1 &
+                echo "Waiting for mock backend http://localhost:4000/health..."
+                npx wait-on http://localhost:4000/health --silent --timeout 300000
+
+            - name: Runner diagnostics and container logs (best-effort)
+              if: always()
+              run: |
+                mkdir -p frontend/test-results/logs
+                echo '--- which docker ---' > frontend/test-results/logs/runner-system-info.txt || true
+                which docker >> frontend/test-results/logs/runner-system-info.txt 2>&1 || true
+                echo '--- docker version ---' >> frontend/test-results/logs/runner-system-info.txt 2>&1 || true
+                docker version >> frontend/test-results/logs/runner-system-info.txt 2>&1 || true
+                echo '--- ps aux | grep node ---' >> frontend/test-results/logs/runner-system-info.txt 2>&1 || true
+                ps aux | grep node >> frontend/test-results/logs/runner-system-info.txt 2>&1 || true
+                echo '--- ss -ltnp (net listeners) ---' >> frontend/test-results/logs/runner-system-info.txt 2>&1 || true
+                ss -ltnp >> frontend/test-results/logs/runner-system-info.txt 2>&1 || true
+                echo '--- lsof -i -P -n (network sockets) ---' >> frontend/test-results/logs/runner-system-info.txt 2>&1 || true
+                lsof -i -P -n >> frontend/test-results/logs/runner-system-info.txt 2>&1 || true
+                echo '--- env (partial) ---' >> frontend/test-results/logs/runner-system-info.txt 2>&1 || true
+                env | grep -E 'GITHUB_WORKSPACE|GITHUB_RUN_ID|CI|NODE' >> frontend/test-results/logs/runner-system-info.txt 2>&1 || true
+                # best-effort docker captures
+                echo '--- docker ps -a ---' > frontend/test-results/logs/docker-ps.txt || true
+                docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Image}}" >> frontend/test-results/logs/docker-ps.txt || true
+                docker logs --tail 500 shop-api > frontend/test-results/logs/shop-api.log 2>&1 || true
+                docker logs --tail 500 pg > frontend/test-results/logs/pg.log 2>&1 || true
+
+            - name: Run Playwright smoke tests
+              working-directory: frontend
+              env:
+                CI: true
+                API_BASE_URL: http://localhost:4000
+              run: |
+                # Use Playwright config's reporters; run specific smoke test file to keep job quick
+                npx playwright test tests/cart-checkout.spec.ts --project=chromium || true
+
+            - name: List Playwright test-results
+              working-directory: frontend
+              if: always()
+              run: |
+                echo '--- ls -R test-results ---'
+                ls -la test-results || true
+                echo '--- show report index if present ---'
+                if [ -f test-results/playwright-report/index.html ]; then head -n 40 test-results/playwright-report/index.html; fi
+
+            - name: Consolidate debug artifacts (guarantee preserved)
+              if: always()
+              run: |
+                mkdir -p playwright-debug-artifacts/logs
+                cp -a frontend/test-results/logs/. playwright-debug-artifacts/logs/ 2>/dev/null || true
+                cp -a frontend/test-results/playwright-report playwright-debug-artifacts/ 2>/dev/null || true
+                echo '--- preserved artifacts ---'
+                ls -la playwright-debug-artifacts || true
+
+            - name: Final diagnostic (tail expected logs)
+              if: always()
+              run: |
+                echo '--- ls frontend/test-results ---'
+                ls -la frontend/test-results || true
+                echo '--- tail frontend-dev.log ---'
+                tail -n 200 frontend/test-results/logs/frontend-dev.log || echo 'no frontend-dev.log'
+                echo '--- tail mock-backend.log ---'
+                tail -n 200 frontend/test-results/logs/mock-backend.log || echo 'no mock-backend.log'
+                echo '--- tail runner-system-info.txt ---'
+                tail -n 200 frontend/test-results/logs/runner-system-info.txt || echo 'no runner-system-info.txt'
+
+            - name: Upload Playwright report and logs
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                name: playwright-smoke-report
+                path: |
+                  frontend/test-results/**
+                  playwright-debug-artifacts/**
+          else
+            npm install --include=dev
+          fi
+
+      - name: Capture Docker / container logs into artifact folder
+        if: always()
+        run: |
+          mkdir -p frontend/test-results/logs
+          echo '--- docker ps -a ---' > frontend/test-results/logs/docker-ps.txt || true
+          docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Image}}" >> frontend/test-results/logs/docker-ps.txt || true
+          # Capture logs for common container names used in local CI (shop-api, pg)
+          docker logs --tail 500 shop-api > frontend/test-results/logs/shop-api.log 2>&1 || true
+          docker logs --tail 500 pg > frontend/test-results/logs/pg.log 2>&1 || true
+          # Capture any other container logs (best-effort)
+          docker ps -a --format '{{.Names}}' | xargs -r -I{} sh -c 'docker logs --tail 200 {} > "frontend/test-results/logs/{}.log" 2>&1 || true'
+      - name: Install Playwright browsers
+        working-directory: frontend
+        run: |
+          npx playwright install --with-deps
+
+      - name: Verify Playwright package present
+        working-directory: frontend
+      - name: Save `docker ps -a` explicitly to artifact folder
+        if: always()
+        run: |
+          mkdir -p frontend/test-results/logs
+          echo '--- docker ps -a (explicit capture) ---' > frontend/test-results/logs/docker-ps.txt || true
+          # Use --no-trunc and include container IDs for robust identification; fall back gracefully if docker missing
+          (docker ps -a --no-trunc --format 'table {{.Names}}\t{{.ID}}\t{{.Status}}\t{{.Image}}' >> frontend/test-results/logs/docker-ps.txt) || echo 'docker command unavailable on runner' >> frontend/test-results/logs/docker-ps.txt
+        run: |
+          echo 'Checking for @playwright/test in frontend/node_modules'
+          node -e "try{console.log(require.resolve('@playwright/test'))}catch(e){console.error('MISSING:@playwright/test'); process.exit(0)}"
+
+      - name: Install mock backend deps
+        working-directory: frontend/mock-backend
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Start frontend dev server
+        working-directory: frontend
+        run: |
+      - name: Runner diagnostics (save ps, ss, node list, env)
+        if: always()
+        run: |
+          mkdir -p frontend/test-results/logs
+          echo '--- which docker ---' > frontend/test-results/logs/runner-system-info.txt || true
+          which docker >> frontend/test-results/logs/runner-system-info.txt 2>&1 || true
+          echo '--- docker version ---' >> frontend/test-results/logs/runner-system-info.txt 2>&1 || true
+          docker version >> frontend/test-results/logs/runner-system-info.txt 2>&1 || true
+          echo '--- ps aux | grep node ---' >> frontend/test-results/logs/runner-system-info.txt 2>&1 || true
+          ps aux | grep node >> frontend/test-results/logs/runner-system-info.txt 2>&1 || true
+          echo '--- ss -ltnp (net listeners) ---' >> frontend/test-results/logs/runner-system-info.txt 2>&1 || true
+          ss -ltnp >> frontend/test-results/logs/runner-system-info.txt 2>&1 || true
+          echo '--- lsof -i -P -n (network sockets) ---' >> frontend/test-results/logs/runner-system-info.txt 2>&1 || true
+          lsof -i -P -n >> frontend/test-results/logs/runner-system-info.txt 2>&1 || true
+          echo '--- env (partial) ---' >> frontend/test-results/logs/runner-system-info.txt 2>&1 || true
+          env | grep -E 'GITHUB_WORKSPACE|GITHUB_RUN_ID|CI|NODE' >> frontend/test-results/logs/runner-system-info.txt 2>&1 || true
+          mkdir -p "$GITHUB_WORKSPACE/frontend/test-results/logs"
+          # Start frontend dev server with nohup so output is reliably captured
+          nohup bash -lc "npm run dev" > "$GITHUB_WORKSPACE/frontend/test-results/logs/frontend-dev.log" 2>&1 &
+          # Wait for the dev server to be available
+          npx wait-on http://localhost:3000 --silent --timeout 45000
+
+      - name: Start mock backend
+        working-directory: frontend/mock-backend
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/frontend/test-results/logs"
+          # Start mock backend with nohup so output is reliably captured
+          nohup bash -lc "node server.js" > "$GITHUB_WORKSPACE/frontend/test-results/logs/mock-backend.log" 2>&1 &
+      - name: List Playwright test-results
+        working-directory: frontend
+        if: always()
+        run: |
+          echo '--- ls -R test-results (frontend/test-results) ---'
+          ls -la test-results || echo 'no test-results directory'
+          echo '--- ls -R test-results/playwright-report ---'
+          ls -la test-results/playwright-report || echo 'no playwright-report directory'
+          if [ -f test-results/playwright-report/index.html ]; then
+            echo '--- first 40 lines of index.html ---'
+            head -n 40 test-results/playwright-report/index.html
+          fi
+          # Allow more time for the mock backend to initialize on busy runners
+          npx wait-on http://localhost:4000/health --silent --timeout 300000
+
+      - name: Capture Docker / container logs into artifact folder
+        if: always()
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/frontend/test-results/logs"
+          echo '--- docker ps -a ---' > "$GITHUB_WORKSPACE/frontend/test-results/logs/docker-ps.txt" || true
+          docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Image}}" >> "$GITHUB_WORKSPACE/frontend/test-results/logs/docker-ps.txt" || true
+          # Capture logs for common container names used in local CI (shop-api, pg)
+          docker logs --tail 500 shop-api > "$GITHUB_WORKSPACE/frontend/test-results/logs/shop-api.log" 2>&1 || true
+      - name: Consolidate debug artifacts (guarantee preserved)
+        if: always()
+        run: |
+          mkdir -p playwright-debug-artifacts/logs
+          # Copy any collected logs into a separate folder that Playwright won't clear
+          cp -a frontend/test-results/logs/. playwright-debug-artifacts/logs/ 2>/dev/null || true
+          # Also copy the HTML report for easy viewing
+          cp -a frontend/test-results/playwright-report playwright-debug-artifacts/ 2>/dev/null || true
+          echo '--- playwright-debug-artifacts contents ---'
+          ls -la playwright-debug-artifacts || true
+          ls -la playwright-debug-artifacts/logs || true
+          docker logs --tail 500 pg > "$GITHUB_WORKSPACE/frontend/test-results/logs/pg.log" 2>&1 || true
+          # Capture any other container logs (best-effort)
+          docker ps -a --format '{{.Names}}' | xargs -r -I{} sh -c 'docker logs --tail 200 {} > "$GITHUB_WORKSPACE/frontend/test-results/logs/{}.log" 2>&1 || true'
+
+      - name: Save `docker ps -a` explicitly to artifact folder
+        if: always()
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/frontend/test-results/logs"
+          echo '--- docker ps -a (explicit capture) ---' > "$GITHUB_WORKSPACE/frontend/test-results/logs/docker-ps.txt" || true
+          # Use --no-trunc and include container IDs for robust identification; fall back gracefully if docker missing
+          (docker ps -a --no-trunc --format 'table {{.Names}}\t{{.ID}}\t{{.Status}}\t{{.Image}}' >> "$GITHUB_WORKSPACE/frontend/test-results/logs/docker-ps.txt") || echo 'docker command unavailable on runner' >> "$GITHUB_WORKSPACE/frontend/test-results/logs/docker-ps.txt"
+
+      - name: Runner diagnostics (save ps, ss, node list, env)
+      - name: Final diagnostic (list and tail expected logs)
+        if: always()
+        run: |
+          echo '--- ls frontend/test-results ---'
+          ls -la frontend/test-results || true
+          echo '--- ls frontend/test-results/logs ---'
+          ls -la frontend/test-results/logs || true
+          echo '--- tail frontend-dev.log ---'
+          tail -n 200 frontend/test-results/logs/frontend-dev.log || echo 'no frontend-dev.log'
+          echo '--- tail mock-backend.log ---'
+          tail -n 200 frontend/test-results/logs/mock-backend.log || echo 'no mock-backend.log'
+          echo '--- tail runner-system-info.txt ---'
+          tail -n 200 frontend/test-results/logs/runner-system-info.txt || echo 'no runner-system-info.txt'
+        if: always()
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/frontend/test-results/logs"
+          echo '--- which docker ---' > "$GITHUB_WORKSPACE/frontend/test-results/logs/runner-system-info.txt" || true
+          which docker >> "$GITHUB_WORKSPACE/frontend/test-results/logs/runner-system-info.txt" 2>&1 || true
+          echo '--- docker version ---' >> "$GITHUB_WORKSPACE/frontend/test-results/logs/runner-system-info.txt" 2>&1 || true
+          docker version >> "$GITHUB_WORKSPACE/frontend/test-results/logs/runner-system-info.txt" 2>&1 || true
+          echo '--- ps aux | grep node ---' >> "$GITHUB_WORKSPACE/frontend/test-results/logs/runner-system-info.txt" 2>&1 || true
+          ps aux | grep node >> "$GITHUB_WORKSPACE/frontend/test-results/logs/runner-system-info.txt" 2>&1 || true
+          echo '--- ss -ltnp (net listeners) ---' >> "$GITHUB_WORKSPACE/frontend/test-results/logs/runner-system-info.txt" 2>&1 || true
+          ss -ltnp >> "$GITHUB_WORKSPACE/frontend/test-results/logs/runner-system-info.txt" 2>&1 || true
+          echo '--- lsof -i -P -n (network sockets) ---' >> "$GITHUB_WORKSPACE/frontend/test-results/logs/runner-system-info.txt" 2>&1 || true
+          lsof -i -P -n >> "$GITHUB_WORKSPACE/frontend/test-results/logs/runner-system-info.txt" 2>&1 || true
+          echo '--- env (partial) ---' >> "$GITHUB_WORKSPACE/frontend/test-results/logs/runner-system-info.txt" 2>&1 || true
+          env | grep -E 'GITHUB_WORKSPACE|GITHUB_RUN_ID|CI|NODE' >> "$GITHUB_WORKSPACE/frontend/test-results/logs/runner-system-info.txt" 2>&1 || true
+
+      - name: Debug containers immediately after start
+        if: github.event_name == 'push'
+        run: |
+          echo '--- docker ps (immediately after backend start) ---'
+          docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Image}}" || true
+          echo '--- shop-api (if present) last 200 lines ---'
+          docker logs --tail 200 shop-api || echo 'no shop-api logs available'
+          echo '--- pg (if present) last 200 lines ---'
+          docker logs --tail 200 pg || echo 'no pg logs available'
+
+      - name: Run Playwright smoke tests
+        working-directory: frontend
+        env:
+          CI: true
+          API_BASE_URL: http://localhost:4000
+        run: |
+          # Let Playwright use the reporters from frontend/playwright.config.ts
+          npx playwright test tests/cart-checkout.spec.ts --project=chromium || true
+
+      - name: List Playwright test-results
+        working-directory: frontend
+        if: always()
+        run: |
+          echo '--- ls -R test-results (frontend/test-results) ---'
+          ls -la test-results || echo 'no test-results directory'
+          echo '--- ls -R test-results/playwright-report ---'
+          ls -la test-results/playwright-report || echo 'no playwright-report directory'
+          if [ -f test-results/playwright-report/index.html ]; then
+            echo '--- first 40 lines of index.html ---'
+            head -n 40 test-results/playwright-report/index.html
+          fi
+
+      - name: Consolidate debug artifacts (guarantee preserved)
+        if: always()
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/playwright-debug-artifacts/logs"
+          # Copy any collected logs into a separate folder that Playwright won't clear
+          cp -a "$GITHUB_WORKSPACE/frontend/test-results/logs/." "$GITHUB_WORKSPACE/playwright-debug-artifacts/logs/" 2>/dev/null || true
+          # Also copy the HTML report for easy viewing
+          cp -a "$GITHUB_WORKSPACE/frontend/test-results/playwright-report" "$GITHUB_WORKSPACE/playwright-debug-artifacts/" 2>/dev/null || true
+          echo '--- playwright-debug-artifacts contents ---'
+          ls -la "$GITHUB_WORKSPACE/playwright-debug-artifacts" || true
+          ls -la "$GITHUB_WORKSPACE/playwright-debug-artifacts/logs" || true
+
+      - name: Final diagnostic (list and tail expected logs)
+        if: always()
+        run: |
+          echo '--- ls frontend/test-results ---'
+          ls -la "$GITHUB_WORKSPACE/frontend/test-results" || true
+          echo '--- ls frontend/test-results/logs ---'
+          ls -la "$GITHUB_WORKSPACE/frontend/test-results/logs" || true
+          echo '--- tail frontend-dev.log ---'
+          tail -n 200 "$GITHUB_WORKSPACE/frontend/test-results/logs/frontend-dev.log" || echo 'no frontend-dev.log'
+          echo '--- tail mock-backend.log ---'
+          tail -n 200 "$GITHUB_WORKSPACE/frontend/test-results/logs/mock-backend.log" || echo 'no mock-backend.log'
+          echo '--- tail runner-system-info.txt ---'
+          tail -n 200 "$GITHUB_WORKSPACE/frontend/test-results/logs/runner-system-info.txt" || echo 'no runner-system-info.txt'
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-smoke-report
+          # Upload everything under frontend/test-results and preserved debug artifacts
+          path: |
+            frontend/test-results/**
+            playwright-debug-artifacts/**

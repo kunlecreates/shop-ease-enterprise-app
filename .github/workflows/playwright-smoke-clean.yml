@@ -8,8 +8,37 @@ on:
   workflow_dispatch: {}
 
 jobs:
+  unit-tests:
+    name: Frontend Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install frontend deps (incl dev)
+        working-directory: frontend
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci --include=dev
+          else
+            npm install --include=dev
+          fi
+
+      - name: Run frontend unit tests
+        working-directory: frontend
+        run: |
+          echo 'Running frontend unit tests'
+          npm test
+
+  
   smoke:
     name: Playwright Smoke (clean)
+    needs: unit-tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -76,13 +105,48 @@ jobs:
             docker exec ci-pg pg_isready -U postgres >/dev/null 2>&1 && break || sleep 2
           done
           echo 'Attempting Flyway migrate (best-effort) and saving output to $GITHUB_WORKSPACE/playwright-debug-artifacts/live-logs/pg.log'
-          # If repository contains SQL migrations under db/ or services/*/migrations, mount them; otherwise attempt migrate (may be no-op)
-          docker run --rm --net ci-net -v "$PWD/db:/flyway/sql" flyway/flyway -url=jdbc:postgresql://ci-pg:5432/test -user=postgres -password=postgres migrate > "$GITHUB_WORKSPACE/playwright-debug-artifacts/live-logs/pg.log" 2>&1 || true
+          # Find possible migration directories and mount the first one found into the Flyway container
+          MIG_PATH=""
+          if [ -d "$PWD/db" ]; then
+            MIG_PATH="$PWD/db"
+          elif [ -d "$PWD/services/test-utils/migrations" ]; then
+            MIG_PATH="$PWD/services/test-utils/migrations"
+          elif [ -d "$PWD/migrations" ]; then
+            MIG_PATH="$PWD/migrations"
+          else
+            for p in "$PWD"/services/*/migrations; do
+              if [ -d "$p" ]; then
+                MIG_PATH="$p"
+                break
+              fi
+            done
+          fi
+          if [ -n "$MIG_PATH" ]; then
+            echo "Found migrations at: $MIG_PATH"
+            docker run --rm --net ci-net -v "$MIG_PATH:/flyway/sql" flyway/flyway -url=jdbc:postgresql://ci-pg:5432/test -user=postgres -password=postgres migrate > "$GITHUB_WORKSPACE/playwright-debug-artifacts/live-logs/pg.log" 2>&1 || true
+          else
+            echo 'No migrations path found in repo; running Flyway without mounted SQL (may be no-op)'
+            docker run --rm --net ci-net flyway/flyway -url=jdbc:postgresql://ci-pg:5432/test -user=postgres -password=postgres migrate > "$GITHUB_WORKSPACE/playwright-debug-artifacts/live-logs/pg.log" 2>&1 || true
+          fi
           # Always capture postgres container logs
           docker logs --tail 500 ci-pg > "$GITHUB_WORKSPACE/playwright-debug-artifacts/live-logs/pg-container.log" 2>&1 || true
           echo '--- postgres live-logs after flyway ---'
           ls -la "$GITHUB_WORKSPACE/playwright-debug-artifacts/live-logs" || true
           tail -n +1 "$GITHUB_WORKSPACE/playwright-debug-artifacts/live-logs/pg.log" | sed -n '1,200p' || true
+
+      - name: Try to pull and run `shop-api` (optional)
+        if: always()
+        env:
+          API_IMAGE: ghcr.io/${{ github.repository_owner }}/shop-api:latest
+        run: |
+          set -eux
+          echo "Attempting to pull API image: $API_IMAGE"
+          if docker pull "$API_IMAGE"; then
+            echo 'Pulled API image; starting container named shop-api'
+            docker run -d --name shop-api --net ci-net -e PORT=8080 "$API_IMAGE" || echo 'failed to run shop-api'
+          else
+            echo 'shop-api image not available in registry; skipping starting shop-api (PRs will use mock-backend)'
+          fi
 
       - name: Runner diagnostics and container logs (best-effort)
         if: always()
@@ -119,13 +183,22 @@ jobs:
             echo 'Copying source live-logs (source -> dest)'
             echo "source: $GITHUB_WORKSPACE/playwright-debug-artifacts/live-logs"
             ls -la "$GITHUB_WORKSPACE/playwright-debug-artifacts" || true
-            # Copy logs and report; surface any errors instead of silencing them
+            # Copy logs; surface any errors instead of silencing them
             cp -av "$GITHUB_WORKSPACE/playwright-debug-artifacts/live-logs/." playwright-debug-artifacts/logs/ || echo "cp logs exit:$?"
-            cp -av "$GITHUB_WORKSPACE/frontend/test-results/playwright-report" playwright-debug-artifacts/ || echo "cp report exit:$?"
+            # Playwright report is expected to be generated into playwright-debug-artifacts/playwright-report
+            # (project-level Playwright config should target this directory). If present, include it.
+            if [ -d "$GITHUB_WORKSPACE/playwright-debug-artifacts/playwright-report" ]; then
+              cp -av "$GITHUB_WORKSPACE/playwright-debug-artifacts/playwright-report" playwright-debug-artifacts/ || echo "cp report exit:$?"
+            else
+              echo 'No playwright-debug-artifacts/playwright-report found; skipping report copy'
+            fi
             echo '--- consolidated artifact list (top-level) ---'
             ls -la playwright-debug-artifacts || true
             echo '--- consolidated artifact list (logs) ---'
             ls -la playwright-debug-artifacts/logs || true
+            echo 'Compressing logs to playwright-debug-artifacts/logs.tar.gz'
+            tar -czf playwright-debug-artifacts/logs.tar.gz -C playwright-debug-artifacts logs || echo "tar exit:$?"
+            echo 'Keeping uncompressed logs for local inspection, but compressed archive will be uploaded'
             echo '--- file inventory (all files) ---'
             find playwright-debug-artifacts -type f -ls || true
 
@@ -135,5 +208,5 @@ jobs:
         with:
           name: playwright-smoke-report-clean
           path: |
-            frontend/test-results/**
             playwright-debug-artifacts/**
+            frontend/**
