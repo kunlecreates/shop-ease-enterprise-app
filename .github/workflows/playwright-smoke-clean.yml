@@ -53,17 +53,30 @@ jobs:
       - name: Run integration tests per Maven module under `services/`
         run: |
           set -euo pipefail
-          echo 'Discovering Maven modules under services/ and running verify (integration tests)'
+          echo 'Installing test-utils (if present) and running mvn verify for other services'
+
+          # If services/test-utils exists, install it first into the local repo (skip tests to speed up)
+          if [ -f services/test-utils/pom.xml ]; then
+            echo 'Found services/test-utils, running mvn install (skip tests)'
+            mvn -f services/test-utils/pom.xml -B -DskipTests install || { echo 'Failed to install test-utils'; exit 1; }
+          else
+            echo 'No services/test-utils module found; continuing'
+          fi
+
           found=0
           for dir in services/*; do
+            # skip test-utils itself (already installed)
+            if [ "$(basename "$dir")" = 'test-utils' ]; then
+              continue
+            fi
             if [ -f "$dir/pom.xml" ]; then
               found=1
               echo "Running mvn verify in $dir"
-              (cd "$dir" && mvn -B -V -DskipTests verify) || { echo "mvn verify failed in $dir"; exit 1; }
+              (cd "$dir" && mvn -B -V verify) || { echo "mvn verify failed in $dir"; exit 1; }
             fi
           done
           if [ "$found" -eq 0 ]; then
-            echo 'No Maven modules found under services/; nothing to run.'
+            echo 'No other Maven modules found under services/; nothing to run.'
           fi
 
       - name: Upload integration test reports (if any)
