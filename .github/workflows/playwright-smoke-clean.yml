@@ -36,61 +36,13 @@ jobs:
           npm test
 
   
-  integration-tests:
-    name: Service Integration Tests (per-module mvn verify)
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Java 21
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '21'
-
-      - name: Run integration tests per Maven module under `services/`
-        run: |
-          set -euo pipefail
-          echo 'Installing test-utils (if present) and running mvn verify for other services'
-
-          # If services/test-utils exists, install it first into the local repo (skip tests to speed up)
-          if [ -f services/test-utils/pom.xml ]; then
-            echo 'Found services/test-utils, running mvn install (skip tests)'
-            mvn -f services/test-utils/pom.xml -B -DskipTests install || { echo 'Failed to install test-utils'; exit 1; }
-          else
-            echo 'No services/test-utils module found; continuing'
-          fi
-
-          found=0
-          for dir in services/*; do
-            # skip test-utils itself (already installed)
-            if [ "$(basename "$dir")" = 'test-utils' ]; then
-              continue
-            fi
-            if [ -f "$dir/pom.xml" ]; then
-              found=1
-              echo "Running mvn verify in $dir"
-              (cd "$dir" && mvn -B -V verify) || { echo "mvn verify failed in $dir"; exit 1; }
-            fi
-          done
-          if [ "$found" -eq 0 ]; then
-            echo 'No other Maven modules found under services/; nothing to run.'
-          fi
-
-      - name: Upload integration test reports (if any)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: integration-test-reports
-          path: |
-            **/target/surefire-reports/**
-            **/target/failsafe-reports/**
+  # integration-tests job removed from this workflow to avoid duplication.
+  # Per-service tests are run centrally by `.github/workflows/integration-tests.yml`.
+  # Keeping Playwright workflow focused on frontend unit + smoke tests (E2E).
 
   smoke:
     name: Playwright Smoke (clean)
-    needs: [unit-tests, integration-tests]
+    needs: [unit-tests]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
