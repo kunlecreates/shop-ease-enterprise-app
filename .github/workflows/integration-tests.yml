@@ -12,6 +12,9 @@ on:
     branches: [ main, master ]
     paths-ignore:
       - 'services/**'
+  # Temporary manual trigger so maintainers can run the full matrix on-demand.
+  # This is intended for transient use and can be removed after verification.
+  workflow_dispatch: {}
 
 jobs:
   prepare:
