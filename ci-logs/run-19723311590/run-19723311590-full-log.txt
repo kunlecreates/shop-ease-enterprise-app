@@ -1,0 +1,841 @@
+User Service Tests	Set up job	﻿2025-11-27T02:30:44.8966924Z Current runner version: '2.329.0'
+User Service Tests	Set up job	2025-11-27T02:30:44.8993704Z ##[group]Runner Image Provisioner
+User Service Tests	Set up job	2025-11-27T02:30:44.8994552Z Hosted Compute Agent
+User Service Tests	Set up job	2025-11-27T02:30:44.8995121Z Version: 20251016.436
+User Service Tests	Set up job	2025-11-27T02:30:44.8995866Z Commit: 8ab8ac8bfd662a3739dab9fe09456aba92132568
+User Service Tests	Set up job	2025-11-27T02:30:44.8996578Z Build Date: 2025-10-15T20:44:12Z
+User Service Tests	Set up job	2025-11-27T02:30:44.8997202Z ##[endgroup]
+User Service Tests	Set up job	2025-11-27T02:30:44.8997838Z ##[group]Operating System
+User Service Tests	Set up job	2025-11-27T02:30:44.8998450Z Ubuntu
+User Service Tests	Set up job	2025-11-27T02:30:44.8998925Z 24.04.3
+User Service Tests	Set up job	2025-11-27T02:30:44.8999477Z LTS
+User Service Tests	Set up job	2025-11-27T02:30:44.8999932Z ##[endgroup]
+User Service Tests	Set up job	2025-11-27T02:30:44.9000458Z ##[group]Runner Image
+User Service Tests	Set up job	2025-11-27T02:30:44.9001108Z Image: ubuntu-24.04
+User Service Tests	Set up job	2025-11-27T02:30:44.9001615Z Version: 20251112.124.1
+User Service Tests	Set up job	2025-11-27T02:30:44.9002685Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20251112.124/images/ubuntu/Ubuntu2404-Readme.md
+User Service Tests	Set up job	2025-11-27T02:30:44.9004538Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20251112.124
+User Service Tests	Set up job	2025-11-27T02:30:44.9005762Z ##[endgroup]
+User Service Tests	Set up job	2025-11-27T02:30:44.9007028Z ##[group]GITHUB_TOKEN Permissions
+User Service Tests	Set up job	2025-11-27T02:30:44.9008878Z Contents: read
+User Service Tests	Set up job	2025-11-27T02:30:44.9009556Z Metadata: read
+User Service Tests	Set up job	2025-11-27T02:30:44.9010078Z Packages: read
+User Service Tests	Set up job	2025-11-27T02:30:44.9010612Z ##[endgroup]
+User Service Tests	Set up job	2025-11-27T02:30:44.9012612Z Secret source: Actions
+User Service Tests	Set up job	2025-11-27T02:30:44.9013844Z Prepare workflow directory
+User Service Tests	Set up job	2025-11-27T02:30:44.9333586Z Prepare all required actions
+User Service Tests	Set up job	2025-11-27T02:30:44.9387697Z Getting action download info
+User Service Tests	Set up job	2025-11-27T02:30:45.3639833Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+User Service Tests	Set up job	2025-11-27T02:30:45.9466323Z Download action repository 'actions/setup-java@v4' (SHA:c5195efecf7bdfc987ee8bae7a71cb8b11521c00)
+User Service Tests	Set up job	2025-11-27T02:30:46.6537598Z Complete job name: User Service Tests
+User Service Tests	Checkout	﻿2025-11-27T02:30:46.7239228Z ##[group]Run actions/checkout@v4
+User Service Tests	Checkout	2025-11-27T02:30:46.7240140Z with:
+User Service Tests	Checkout	2025-11-27T02:30:46.7240652Z   repository: kunlecreates/shop-ease-enterprise-app
+User Service Tests	Checkout	2025-11-27T02:30:46.7241451Z   token: ***
+User Service Tests	Checkout	2025-11-27T02:30:46.7241885Z   ssh-strict: true
+User Service Tests	Checkout	2025-11-27T02:30:46.7242301Z   ssh-user: git
+User Service Tests	Checkout	2025-11-27T02:30:46.7242732Z   persist-credentials: true
+User Service Tests	Checkout	2025-11-27T02:30:46.7243448Z   clean: true
+User Service Tests	Checkout	2025-11-27T02:30:46.7243876Z   sparse-checkout-cone-mode: true
+User Service Tests	Checkout	2025-11-27T02:30:46.7244388Z   fetch-depth: 1
+User Service Tests	Checkout	2025-11-27T02:30:46.7244807Z   fetch-tags: false
+User Service Tests	Checkout	2025-11-27T02:30:46.7245226Z   show-progress: true
+User Service Tests	Checkout	2025-11-27T02:30:46.7245655Z   lfs: false
+User Service Tests	Checkout	2025-11-27T02:30:46.7246043Z   submodules: false
+User Service Tests	Checkout	2025-11-27T02:30:46.7246498Z   set-safe-directory: true
+User Service Tests	Checkout	2025-11-27T02:30:46.7247228Z ##[endgroup]
+User Service Tests	Checkout	2025-11-27T02:30:46.8331821Z Syncing repository: kunlecreates/shop-ease-enterprise-app
+User Service Tests	Checkout	2025-11-27T02:30:46.8334283Z ##[group]Getting Git version info
+User Service Tests	Checkout	2025-11-27T02:30:46.8335295Z Working directory is '/home/runner/work/shop-ease-enterprise-app/shop-ease-enterprise-app'
+User Service Tests	Checkout	2025-11-27T02:30:46.8336646Z [command]/usr/bin/git version
+User Service Tests	Checkout	2025-11-27T02:30:46.8447015Z git version 2.51.2
+User Service Tests	Checkout	2025-11-27T02:30:46.8473594Z ##[endgroup]
+User Service Tests	Checkout	2025-11-27T02:30:46.8487634Z Temporarily overriding HOME='/home/runner/work/_temp/bc2d33bf-4200-4840-8263-958e69a99151' before making global git config changes
+User Service Tests	Checkout	2025-11-27T02:30:46.8489350Z Adding repository directory to the temporary git global config as a safe directory
+User Service Tests	Checkout	2025-11-27T02:30:46.8493353Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/shop-ease-enterprise-app/shop-ease-enterprise-app
+User Service Tests	Checkout	2025-11-27T02:30:46.8529823Z Deleting the contents of '/home/runner/work/shop-ease-enterprise-app/shop-ease-enterprise-app'
+User Service Tests	Checkout	2025-11-27T02:30:46.8533287Z ##[group]Initializing the repository
+User Service Tests	Checkout	2025-11-27T02:30:46.8537569Z [command]/usr/bin/git init /home/runner/work/shop-ease-enterprise-app/shop-ease-enterprise-app
+User Service Tests	Checkout	2025-11-27T02:30:46.8652704Z hint: Using 'master' as the name for the initial branch. This default branch name
+User Service Tests	Checkout	2025-11-27T02:30:46.8655135Z hint: is subject to change. To configure the initial branch name to use in all
+User Service Tests	Checkout	2025-11-27T02:30:46.8657483Z hint: of your new repositories, which will suppress this warning, call:
+User Service Tests	Checkout	2025-11-27T02:30:46.8659492Z hint:
+User Service Tests	Checkout	2025-11-27T02:30:46.8660257Z hint: 	git config --global init.defaultBranch <name>
+User Service Tests	Checkout	2025-11-27T02:30:46.8661070Z hint:
+User Service Tests	Checkout	2025-11-27T02:30:46.8661836Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+User Service Tests	Checkout	2025-11-27T02:30:46.8663389Z hint: 'development'. The just-created branch can be renamed via this command:
+User Service Tests	Checkout	2025-11-27T02:30:46.8664760Z hint:
+User Service Tests	Checkout	2025-11-27T02:30:46.8665430Z hint: 	git branch -m <name>
+User Service Tests	Checkout	2025-11-27T02:30:46.8666023Z hint:
+User Service Tests	Checkout	2025-11-27T02:30:46.8666636Z hint: Disable this message with "git config set advice.defaultBranchName false"
+User Service Tests	Checkout	2025-11-27T02:30:46.8668050Z Initialized empty Git repository in /home/runner/work/shop-ease-enterprise-app/shop-ease-enterprise-app/.git/
+User Service Tests	Checkout	2025-11-27T02:30:46.8670538Z [command]/usr/bin/git remote add origin https://github.com/kunlecreates/shop-ease-enterprise-app
+User Service Tests	Checkout	2025-11-27T02:30:46.8713530Z ##[endgroup]
+User Service Tests	Checkout	2025-11-27T02:30:46.8715003Z ##[group]Disabling automatic garbage collection
+User Service Tests	Checkout	2025-11-27T02:30:46.8716443Z [command]/usr/bin/git config --local gc.auto 0
+User Service Tests	Checkout	2025-11-27T02:30:46.8751743Z ##[endgroup]
+User Service Tests	Checkout	2025-11-27T02:30:46.8753925Z ##[group]Setting up auth
+User Service Tests	Checkout	2025-11-27T02:30:46.8758379Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+User Service Tests	Checkout	2025-11-27T02:30:46.8792099Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+User Service Tests	Checkout	2025-11-27T02:30:46.9140323Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+User Service Tests	Checkout	2025-11-27T02:30:46.9173449Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+User Service Tests	Checkout	2025-11-27T02:30:46.9394884Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+User Service Tests	Checkout	2025-11-27T02:30:46.9434940Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+User Service Tests	Checkout	2025-11-27T02:30:46.9668365Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+User Service Tests	Checkout	2025-11-27T02:30:46.9705391Z ##[endgroup]
+User Service Tests	Checkout	2025-11-27T02:30:46.9714320Z ##[group]Fetching the repository
+User Service Tests	Checkout	2025-11-27T02:30:46.9716921Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +2ecda381b263c78fa07970e57a6021050b64b3b0:refs/remotes/pull/7/merge
+User Service Tests	Checkout	2025-11-27T02:30:47.4480907Z From https://github.com/kunlecreates/shop-ease-enterprise-app
+User Service Tests	Checkout	2025-11-27T02:30:47.4482180Z  * [new ref]         2ecda381b263c78fa07970e57a6021050b64b3b0 -> pull/7/merge
+User Service Tests	Checkout	2025-11-27T02:30:47.4515151Z ##[endgroup]
+User Service Tests	Checkout	2025-11-27T02:30:47.4516099Z ##[group]Determining the checkout info
+User Service Tests	Checkout	2025-11-27T02:30:47.4517468Z ##[endgroup]
+User Service Tests	Checkout	2025-11-27T02:30:47.4521855Z [command]/usr/bin/git sparse-checkout disable
+User Service Tests	Checkout	2025-11-27T02:30:47.4563315Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+User Service Tests	Checkout	2025-11-27T02:30:47.4588070Z ##[group]Checking out the ref
+User Service Tests	Checkout	2025-11-27T02:30:47.4591846Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/7/merge
+User Service Tests	Checkout	2025-11-27T02:30:47.4857418Z Note: switching to 'refs/remotes/pull/7/merge'.
+User Service Tests	Checkout	2025-11-27T02:30:47.4858447Z 
+User Service Tests	Checkout	2025-11-27T02:30:47.4859170Z You are in 'detached HEAD' state. You can look around, make experimental
+User Service Tests	Checkout	2025-11-27T02:30:47.4860920Z changes and commit them, and you can discard any commits you make in this
+User Service Tests	Checkout	2025-11-27T02:30:47.4862855Z state without impacting any branches by switching back to a branch.
+User Service Tests	Checkout	2025-11-27T02:30:47.4864157Z 
+User Service Tests	Checkout	2025-11-27T02:30:47.4864853Z If you want to create a new branch to retain commits you create, you may
+User Service Tests	Checkout	2025-11-27T02:30:47.4866548Z do so (now or later) by using -c with the switch command. Example:
+User Service Tests	Checkout	2025-11-27T02:30:47.4867554Z 
+User Service Tests	Checkout	2025-11-27T02:30:47.4867930Z   git switch -c <new-branch-name>
+User Service Tests	Checkout	2025-11-27T02:30:47.4868559Z 
+User Service Tests	Checkout	2025-11-27T02:30:47.4868917Z Or undo this operation with:
+User Service Tests	Checkout	2025-11-27T02:30:47.4869818Z 
+User Service Tests	Checkout	2025-11-27T02:30:47.4870147Z   git switch -
+User Service Tests	Checkout	2025-11-27T02:30:47.4870565Z 
+User Service Tests	Checkout	2025-11-27T02:30:47.4871258Z Turn off this advice by setting config variable advice.detachedHead to false
+User Service Tests	Checkout	2025-11-27T02:30:47.4872344Z 
+User Service Tests	Checkout	2025-11-27T02:30:47.4873854Z HEAD is now at 2ecda38 Merge a85aa20eef98c57c128dbbdc6f3e83ddb3e807aa into 3439236f0d6d51d9eb185e1f96e04dd0f488bff6
+User Service Tests	Checkout	2025-11-27T02:30:47.4877559Z ##[endgroup]
+User Service Tests	Checkout	2025-11-27T02:30:47.4910687Z [command]/usr/bin/git log -1 --format=%H
+User Service Tests	Checkout	2025-11-27T02:30:47.4933823Z 2ecda381b263c78fa07970e57a6021050b64b3b0
+User Service Tests	Set up JDK 21	﻿2025-11-27T02:30:47.5198359Z ##[group]Run actions/setup-java@v4
+User Service Tests	Set up JDK 21	2025-11-27T02:30:47.5198954Z with:
+User Service Tests	Set up JDK 21	2025-11-27T02:30:47.5199336Z   distribution: temurin
+User Service Tests	Set up JDK 21	2025-11-27T02:30:47.5199773Z   java-version: 21
+User Service Tests	Set up JDK 21	2025-11-27T02:30:47.5200186Z   java-package: jdk
+User Service Tests	Set up JDK 21	2025-11-27T02:30:47.5200591Z   check-latest: false
+User Service Tests	Set up JDK 21	2025-11-27T02:30:47.5201016Z   server-id: github
+User Service Tests	Set up JDK 21	2025-11-27T02:30:47.5201435Z   server-username: GITHUB_ACTOR
+User Service Tests	Set up JDK 21	2025-11-27T02:30:47.5201932Z   server-password: GITHUB_TOKEN
+User Service Tests	Set up JDK 21	2025-11-27T02:30:47.5202439Z   overwrite-settings: true
+User Service Tests	Set up JDK 21	2025-11-27T02:30:47.5203083Z   job-status: success
+User Service Tests	Set up JDK 21	2025-11-27T02:30:47.5203678Z   token: ***
+User Service Tests	Set up JDK 21	2025-11-27T02:30:47.5204061Z ##[endgroup]
+User Service Tests	Set up JDK 21	2025-11-27T02:30:47.7227080Z ##[group]Installed distributions
+User Service Tests	Set up JDK 21	2025-11-27T02:30:47.7450115Z Resolved Java 21.0.9+10 from tool-cache
+User Service Tests	Set up JDK 21	2025-11-27T02:30:47.7451648Z Setting Java 21.0.9+10 as the default
+User Service Tests	Set up JDK 21	2025-11-27T02:30:47.7465319Z Creating toolchains.xml for JDK version 21 from temurin
+User Service Tests	Set up JDK 21	2025-11-27T02:30:47.7542065Z Writing to /home/runner/.m2/toolchains.xml
+User Service Tests	Set up JDK 21	2025-11-27T02:30:47.7543229Z 
+User Service Tests	Set up JDK 21	2025-11-27T02:30:47.7543805Z Java configuration:
+User Service Tests	Set up JDK 21	2025-11-27T02:30:47.7544829Z   Distribution: temurin
+User Service Tests	Set up JDK 21	2025-11-27T02:30:47.7545890Z   Version: 21.0.9+10
+User Service Tests	Set up JDK 21	2025-11-27T02:30:47.7547312Z   Path: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.9-10/x64
+User Service Tests	Set up JDK 21	2025-11-27T02:30:47.7549029Z 
+User Service Tests	Set up JDK 21	2025-11-27T02:30:47.7550338Z ##[endgroup]
+User Service Tests	Set up JDK 21	2025-11-27T02:30:47.7566562Z Creating settings.xml with server-id: github
+User Service Tests	Set up JDK 21	2025-11-27T02:30:47.7572144Z Writing to /home/runner/.m2/settings.xml
+User Service Tests	Make service Maven wrapper executable	﻿2025-11-27T02:30:47.7719645Z ##[group]Run if [ -f ./services/user-service/mvnw ]; then
+User Service Tests	Make service Maven wrapper executable	2025-11-27T02:30:47.7721288Z [36;1mif [ -f ./services/user-service/mvnw ]; then[0m
+User Service Tests	Make service Maven wrapper executable	2025-11-27T02:30:47.7722764Z [36;1m  chmod +x ./services/user-service/mvnw || true[0m
+User Service Tests	Make service Maven wrapper executable	2025-11-27T02:30:47.7724336Z [36;1mfi[0m
+User Service Tests	Make service Maven wrapper executable	2025-11-27T02:30:47.7763480Z shell: /usr/bin/bash -e {0}
+User Service Tests	Make service Maven wrapper executable	2025-11-27T02:30:47.7764546Z env:
+User Service Tests	Make service Maven wrapper executable	2025-11-27T02:30:47.7765788Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.9-10/x64
+User Service Tests	Make service Maven wrapper executable	2025-11-27T02:30:47.7767949Z   JAVA_HOME_21_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.9-10/x64
+User Service Tests	Make service Maven wrapper executable	2025-11-27T02:30:47.7769615Z ##[endgroup]
+User Service Tests	Ensure test-utils (install if missing)	﻿2025-11-27T02:30:47.8001590Z ##[group]Run # If test-utils artifact already exists in local Maven repo, skip rebuild.
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:47.8004301Z [36;1m# If test-utils artifact already exists in local Maven repo, skip rebuild.[0m
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:47.8006749Z [36;1mif [ -f "$HOME/.m2/repository/org/kunlecreates/test-utils/0.1.0/test-utils-0.1.0.jar" ]; then[0m
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:47.8009012Z [36;1m  echo "test-utils found in local Maven repo; skipping build"[0m
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:47.8010386Z [36;1melse[0m
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:47.8011544Z [36;1m  echo "test-utils not found; building and installing from sources"[0m
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:47.8013612Z [36;1m  if [ -f ./services/test-utils/pom.xml ]; then[0m
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:47.8015145Z [36;1m    mvn -B -DskipTests -f services/test-utils/pom.xml install[0m
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:47.8016499Z [36;1m  else[0m
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:47.8017848Z [36;1m    echo "test-utils sources not present in checkout; continuing without install"[0m
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:47.8019496Z [36;1m  fi[0m
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:47.8020287Z [36;1mfi[0m
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:47.8054361Z shell: /usr/bin/bash -e {0}
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:47.8055245Z env:
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:47.8056347Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.9-10/x64
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:47.8058310Z   JAVA_HOME_21_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.9-10/x64
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:47.8060008Z ##[endgroup]
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:47.8126174Z test-utils not found; building and installing from sources
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:52.2605130Z [INFO] Scanning for projects...
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:53.1675693Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/boot/spring-boot-starter-parent/3.3.5/spring-boot-starter-parent-3.3.5.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:53.9037486Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/boot/spring-boot-starter-parent/3.3.5/spring-boot-starter-parent-3.3.5.pom (13 kB at 18 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:53.9802844Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/boot/spring-boot-dependencies/3.3.5/spring-boot-dependencies-3.3.5.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.0204081Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/boot/spring-boot-dependencies/3.3.5/spring-boot-dependencies-3.3.5.pom (100 kB at 2.4 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.0856721Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/activemq/activemq-bom/6.1.3/activemq-bom-6.1.3.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.1187437Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/activemq/activemq-bom/6.1.3/activemq-bom-6.1.3.pom (7.9 kB at 239 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.1250892Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/activemq/artemis-bom/2.33.0/artemis-bom-2.33.0.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.1501601Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/activemq/artemis-bom/2.33.0/artemis-bom-2.33.0.pom (9.6 kB at 385 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.1537835Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/activemq/artemis-project/2.33.0/artemis-project-2.33.0.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.1831397Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/activemq/artemis-project/2.33.0/artemis-project-2.33.0.pom (64 kB at 2.2 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.1926169Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/apache/31/apache-31.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.2254617Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/apache/31/apache-31.pom (24 kB at 713 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.2343350Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/assertj/assertj-bom/3.25.3/assertj-bom-3.25.3.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.2679785Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/assertj/assertj-bom/3.25.3/assertj-bom-3.25.3.pom (3.7 kB at 108 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.2738644Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/io/zipkin/reporter2/zipkin-reporter-bom/3.4.2/zipkin-reporter-bom-3.4.2.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.3216905Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/io/zipkin/reporter2/zipkin-reporter-bom/3.4.2/zipkin-reporter-bom-3.4.2.pom (6.4 kB at 128 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.3252456Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/io/zipkin/brave/brave-bom/6.0.3/brave-bom-6.0.3.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.3531991Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/io/zipkin/brave/brave-bom/6.0.3/brave-bom-6.0.3.pom (11 kB at 392 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.3572666Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/cassandra/java-driver-bom/4.18.1/java-driver-bom-4.18.1.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.3861190Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/cassandra/java-driver-bom/4.18.1/java-driver-bom-4.18.1.pom (5.5 kB at 188 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.3900481Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/glassfish/jaxb/jaxb-bom/4.0.5/jaxb-bom-4.0.5.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.4198426Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/glassfish/jaxb/jaxb-bom/4.0.5/jaxb-bom-4.0.5.pom (12 kB at 388 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.4221905Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/eclipse/ee4j/project/1.0.9/project-1.0.9.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.4498936Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/eclipse/ee4j/project/1.0.9/project-1.0.9.pom (16 kB at 576 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.4552415Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/groovy/groovy-bom/4.0.23/groovy-bom-4.0.23.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.4793353Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/groovy/groovy-bom/4.0.23/groovy-bom-4.0.23.pom (27 kB at 1.1 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.4856486Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/infinispan/infinispan-bom/15.0.10.Final/infinispan-bom-15.0.10.Final.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.5101935Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/infinispan/infinispan-bom/15.0.10.Final/infinispan-bom-15.0.10.Final.pom (18 kB at 758 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.5133797Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/infinispan/infinispan-build-configuration-parent/15.0.10.Final/infinispan-build-configuration-parent-15.0.10.Final.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.5415759Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/infinispan/infinispan-build-configuration-parent/15.0.10.Final/infinispan-build-configuration-parent-15.0.10.Final.pom (19 kB at 667 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.5462552Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/jboss/jboss-parent/43/jboss-parent-43.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.5730465Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/jboss/jboss-parent/43/jboss-parent-43.pom (75 kB at 2.8 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.5857111Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/com/fasterxml/jackson/jackson-bom/2.17.2/jackson-bom-2.17.2.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.6119549Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/fasterxml/jackson/jackson-bom/2.17.2/jackson-bom-2.17.2.pom (19 kB at 692 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.6146952Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/com/fasterxml/jackson/jackson-parent/2.17/jackson-parent-2.17.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.6428281Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/fasterxml/jackson/jackson-parent/2.17/jackson-parent-2.17.pom (6.5 kB at 233 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.6460273Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/com/fasterxml/oss-parent/58/oss-parent-58.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.6834546Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/fasterxml/oss-parent/58/oss-parent-58.pom (24 kB at 623 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.6917790Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/glassfish/jersey/jersey-bom/3.1.9/jersey-bom-3.1.9.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.7185107Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/glassfish/jersey/jersey-bom/3.1.9/jersey-bom-3.1.9.pom (21 kB at 742 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.7239557Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/eclipse/jetty/ee10/jetty-ee10-bom/12.0.14/jetty-ee10-bom-12.0.14.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.7494064Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/eclipse/jetty/ee10/jetty-ee10-bom/12.0.14/jetty-ee10-bom-12.0.14.pom (9.6 kB at 367 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.7530857Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/eclipse/jetty/jetty-bom/12.0.14/jetty-bom-12.0.14.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.7810644Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/eclipse/jetty/jetty-bom/12.0.14/jetty-bom-12.0.14.pom (14 kB at 516 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.7852233Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/junit/junit-bom/5.10.5/junit-bom-5.10.5.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.8128205Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/junit/junit-bom/5.10.5/junit-bom-5.10.5.pom (5.6 kB at 202 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.8162019Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/jetbrains/kotlin/kotlin-bom/1.9.25/kotlin-bom-1.9.25.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.8386800Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/jetbrains/kotlin/kotlin-bom/1.9.25/kotlin-bom-1.9.25.pom (9.1 kB at 397 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.8428190Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/jetbrains/kotlinx/kotlinx-coroutines-bom/1.8.1/kotlinx-coroutines-bom-1.8.1.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.8819149Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/jetbrains/kotlinx/kotlinx-coroutines-bom/1.8.1/kotlinx-coroutines-bom-1.8.1.pom (4.3 kB at 110 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.8852053Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/jetbrains/kotlinx/kotlinx-serialization-bom/1.6.3/kotlinx-serialization-bom-1.6.3.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.9246709Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/jetbrains/kotlinx/kotlinx-serialization-bom/1.6.3/kotlinx-serialization-bom-1.6.3.pom (3.7 kB at 92 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:54.9281456Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/logging/log4j/log4j-bom/2.23.1/log4j-bom-2.23.1.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.0312790Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/logging/log4j/log4j-bom/2.23.1/log4j-bom-2.23.1.pom (12 kB at 120 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.0342566Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/logging/logging-parent/10.6.0/logging-parent-10.6.0.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.0651937Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/logging/logging-parent/10.6.0/logging-parent-10.6.0.pom (54 kB at 1.8 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.0730606Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/io/micrometer/micrometer-bom/1.13.6/micrometer-bom-1.13.6.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.1090979Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/io/micrometer/micrometer-bom/1.13.6/micrometer-bom-1.13.6.pom (8.4 kB at 234 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.1127522Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/io/micrometer/micrometer-tracing-bom/1.3.5/micrometer-tracing-bom-1.3.5.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.1554196Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/io/micrometer/micrometer-tracing-bom/1.3.5/micrometer-tracing-bom-1.3.5.pom (4.5 kB at 105 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.1581506Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/mockito/mockito-bom/5.11.0/mockito-bom-5.11.0.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.1796933Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/mockito/mockito-bom/5.11.0/mockito-bom-5.11.0.pom (3.0 kB at 135 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.1822248Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/io/netty/netty-bom/4.1.114.Final/netty-bom-4.1.114.Final.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.2128460Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/io/netty/netty-bom/4.1.114.Final/netty-bom-4.1.114.Final.pom (14 kB at 443 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.2150922Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/sonatype/oss/oss-parent/7/oss-parent-7.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.2362218Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/sonatype/oss/oss-parent/7/oss-parent-7.pom (4.8 kB at 230 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.2397377Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/com/squareup/okhttp3/okhttp-bom/4.12.0/okhttp-bom-4.12.0.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.2656349Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/squareup/okhttp3/okhttp-bom/4.12.0/okhttp-bom-4.12.0.pom (3.1 kB at 117 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.2694461Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/io/opentelemetry/opentelemetry-bom/1.37.0/opentelemetry-bom-1.37.0.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.3007535Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/io/opentelemetry/opentelemetry-bom/1.37.0/opentelemetry-bom-1.37.0.pom (5.7 kB at 183 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.3034128Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/io/prometheus/prometheus-metrics-bom/1.2.1/prometheus-metrics-bom-1.2.1.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.3376701Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/io/prometheus/prometheus-metrics-bom/1.2.1/prometheus-metrics-bom-1.2.1.pom (6.1 kB at 178 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.3397282Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/io/prometheus/client_java/1.2.1/client_java-1.2.1.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.3627815Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/io/prometheus/client_java/1.2.1/client_java-1.2.1.pom (13 kB at 577 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.3658078Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/io/prometheus/simpleclient_bom/0.16.0/simpleclient_bom-0.16.0.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.3898659Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/io/prometheus/simpleclient_bom/0.16.0/simpleclient_bom-0.16.0.pom (6.0 kB at 251 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.3921460Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/io/prometheus/parent/0.16.0/parent-0.16.0.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.4172279Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/io/prometheus/parent/0.16.0/parent-0.16.0.pom (13 kB at 481 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.4206721Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/pulsar/pulsar-bom/3.2.4/pulsar-bom-3.2.4.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.4458884Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/pulsar/pulsar-bom/3.2.4/pulsar-bom-3.2.4.pom (26 kB at 1.0 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.4482382Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/apache/29/apache-29.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.4820934Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/apache/29/apache-29.pom (21 kB at 609 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.4865613Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/com/querydsl/querydsl-bom/5.1.0/querydsl-bom-5.1.0.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.5131751Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/querydsl/querydsl-bom/5.1.0/querydsl-bom-5.1.0.pom (7.2 kB at 275 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.5166829Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/io/projectreactor/reactor-bom/2023.0.11/reactor-bom-2023.0.11.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.5490393Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/io/projectreactor/reactor-bom/2023.0.11/reactor-bom-2023.0.11.pom (4.8 kB at 149 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.5525222Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/io/rest-assured/rest-assured-bom/5.4.0/rest-assured-bom-5.4.0.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.5755683Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/io/rest-assured/rest-assured-bom/5.4.0/rest-assured-bom-5.4.0.pom (4.5 kB at 195 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.5779604Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/io/rsocket/rsocket-bom/1.1.3/rsocket-bom-1.1.3.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.6066809Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/io/rsocket/rsocket-bom/1.1.3/rsocket-bom-1.1.3.pom (2.6 kB at 91 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.6092170Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/seleniumhq/selenium/selenium-bom/4.19.1/selenium-bom-4.19.1.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.6359599Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/seleniumhq/selenium/selenium-bom/4.19.1/selenium-bom-4.19.1.pom (6.0 kB at 223 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.6382322Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/amqp/spring-amqp-bom/3.1.7/spring-amqp-bom-3.1.7.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.6625907Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/amqp/spring-amqp-bom/3.1.7/spring-amqp-bom-3.1.7.pom (3.9 kB at 155 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.6650265Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/batch/spring-batch-bom/5.1.2/spring-batch-bom-5.1.2.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.6904902Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/batch/spring-batch-bom/5.1.2/spring-batch-bom-5.1.2.pom (3.2 kB at 125 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.6928278Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/data/spring-data-bom/2024.0.5/spring-data-bom-2024.0.5.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.7204516Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/data/spring-data-bom/2024.0.5/spring-data-bom-2024.0.5.pom (5.5 kB at 197 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.7227865Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/spring-framework-bom/6.1.14/spring-framework-bom-6.1.14.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.7489421Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/spring-framework-bom/6.1.14/spring-framework-bom-6.1.14.pom (5.8 kB at 225 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.7510498Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/integration/spring-integration-bom/6.3.5/spring-integration-bom-6.3.5.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.7769423Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/integration/spring-integration-bom/6.3.5/spring-integration-bom-6.3.5.pom (10 kB at 395 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.7800701Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/pulsar/spring-pulsar-bom/1.1.5/spring-pulsar-bom-1.1.5.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.8056607Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/pulsar/spring-pulsar-bom/1.1.5/spring-pulsar-bom-1.1.5.pom (2.9 kB at 112 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.8083922Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/restdocs/spring-restdocs-bom/3.0.2/spring-restdocs-bom-3.0.2.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.8304225Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/restdocs/spring-restdocs-bom/3.0.2/spring-restdocs-bom-3.0.2.pom (2.6 kB at 117 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.8329589Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/security/spring-security-bom/6.3.4/spring-security-bom-6.3.4.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.8611469Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/security/spring-security-bom/6.3.4/spring-security-bom-6.3.4.pom (5.3 kB at 190 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.8636164Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/session/spring-session-bom/3.3.3/spring-session-bom-3.3.3.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.8879306Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/session/spring-session-bom/3.3.3/spring-session-bom-3.3.3.pom (2.9 kB at 120 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.8909240Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/ws/spring-ws-bom/4.0.11/spring-ws-bom-4.0.11.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.9163054Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/ws/spring-ws-bom/4.0.11/spring-ws-bom-4.0.11.pom (3.5 kB at 140 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.9196760Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/testcontainers/testcontainers-bom/1.19.8/testcontainers-bom-1.19.8.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.9429760Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/testcontainers/testcontainers-bom/1.19.8/testcontainers-bom-1.19.8.pom (10 kB at 453 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.9810855Z [INFO] 
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.9812079Z [INFO] --------------------< org.kunlecreates:test-utils >---------------------
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.9813442Z [INFO] Building Test Utilities (shared test resources) 0.1.0
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.9814397Z [INFO]   from pom.xml
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.9815694Z [INFO] --------------------------------[ jar ]---------------------------------
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:55.9840923Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-resources-plugin/3.3.1/maven-resources-plugin-3.3.1.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.0412307Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-resources-plugin/3.3.1/maven-resources-plugin-3.3.1.pom (8.2 kB at 143 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.0466526Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-plugins/39/maven-plugins-39.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.0689828Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-plugins/39/maven-plugins-39.pom (8.1 kB at 368 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.0716256Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-parent/39/maven-parent-39.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.0985546Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-parent/39/maven-parent-39.pom (48 kB at 1.8 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.1151636Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-resources-plugin/3.3.1/maven-resources-plugin-3.3.1.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.1564601Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-resources-plugin/3.3.1/maven-resources-plugin-3.3.1.jar (31 kB at 737 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.1649303Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-compiler-plugin/3.13.0/maven-compiler-plugin-3.13.0.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.1900003Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-compiler-plugin/3.13.0/maven-compiler-plugin-3.13.0.pom (10 kB at 418 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.1924810Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-plugins/41/maven-plugins-41.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.2247138Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-plugins/41/maven-plugins-41.pom (7.4 kB at 230 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.2268176Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-parent/41/maven-parent-41.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.2505653Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-parent/41/maven-parent-41.pom (50 kB at 2.1 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.2577267Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-compiler-plugin/3.13.0/maven-compiler-plugin-3.13.0.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.2875147Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-compiler-plugin/3.13.0/maven-compiler-plugin-3.13.0.jar (83 kB at 2.8 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.2945272Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-surefire-plugin/3.2.5/maven-surefire-plugin-3.2.5.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.3252362Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-surefire-plugin/3.2.5/maven-surefire-plugin-3.2.5.pom (5.3 kB at 177 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.3276737Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/surefire/surefire/3.2.5/surefire-3.2.5.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.3550095Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/surefire/surefire/3.2.5/surefire-3.2.5.pom (22 kB at 814 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.3613343Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/junit/junit-bom/5.9.3/junit-bom-5.9.3.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.3920341Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/junit/junit-bom/5.9.3/junit-bom-5.9.3.pom (5.6 kB at 188 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.3964536Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-surefire-plugin/3.2.5/maven-surefire-plugin-3.2.5.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.4195520Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-surefire-plugin/3.2.5/maven-surefire-plugin-3.2.5.jar (45 kB at 1.9 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.4253216Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-jar-plugin/3.4.2/maven-jar-plugin-3.4.2.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.4467519Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-jar-plugin/3.4.2/maven-jar-plugin-3.4.2.pom (7.7 kB at 366 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.4489197Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-plugins/42/maven-plugins-42.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.4725825Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-plugins/42/maven-plugins-42.pom (7.7 kB at 320 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.4750030Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-parent/42/maven-parent-42.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.5010604Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-parent/42/maven-parent-42.pom (50 kB at 1.9 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.5042590Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/apache/32/apache-32.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.5301414Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/apache/32/apache-32.pom (24 kB at 967 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.5353209Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/junit/junit-bom/5.10.2/junit-bom-5.10.2.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.5597261Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/junit/junit-bom/5.10.2/junit-bom-5.10.2.pom (5.6 kB at 235 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.5631479Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-jar-plugin/3.4.2/maven-jar-plugin-3.4.2.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.5884966Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-jar-plugin/3.4.2/maven-jar-plugin-3.4.2.jar (34 kB at 1.3 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.5921956Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-install-plugin/3.1.3/maven-install-plugin-3.1.3.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.6163793Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-install-plugin/3.1.3/maven-install-plugin-3.1.3.pom (8.1 kB at 337 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.6189121Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-plugins/43/maven-plugins-43.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.6422022Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-plugins/43/maven-plugins-43.pom (7.5 kB at 325 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.6450311Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-parent/43/maven-parent-43.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.6745492Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-parent/43/maven-parent-43.pom (50 kB at 1.7 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.6780671Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/apache/33/apache-33.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.7001338Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/apache/33/apache-33.pom (24 kB at 1.1 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.7042785Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/junit/junit-bom/5.10.3/junit-bom-5.10.3.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.7297851Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/junit/junit-bom/5.10.3/junit-bom-5.10.3.pom (5.6 kB at 226 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.7327838Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-install-plugin/3.1.3/maven-install-plugin-3.1.3.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.7581721Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-install-plugin/3.1.3/maven-install-plugin-3.1.3.jar (33 kB at 1.3 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.7797104Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/slf4j/slf4j-api/2.0.9/slf4j-api-2.0.9.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.8108563Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/slf4j/slf4j-api/2.0.9/slf4j-api-2.0.9.pom (2.8 kB at 91 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.8136871Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/slf4j/slf4j-parent/2.0.9/slf4j-parent-2.0.9.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.8370445Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/slf4j/slf4j-parent/2.0.9/slf4j-parent-2.0.9.pom (16 kB at 675 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.8398852Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/slf4j/slf4j-bom/2.0.9/slf4j-bom-2.0.9.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.8716769Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/slf4j/slf4j-bom/2.0.9/slf4j-bom-2.0.9.pom (4.9 kB at 154 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.8777566Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/boot/spring-boot-test/3.3.5/spring-boot-test-3.3.5.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.9050054Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/boot/spring-boot-test/3.3.5/spring-boot-test-3.3.5.pom (2.2 kB at 82 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.9088345Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/boot/spring-boot/3.3.5/spring-boot-3.3.5.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.9428521Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/boot/spring-boot/3.3.5/spring-boot-3.3.5.pom (2.2 kB at 65 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.9455323Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/spring-core/6.1.14/spring-core-6.1.14.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.9777654Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/spring-core/6.1.14/spring-core-6.1.14.pom (2.0 kB at 63 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:56.9811548Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/spring-jcl/6.1.14/spring-jcl-6.1.14.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.0033046Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/spring-jcl/6.1.14/spring-jcl-6.1.14.pom (1.8 kB at 80 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.0061782Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/spring-context/6.1.14/spring-context-6.1.14.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.0262765Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/spring-context/6.1.14/spring-context-6.1.14.pom (2.8 kB at 133 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.0290304Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/spring-aop/6.1.14/spring-aop-6.1.14.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.0562554Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/spring-aop/6.1.14/spring-aop-6.1.14.pom (2.2 kB at 79 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.0588689Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/spring-beans/6.1.14/spring-beans-6.1.14.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.0853807Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/spring-beans/6.1.14/spring-beans-6.1.14.pom (2.0 kB at 78 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.0894466Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/spring-expression/6.1.14/spring-expression-6.1.14.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.1148295Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/spring-expression/6.1.14/spring-expression-6.1.14.pom (2.1 kB at 83 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.1180992Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/io/micrometer/micrometer-observation/1.13.6/micrometer-observation-1.13.6.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.1494886Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/io/micrometer/micrometer-observation/1.13.6/micrometer-observation-1.13.6.pom (3.8 kB at 120 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.1524637Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/io/micrometer/micrometer-commons/1.13.6/micrometer-commons-1.13.6.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.1828564Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/io/micrometer/micrometer-commons/1.13.6/micrometer-commons-1.13.6.pom (3.4 kB at 114 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.1857069Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/spring-test/6.1.14/spring-test-6.1.14.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.2162723Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/spring-test/6.1.14/spring-test-6.1.14.pom (2.1 kB at 69 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.2238350Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/boot/spring-boot-autoconfigure/3.3.5/spring-boot-autoconfigure-3.3.5.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.2473657Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/boot/spring-boot-autoconfigure/3.3.5/spring-boot-autoconfigure-3.3.5.pom (2.1 kB at 86 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.2506640Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/flywaydb/flyway-core/11.17.1/flyway-core-11.17.1.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.2758352Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/flywaydb/flyway-core/11.17.1/flyway-core-11.17.1.pom (4.8 kB at 191 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.2782427Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/flywaydb/flyway-parent/11.17.1/flyway-parent-11.17.1.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.3117757Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/flywaydb/flyway-parent/11.17.1/flyway-parent-11.17.1.pom (34 kB at 987 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.3157333Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/io/netty/netty-bom/4.2.7.Final/netty-bom-4.2.7.Final.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.3440798Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/io/netty/netty-bom/4.2.7.Final/netty-bom-4.2.7.Final.pom (18 kB at 653 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.3497097Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/com/fasterxml/jackson/core/jackson-databind/2.17.2/jackson-databind-2.17.2.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.3714822Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/fasterxml/jackson/core/jackson-databind/2.17.2/jackson-databind-2.17.2.pom (21 kB at 966 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.3749514Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/com/fasterxml/jackson/jackson-base/2.17.2/jackson-base-2.17.2.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.3983286Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/fasterxml/jackson/jackson-base/2.17.2/jackson-base-2.17.2.pom (12 kB at 490 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.4041504Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/com/fasterxml/jackson/core/jackson-annotations/2.17.2/jackson-annotations-2.17.2.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.4385502Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/fasterxml/jackson/core/jackson-annotations/2.17.2/jackson-annotations-2.17.2.pom (7.1 kB at 202 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.4417027Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/com/fasterxml/jackson/core/jackson-core/2.17.2/jackson-core-2.17.2.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.4656441Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/fasterxml/jackson/core/jackson-core/2.17.2/jackson-core-2.17.2.pom (9.6 kB at 402 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.4695403Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/flywaydb/flyway-database-postgresql/11.17.1/flyway-database-postgresql-11.17.1.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.4914801Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/flywaydb/flyway-database-postgresql/11.17.1/flyway-database-postgresql-11.17.1.pom (1.9 kB at 86 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.4956226Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/flywaydb/flyway-core/10.10.0/flyway-core-10.10.0.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.5218086Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/flywaydb/flyway-core/10.10.0/flyway-core-10.10.0.pom (6.2 kB at 240 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.5241231Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/flywaydb/flyway-parent/10.10.0/flyway-parent-10.10.0.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.5528242Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/flywaydb/flyway-parent/10.10.0/flyway-parent-10.10.0.pom (33 kB at 1.1 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.5564430Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/com/fasterxml/jackson/dataformat/jackson-dataformat-toml/2.17.2/jackson-dataformat-toml-2.17.2.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.5844844Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/fasterxml/jackson/dataformat/jackson-dataformat-toml/2.17.2/jackson-dataformat-toml-2.17.2.pom (3.5 kB at 124 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.5868251Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/com/fasterxml/jackson/dataformat/jackson-dataformats-text/2.17.2/jackson-dataformats-text-2.17.2.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.6146071Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/fasterxml/jackson/dataformat/jackson-dataformats-text/2.17.2/jackson-dataformats-text-2.17.2.pom (3.5 kB at 124 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.6200784Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/com/google/code/gson/gson/2.10.1/gson-2.10.1.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.6455173Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/google/code/gson/gson/2.10.1/gson-2.10.1.pom (9.4 kB at 360 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.6479277Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/com/google/code/gson/gson-parent/2.10.1/gson-parent-2.10.1.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.6750063Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/google/code/gson/gson-parent/2.10.1/gson-parent-2.10.1.pom (13 kB at 464 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.6907295Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/slf4j/slf4j-api/2.0.9/slf4j-api-2.0.9.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.7152206Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/slf4j/slf4j-api/2.0.9/slf4j-api-2.0.9.jar (65 kB at 2.7 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.7161861Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/boot/spring-boot-test/3.3.5/spring-boot-test-3.3.5.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.7167234Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/boot/spring-boot/3.3.5/spring-boot-3.3.5.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.7173896Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/spring-core/6.1.14/spring-core-6.1.14.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.7176113Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/spring-jcl/6.1.14/spring-jcl-6.1.14.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.7180488Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/spring-context/6.1.14/spring-context-6.1.14.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.7575983Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/boot/spring-boot-test/3.3.5/spring-boot-test-3.3.5.jar (249 kB at 5.9 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.7577330Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/spring-aop/6.1.14/spring-aop-6.1.14.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.7697067Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/spring-jcl/6.1.14/spring-jcl-6.1.14.jar (25 kB at 463 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.7700604Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/spring-beans/6.1.14/spring-beans-6.1.14.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.8037439Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/spring-aop/6.1.14/spring-aop-6.1.14.jar (417 kB at 4.9 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.8039401Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/spring-expression/6.1.14/spring-expression-6.1.14.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.8329339Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/spring-context/6.1.14/spring-context-6.1.14.jar (1.3 MB at 11 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.8335335Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/boot/spring-boot/3.3.5/spring-boot-3.3.5.jar (1.6 MB at 14 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.8337243Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/io/micrometer/micrometer-observation/1.13.6/micrometer-observation-1.13.6.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.8338953Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/io/micrometer/micrometer-commons/1.13.6/micrometer-commons-1.13.6.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.8340783Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/spring-beans/6.1.14/spring-beans-6.1.14.jar (863 kB at 7.4 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.8344263Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/spring-test/6.1.14/spring-test-6.1.14.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.8346566Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/spring-expression/6.1.14/spring-expression-6.1.14.jar (304 kB at 2.6 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.8348504Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/boot/spring-boot-autoconfigure/3.3.5/spring-boot-autoconfigure-3.3.5.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.8374731Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/spring-core/6.1.14/spring-core-6.1.14.jar (1.9 MB at 16 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.8377495Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/flywaydb/flyway-core/11.17.1/flyway-core-11.17.1.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.8606176Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/io/micrometer/micrometer-observation/1.13.6/micrometer-observation-1.13.6.jar (72 kB at 505 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.8607699Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/com/fasterxml/jackson/core/jackson-databind/2.17.2/jackson-databind-2.17.2.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.8691567Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/io/micrometer/micrometer-commons/1.13.6/micrometer-commons-1.13.6.jar (48 kB at 317 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.8696324Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/com/fasterxml/jackson/core/jackson-annotations/2.17.2/jackson-annotations-2.17.2.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.8752233Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/spring-test/6.1.14/spring-test-6.1.14.jar (857 kB at 5.5 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.8755201Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/com/fasterxml/jackson/core/jackson-core/2.17.2/jackson-core-2.17.2.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.8807048Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/flywaydb/flyway-core/11.17.1/flyway-core-11.17.1.jar (745 kB at 4.6 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.8808488Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/flywaydb/flyway-database-postgresql/11.17.1/flyway-database-postgresql-11.17.1.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.8961614Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/fasterxml/jackson/core/jackson-annotations/2.17.2/jackson-annotations-2.17.2.jar (78 kB at 443 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.9070018Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/fasterxml/jackson/core/jackson-core/2.17.2/jackson-core-2.17.2.jar (582 kB at 3.1 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.9136946Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/fasterxml/jackson/core/jackson-databind/2.17.2/jackson-databind-2.17.2.jar (1.6 MB at 8.5 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.9186525Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/boot/spring-boot-autoconfigure/3.3.5/spring-boot-autoconfigure-3.3.5.jar (2.0 MB at 9.8 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.9192458Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/flywaydb/flyway-database-postgresql/11.17.1/flyway-database-postgresql-11.17.1.jar (48 kB at 238 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.9305206Z [INFO] 
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.9307288Z [INFO] --- resources:3.3.1:resources (default-resources) @ test-utils ---
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.9387131Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-interpolation/1.26/plexus-interpolation-1.26.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.9778949Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-interpolation/1.26/plexus-interpolation-1.26.pom (2.7 kB at 68 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:57.9805535Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus/5.1/plexus-5.1.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.0132102Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus/5.1/plexus-5.1.pom (23 kB at 703 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.0172339Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-utils/3.5.1/plexus-utils-3.5.1.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.0448773Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-utils/3.5.1/plexus-utils-3.5.1.pom (8.8 kB at 313 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.0479664Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus/10/plexus-10.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.0773528Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus/10/plexus-10.pom (25 kB at 847 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.0814336Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-filtering/3.3.1/maven-filtering-3.3.1.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.1153220Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-filtering/3.3.1/maven-filtering-3.3.1.pom (6.0 kB at 183 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.1172359Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-shared-components/39/maven-shared-components-39.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.1444292Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-shared-components/39/maven-shared-components-39.pom (3.2 kB at 115 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.1487230Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/javax/inject/javax.inject/1/javax.inject-1.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.1739459Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/javax/inject/javax.inject/1/javax.inject-1.pom (612 B at 24 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.1760781Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/slf4j/slf4j-api/1.7.36/slf4j-api-1.7.36.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.2078156Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/slf4j/slf4j-api/1.7.36/slf4j-api-1.7.36.pom (2.7 kB at 86 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.2095933Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/slf4j/slf4j-parent/1.7.36/slf4j-parent-1.7.36.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.2348813Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/slf4j/slf4j-parent/1.7.36/slf4j-parent-1.7.36.pom (14 kB at 564 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.2374924Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/sonatype/plexus/plexus-build-api/0.0.7/plexus-build-api-0.0.7.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.2662144Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/sonatype/plexus/plexus-build-api/0.0.7/plexus-build-api-0.0.7.pom (3.2 kB at 114 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.2680433Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/sonatype/spice/spice-parent/15/spice-parent-15.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.2995232Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/sonatype/spice/spice-parent/15/spice-parent-15.pom (8.4 kB at 261 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.3014378Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/sonatype/forge/forge-parent/5/forge-parent-5.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.3307466Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/sonatype/forge/forge-parent/5/forge-parent-5.pom (8.4 kB at 288 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.3335007Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-utils/3.5.0/plexus-utils-3.5.0.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.3659619Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-utils/3.5.0/plexus-utils-3.5.0.pom (8.0 kB at 250 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.3690949Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/commons-io/commons-io/2.11.0/commons-io-2.11.0.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.3989727Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/commons-io/commons-io/2.11.0/commons-io-2.11.0.pom (20 kB at 658 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.4009656Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/commons/commons-parent/52/commons-parent-52.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.4267597Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/commons/commons-parent/52/commons-parent-52.pom (79 kB at 3.0 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.4394301Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/apache/23/apache-23.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.4673272Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/apache/23/apache-23.pom (18 kB at 635 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.4716126Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/junit/junit-bom/5.7.2/junit-bom-5.7.2.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.4969383Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/junit/junit-bom/5.7.2/junit-bom-5.7.2.pom (5.1 kB at 204 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.4993161Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/commons/commons-lang3/3.12.0/commons-lang3-3.12.0.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.5248664Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/commons/commons-lang3/3.12.0/commons-lang3-3.12.0.pom (31 kB at 1.2 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.5302838Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/junit/junit-bom/5.7.1/junit-bom-5.7.1.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.5568706Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/junit/junit-bom/5.7.1/junit-bom-5.7.1.pom (5.1 kB at 189 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.5617833Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-interpolation/1.26/plexus-interpolation-1.26.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.5886996Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-interpolation/1.26/plexus-interpolation-1.26.jar (85 kB at 3.2 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.5890409Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-utils/3.5.1/plexus-utils-3.5.1.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.5900301Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-filtering/3.3.1/maven-filtering-3.3.1.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.5903092Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/javax/inject/javax.inject/1/javax.inject-1.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.5911136Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/slf4j/slf4j-api/1.7.36/slf4j-api-1.7.36.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.5913865Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/sonatype/plexus/plexus-build-api/0.0.7/plexus-build-api-0.0.7.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.6168960Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/slf4j/slf4j-api/1.7.36/slf4j-api-1.7.36.jar (41 kB at 1.5 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.6176154Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/commons-io/commons-io/2.11.0/commons-io-2.11.0.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.6205713Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-utils/3.5.1/plexus-utils-3.5.1.jar (269 kB at 8.7 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.6208556Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/commons/commons-lang3/3.12.0/commons-lang3-3.12.0.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.6210269Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-filtering/3.3.1/maven-filtering-3.3.1.jar (55 kB at 1.7 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.6249930Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/sonatype/plexus/plexus-build-api/0.0.7/plexus-build-api-0.0.7.jar (8.5 kB at 242 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.6416196Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/javax/inject/javax.inject/1/javax.inject-1.jar (2.5 kB at 48 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.6458065Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/commons-io/commons-io/2.11.0/commons-io-2.11.0.jar (327 kB at 6.1 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.6536519Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/commons/commons-lang3/3.12.0/commons-lang3-3.12.0.jar (587 kB at 9.5 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.7656488Z [INFO] Copying 2 resources from src/main/resources to target/classes
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.7696539Z [INFO] 
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.7697523Z [INFO] --- compiler:3.13.0:compile (default-compile) @ test-utils ---
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.7749631Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-shared-utils/3.4.2/maven-shared-utils-3.4.2.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.8157755Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-shared-utils/3.4.2/maven-shared-utils-3.4.2.pom (5.9 kB at 144 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.8209009Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-shared-incremental/1.1/maven-shared-incremental-1.1.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.8620391Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-shared-incremental/1.1/maven-shared-incremental-1.1.pom (4.7 kB at 116 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.8644585Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-shared-components/19/maven-shared-components-19.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.9013662Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-shared-components/19/maven-shared-components-19.pom (6.4 kB at 172 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.9033383Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-parent/23/maven-parent-23.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.9542444Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-parent/23/maven-parent-23.pom (33 kB at 652 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.9567842Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/apache/13/apache-13.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.9882844Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/apache/13/apache-13.pom (14 kB at 437 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:58.9920464Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-java/1.2.0/plexus-java-1.2.0.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.0312433Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-java/1.2.0/plexus-java-1.2.0.pom (4.3 kB at 107 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.0331074Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-languages/1.2.0/plexus-languages-1.2.0.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.0795421Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-languages/1.2.0/plexus-languages-1.2.0.pom (3.2 kB at 68 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.0811141Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus/15/plexus-15.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.1152792Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus/15/plexus-15.pom (28 kB at 794 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.1186463Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/junit/junit-bom/5.10.0/junit-bom-5.10.0.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.1514036Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/junit/junit-bom/5.10.0/junit-bom-5.10.0.pom (5.6 kB at 171 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.1539769Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/ow2/asm/asm/9.6/asm-9.6.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.1823588Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/ow2/asm/asm/9.6/asm-9.6.pom (2.4 kB at 82 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.1845454Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/ow2/ow2/1.5.1/ow2-1.5.1.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.2103914Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/ow2/ow2/1.5.1/ow2-1.5.1.pom (11 kB at 434 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.2127198Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/com/thoughtworks/qdox/qdox/2.0.3/qdox-2.0.3.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.2426826Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/thoughtworks/qdox/qdox/2.0.3/qdox-2.0.3.pom (17 kB at 575 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.2473704Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/sonatype/oss/oss-parent/9/oss-parent-9.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.2813588Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/sonatype/oss/oss-parent/9/oss-parent-9.pom (6.6 kB at 193 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.2843410Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-compiler-api/2.15.0/plexus-compiler-api-2.15.0.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.3185924Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-compiler-api/2.15.0/plexus-compiler-api-2.15.0.pom (1.4 kB at 40 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.3201523Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-compiler/2.15.0/plexus-compiler-2.15.0.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.3481658Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-compiler/2.15.0/plexus-compiler-2.15.0.pom (7.6 kB at 271 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.3497930Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus/17/plexus-17.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.3778665Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus/17/plexus-17.pom (28 kB at 1.0 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.3808446Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-utils/4.0.0/plexus-utils-4.0.0.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.4176633Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-utils/4.0.0/plexus-utils-4.0.0.pom (8.7 kB at 234 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.4195077Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus/13/plexus-13.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.4458224Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus/13/plexus-13.pom (27 kB at 1.1 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.4486470Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-compiler-manager/2.15.0/plexus-compiler-manager-2.15.0.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.4757726Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-compiler-manager/2.15.0/plexus-compiler-manager-2.15.0.pom (1.3 kB at 50 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.4786385Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-xml/3.0.0/plexus-xml-3.0.0.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.5052296Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-xml/3.0.0/plexus-xml-3.0.0.pom (3.7 kB at 138 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.5076310Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-compiler-javac/2.15.0/plexus-compiler-javac-2.15.0.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.5318736Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-compiler-javac/2.15.0/plexus-compiler-javac-2.15.0.pom (1.3 kB at 54 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.5335947Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-compilers/2.15.0/plexus-compilers-2.15.0.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.5596815Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-compilers/2.15.0/plexus-compilers-2.15.0.pom (1.6 kB at 60 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.5652404Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-shared-utils/3.4.2/maven-shared-utils-3.4.2.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.6047253Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-shared-utils/3.4.2/maven-shared-utils-3.4.2.jar (151 kB at 3.9 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.6051013Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-shared-incremental/1.1/maven-shared-incremental-1.1.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.6054002Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-java/1.2.0/plexus-java-1.2.0.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.6064054Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/ow2/asm/asm/9.6/asm-9.6.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.6066746Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/com/thoughtworks/qdox/qdox/2.0.3/qdox-2.0.3.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.6068085Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-compiler-api/2.15.0/plexus-compiler-api-2.15.0.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.6295201Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-java/1.2.0/plexus-java-1.2.0.jar (58 kB at 2.3 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.6298633Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-compiler-manager/2.15.0/plexus-compiler-manager-2.15.0.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.6300979Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-shared-incremental/1.1/maven-shared-incremental-1.1.jar (14 kB at 542 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.6302338Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-xml/3.0.0/plexus-xml-3.0.0.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.6321678Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/ow2/asm/asm/9.6/asm-9.6.jar (124 kB at 4.4 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.6323360Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-compiler-javac/2.15.0/plexus-compiler-javac-2.15.0.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.6334705Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-compiler-api/2.15.0/plexus-compiler-api-2.15.0.jar (29 kB at 1.0 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.6336535Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-utils/4.0.0/plexus-utils-4.0.0.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.6390623Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/thoughtworks/qdox/qdox/2.0.3/qdox-2.0.3.jar (334 kB at 10 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.6528781Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-xml/3.0.0/plexus-xml-3.0.0.jar (93 kB at 2.0 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.6573954Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-compiler-manager/2.15.0/plexus-compiler-manager-2.15.0.jar (5.2 kB at 101 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.6593135Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-compiler-javac/2.15.0/plexus-compiler-javac-2.15.0.jar (26 kB at 485 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.6704163Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-utils/4.0.0/plexus-utils-4.0.0.jar (192 kB at 3.0 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.7951941Z [INFO] Recompiling the module because of changed source code.
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:30:59.8008657Z [INFO] Compiling 4 source files with javac [debug parameters release 17] to target/classes
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.3615509Z [WARNING] unknown enum constant javax.annotation.meta.When.MAYBE
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.3616371Z   reason: class file for javax.annotation.meta.When not found
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.3617682Z [INFO] 
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.3618565Z [INFO] --- resources:3.3.1:testResources (default-testResources) @ test-utils ---
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.3696958Z [INFO] skip non existing resourceDirectory /home/runner/work/shop-ease-enterprise-app/shop-ease-enterprise-app/services/test-utils/src/test/resources
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.3707194Z [INFO] 
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.3707739Z [INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ test-utils ---
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.3730215Z [INFO] No sources to compile
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.3730604Z [INFO] 
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.3731007Z [INFO] --- surefire:3.2.5:test (default-test) @ test-utils ---
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.3837672Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/surefire/maven-surefire-common/3.2.5/maven-surefire-common-3.2.5.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.4180803Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/surefire/maven-surefire-common/3.2.5/maven-surefire-common-3.2.5.pom (6.2 kB at 184 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.4231014Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/surefire/surefire-api/3.2.5/surefire-api-3.2.5.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.4503818Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/surefire/surefire-api/3.2.5/surefire-api-3.2.5.pom (3.5 kB at 126 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.4537433Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/surefire/surefire-logger-api/3.2.5/surefire-logger-api-3.2.5.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.4812246Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/surefire/surefire-logger-api/3.2.5/surefire-logger-api-3.2.5.pom (3.3 kB at 121 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.4853544Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/surefire/surefire-shared-utils/3.2.5/surefire-shared-utils-3.2.5.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.5242223Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/surefire/surefire-shared-utils/3.2.5/surefire-shared-utils-3.2.5.pom (4.1 kB at 107 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.5288486Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/surefire/surefire-extensions-api/3.2.5/surefire-extensions-api-3.2.5.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.5847119Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/surefire/surefire-extensions-api/3.2.5/surefire-extensions-api-3.2.5.pom (3.3 kB at 59 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.5890552Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/surefire/surefire-booter/3.2.5/surefire-booter-3.2.5.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.6369921Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/surefire/surefire-booter/3.2.5/surefire-booter-3.2.5.pom (4.5 kB at 93 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.6424585Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/surefire/surefire-extensions-spi/3.2.5/surefire-extensions-spi-3.2.5.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.6697563Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/surefire/surefire-extensions-spi/3.2.5/surefire-extensions-spi-3.2.5.pom (1.8 kB at 65 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.6742272Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/eclipse/aether/aether-util/1.0.0.v20140518/aether-util-1.0.0.v20140518.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.7039652Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/eclipse/aether/aether-util/1.0.0.v20140518/aether-util-1.0.0.v20140518.pom (2.2 kB at 73 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.7053171Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/eclipse/aether/aether/1.0.0.v20140518/aether-1.0.0.v20140518.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.7358049Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/eclipse/aether/aether/1.0.0.v20140518/aether-1.0.0.v20140518.pom (30 kB at 1.0 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.7385118Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/eclipse/aether/aether-api/1.0.0.v20140518/aether-api-1.0.0.v20140518.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.7768027Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/eclipse/aether/aether-api/1.0.0.v20140518/aether-api-1.0.0.v20140518.pom (1.9 kB at 50 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.7797875Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-common-artifact-filters/3.1.1/maven-common-artifact-filters-3.1.1.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.8113244Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-common-artifact-filters/3.1.1/maven-common-artifact-filters-3.1.1.pom (5.8 kB at 181 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.8133534Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-shared-components/34/maven-shared-components-34.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.8418152Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-shared-components/34/maven-shared-components-34.pom (5.1 kB at 182 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.8437267Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-parent/34/maven-parent-34.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.8740945Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-parent/34/maven-parent-34.pom (43 kB at 1.4 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.8780336Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-artifact/3.2.5/maven-artifact-3.2.5.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.9036699Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-artifact/3.2.5/maven-artifact-3.2.5.pom (2.3 kB at 90 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.9053630Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven/3.2.5/maven-3.2.5.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.9320990Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven/3.2.5/maven-3.2.5.pom (22 kB at 860 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.9345857Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-parent/25/maven-parent-25.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.9627707Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-parent/25/maven-parent-25.pom (37 kB at 1.3 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.9652120Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/apache/15/apache-15.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.9915079Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/apache/15/apache-15.pom (15 kB at 586 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:01.9952789Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-core/3.2.5/maven-core-3.2.5.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.0310243Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-core/3.2.5/maven-core-3.2.5.pom (8.1 kB at 230 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.0343902Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-settings/3.2.5/maven-settings-3.2.5.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.0624026Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-settings/3.2.5/maven-settings-3.2.5.pom (2.2 kB at 78 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.0662710Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-settings-builder/3.2.5/maven-settings-builder-3.2.5.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.0936971Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-settings-builder/3.2.5/maven-settings-builder-3.2.5.pom (2.6 kB at 96 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.0967599Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-interpolation/1.21/plexus-interpolation-1.21.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.2242045Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-interpolation/1.21/plexus-interpolation-1.21.pom (1.5 kB at 12 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.2260151Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-components/1.3.1/plexus-components-1.3.1.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.2611927Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-components/1.3.1/plexus-components-1.3.1.pom (3.1 kB at 88 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.2627019Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus/3.3.1/plexus-3.3.1.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.2939489Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus/3.3.1/plexus-3.3.1.pom (20 kB at 660 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.2963441Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/sonatype/spice/spice-parent/17/spice-parent-17.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.3294291Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/sonatype/spice/spice-parent/17/spice-parent-17.pom (6.8 kB at 205 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.3307924Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/sonatype/forge/forge-parent/10/forge-parent-10.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.3600841Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/sonatype/forge/forge-parent/10/forge-parent-10.pom (14 kB at 468 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.3627076Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-component-annotations/1.5.5/plexus-component-annotations-1.5.5.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.3937143Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-component-annotations/1.5.5/plexus-component-annotations-1.5.5.pom (815 B at 26 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.3951633Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-containers/1.5.5/plexus-containers-1.5.5.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.4396352Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-containers/1.5.5/plexus-containers-1.5.5.pom (4.2 kB at 94 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.4411721Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus/2.0.7/plexus-2.0.7.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.4818787Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus/2.0.7/plexus-2.0.7.pom (17 kB at 432 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.4846497Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/sonatype/plexus/plexus-sec-dispatcher/1.3/plexus-sec-dispatcher-1.3.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.5161683Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/sonatype/plexus/plexus-sec-dispatcher/1.3/plexus-sec-dispatcher-1.3.pom (3.0 kB at 96 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.5178855Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/sonatype/spice/spice-parent/12/spice-parent-12.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.5536825Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/sonatype/spice/spice-parent/12/spice-parent-12.pom (6.8 kB at 189 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.5554006Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/sonatype/forge/forge-parent/4/forge-parent-4.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.5844413Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/sonatype/forge/forge-parent/4/forge-parent-4.pom (8.4 kB at 290 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.5868136Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/sonatype/plexus/plexus-cipher/1.4/plexus-cipher-1.4.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.6128346Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/sonatype/plexus/plexus-cipher/1.4/plexus-cipher-1.4.pom (2.1 kB at 79 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.6152380Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-repository-metadata/3.2.5/maven-repository-metadata-3.2.5.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.6430090Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-repository-metadata/3.2.5/maven-repository-metadata-3.2.5.pom (2.2 kB at 80 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.6462419Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-plugin-api/3.2.5/maven-plugin-api-3.2.5.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.6766068Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-plugin-api/3.2.5/maven-plugin-api-3.2.5.pom (3.0 kB at 101 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.6798835Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/eclipse/sisu/org.eclipse.sisu.plexus/0.9.0.M2/org.eclipse.sisu.plexus-0.9.0.M2.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.7116310Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/eclipse/sisu/org.eclipse.sisu.plexus/0.9.0.M2/org.eclipse.sisu.plexus-0.9.0.M2.pom (15 kB at 468 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.7137012Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/eclipse/sisu/sisu-plexus/0.9.0.M2/sisu-plexus-0.9.0.M2.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.7495288Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/eclipse/sisu/sisu-plexus/0.9.0.M2/sisu-plexus-0.9.0.M2.pom (15 kB at 403 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.7518858Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/javax/annotation/javax.annotation-api/1.2/javax.annotation-api-1.2.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.7891213Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/javax/annotation/javax.annotation-api/1.2/javax.annotation-api-1.2.pom (13 kB at 363 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.7909825Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/net/java/jvnet-parent/3/jvnet-parent-3.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.8231018Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/net/java/jvnet-parent/3/jvnet-parent-3.pom (4.8 kB at 150 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.8253830Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/javax/enterprise/cdi-api/1.2/cdi-api-1.2.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.8523892Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/javax/enterprise/cdi-api/1.2/cdi-api-1.2.pom (6.3 kB at 232 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.8540316Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/jboss/weld/weld-parent/26/weld-parent-26.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.8864036Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/jboss/weld/weld-parent/26/weld-parent-26.pom (32 kB at 980 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.8928858Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/eclipse/sisu/org.eclipse.sisu.inject/0.9.0.M2/org.eclipse.sisu.inject-0.9.0.M2.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.9326084Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/eclipse/sisu/org.eclipse.sisu.inject/0.9.0.M2/org.eclipse.sisu.inject-0.9.0.M2.pom (17 kB at 434 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.9345578Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/eclipse/sisu/sisu-inject/0.9.0.M2/sisu-inject-0.9.0.M2.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.9836161Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/eclipse/sisu/sisu-inject/0.9.0.M2/sisu-inject-0.9.0.M2.pom (15 kB at 302 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:02.9862383Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-component-annotations/2.1.0/plexus-component-annotations-2.1.0.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.0150889Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-component-annotations/2.1.0/plexus-component-annotations-2.1.0.pom (750 B at 26 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.0164616Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-containers/2.1.0/plexus-containers-2.1.0.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.0409222Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-containers/2.1.0/plexus-containers-2.1.0.pom (4.8 kB at 200 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.0430962Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-classworlds/2.6.0/plexus-classworlds-2.6.0.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.0867929Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-classworlds/2.6.0/plexus-classworlds-2.6.0.pom (7.9 kB at 180 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.0893846Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-model-builder/3.2.5/maven-model-builder-3.2.5.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.1214840Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-model-builder/3.2.5/maven-model-builder-3.2.5.pom (3.0 kB at 94 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.1248580Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-aether-provider/3.2.5/maven-aether-provider-3.2.5.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.1544685Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-aether-provider/3.2.5/maven-aether-provider-3.2.5.pom (4.2 kB at 142 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.1574225Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/eclipse/aether/aether-spi/1.0.0.v20140518/aether-spi-1.0.0.v20140518.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.1881543Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/eclipse/aether/aether-spi/1.0.0.v20140518/aether-spi-1.0.0.v20140518.pom (2.1 kB at 68 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.1905725Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/eclipse/aether/aether-impl/1.0.0.v20140518/aether-impl-1.0.0.v20140518.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.2214544Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/eclipse/aether/aether-impl/1.0.0.v20140518/aether-impl-1.0.0.v20140518.pom (3.5 kB at 112 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.2246855Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/sonatype/sisu/sisu-guice/3.2.3/sisu-guice-3.2.3.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.2499365Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/sonatype/sisu/sisu-guice/3.2.3/sisu-guice-3.2.3.pom (11 kB at 437 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.2518297Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/sonatype/sisu/inject/guice-parent/3.2.3/guice-parent-3.2.3.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.2835671Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/sonatype/sisu/inject/guice-parent/3.2.3/guice-parent-3.2.3.pom (13 kB at 421 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.2858144Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/sonatype/forge/forge-parent/38/forge-parent-38.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.3172836Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/sonatype/forge/forge-parent/38/forge-parent-38.pom (19 kB at 586 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.3202377Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/aopalliance/aopalliance/1.0/aopalliance-1.0.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.3465802Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/aopalliance/aopalliance/1.0/aopalliance-1.0.pom (363 B at 14 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.3492576Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/com/google/guava/guava/16.0.1/guava-16.0.1.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.3815665Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/google/guava/guava/16.0.1/guava-16.0.1.pom (6.1 kB at 185 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.3837754Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/com/google/guava/guava-parent/16.0.1/guava-parent-16.0.1.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.4082137Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/google/guava/guava-parent/16.0.1/guava-parent-16.0.1.pom (7.3 kB at 293 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.4112111Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-classworlds/2.5.2/plexus-classworlds-2.5.2.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.4523579Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-classworlds/2.5.2/plexus-classworlds-2.5.2.pom (7.3 kB at 174 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.4562346Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/commons-io/commons-io/2.15.1/commons-io-2.15.1.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.4931854Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/commons-io/commons-io/2.15.1/commons-io-2.15.1.pom (20 kB at 540 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.4955583Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/commons/commons-parent/65/commons-parent-65.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.5262099Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/commons/commons-parent/65/commons-parent-65.pom (78 kB at 2.6 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.5303591Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/junit/junit-bom/5.10.1/junit-bom-5.10.1.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.5638191Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/junit/junit-bom/5.10.1/junit-bom-5.10.1.pom (5.6 kB at 171 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.5709206Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/surefire/maven-surefire-common/3.2.5/maven-surefire-common-3.2.5.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.6060932Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/surefire/maven-surefire-common/3.2.5/maven-surefire-common-3.2.5.jar (308 kB at 8.8 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.6066595Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/surefire/surefire-api/3.2.5/surefire-api-3.2.5.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.6068921Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/surefire/surefire-logger-api/3.2.5/surefire-logger-api-3.2.5.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.6073628Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/surefire/surefire-extensions-api/3.2.5/surefire-extensions-api-3.2.5.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.6076265Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/surefire/surefire-booter/3.2.5/surefire-booter-3.2.5.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.6078608Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/surefire/surefire-extensions-spi/3.2.5/surefire-extensions-spi-3.2.5.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.6310374Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/surefire/surefire-booter/3.2.5/surefire-booter-3.2.5.jar (118 kB at 5.1 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.6311849Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/eclipse/aether/aether-util/1.0.0.v20140518/aether-util-1.0.0.v20140518.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.6327094Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/surefire/surefire-logger-api/3.2.5/surefire-logger-api-3.2.5.jar (14 kB at 523 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.6330396Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/eclipse/aether/aether-api/1.0.0.v20140518/aether-api-1.0.0.v20140518.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.6339303Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/surefire/surefire-extensions-spi/3.2.5/surefire-extensions-spi-3.2.5.jar (8.2 kB at 314 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.6343244Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-common-artifact-filters/3.1.1/maven-common-artifact-filters-3.1.1.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.6393943Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/surefire/surefire-extensions-api/3.2.5/surefire-extensions-api-3.2.5.jar (26 kB at 783 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.6399234Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/commons-io/commons-io/2.15.1/commons-io-2.15.1.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.6401204Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/surefire/surefire-api/3.2.5/surefire-api-3.2.5.jar (171 kB at 5.0 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.6403488Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/surefire/surefire-shared-utils/3.2.5/surefire-shared-utils-3.2.5.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.6592414Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/eclipse/aether/aether-api/1.0.0.v20140518/aether-api-1.0.0.v20140518.jar (136 kB at 2.6 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.6596818Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/eclipse/aether/aether-util/1.0.0.v20140518/aether-util-1.0.0.v20140518.jar (146 kB at 2.8 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.6888515Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/surefire/surefire-shared-utils/3.2.5/surefire-shared-utils-3.2.5.jar (2.4 MB at 30 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.7069177Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/commons-io/commons-io/2.15.1/commons-io-2.15.1.jar (501 kB at 5.1 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.7292306Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-common-artifact-filters/3.1.1/maven-common-artifact-filters-3.1.1.jar (61 kB at 503 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.7777237Z [INFO] Tests are skipped.
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.7799600Z [INFO] 
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.7800077Z [INFO] --- jar:3.4.2:jar (default-jar) @ test-utils ---
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.7821003Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/file-management/3.1.0/file-management-3.1.0.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.8198449Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/file-management/3.1.0/file-management-3.1.0.pom (4.5 kB at 118 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.8217418Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-shared-components/36/maven-shared-components-36.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.8462240Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-shared-components/36/maven-shared-components-36.pom (4.9 kB at 204 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.8476968Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-parent/36/maven-parent-36.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.8750464Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-parent/36/maven-parent-36.pom (45 kB at 1.7 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.8771061Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/apache/26/apache-26.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.9056171Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/apache/26/apache-26.pom (21 kB at 708 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.9160319Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-utils/4.0.1/plexus-utils-4.0.1.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.9434967Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-utils/4.0.1/plexus-utils-4.0.1.pom (7.8 kB at 280 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.9487484Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/commons-io/commons-io/2.16.1/commons-io-2.16.1.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.9766037Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/commons-io/commons-io/2.16.1/commons-io-2.16.1.pom (20 kB at 701 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:03.9788466Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/commons/commons-parent/69/commons-parent-69.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.0109500Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/commons/commons-parent/69/commons-parent-69.pom (77 kB at 2.4 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.0153197Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-archiver/3.6.2/maven-archiver-3.6.2.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.0449579Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-archiver/3.6.2/maven-archiver-3.6.2.pom (4.4 kB at 151 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.0463959Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-shared-components/41/maven-shared-components-41.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.0896290Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/maven-shared-components/41/maven-shared-components-41.pom (3.2 kB at 74 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.0926095Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-archiver/4.9.2/plexus-archiver-4.9.2.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.1236995Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-archiver/4.9.2/plexus-archiver-4.9.2.pom (6.0 kB at 193 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.1270614Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-io/3.4.2/plexus-io-3.4.2.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.1579488Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-io/3.4.2/plexus-io-3.4.2.pom (3.9 kB at 125 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.1596614Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus/16/plexus-16.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.1868884Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus/16/plexus-16.pom (28 kB at 1.0 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.1897684Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/commons/commons-compress/1.26.1/commons-compress-1.26.1.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.2198154Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/commons/commons-compress/1.26.1/commons-compress-1.26.1.pom (22 kB at 746 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.2217157Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/commons/commons-parent/66/commons-parent-66.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.2520280Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/commons/commons-parent/66/commons-parent-66.pom (77 kB at 2.6 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.2563300Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/commons-codec/commons-codec/1.16.1/commons-codec-1.16.1.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.2885074Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/commons-codec/commons-codec/1.16.1/commons-codec-1.16.1.pom (16 kB at 490 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.2925706Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/commons/commons-lang3/3.14.0/commons-lang3-3.14.0.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.3201947Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/commons/commons-lang3/3.14.0/commons-lang3-3.14.0.pom (31 kB at 1.1 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.3221809Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/commons/commons-parent/64/commons-parent-64.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.3581168Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/commons/commons-parent/64/commons-parent-64.pom (78 kB at 2.2 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.3606059Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/apache/30/apache-30.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.3854566Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/apache/30/apache-30.pom (23 kB at 930 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.3884975Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/iq80/snappy/snappy/0.4/snappy-0.4.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.4228300Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/iq80/snappy/snappy/0.4/snappy-0.4.pom (15 kB at 428 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.4248783Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/tukaani/xz/1.9/xz-1.9.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.4549525Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/tukaani/xz/1.9/xz-1.9.pom (2.0 kB at 68 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.4568844Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/com/github/luben/zstd-jni/1.5.5-11/zstd-jni-1.5.5-11.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.4879997Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/github/luben/zstd-jni/1.5.5-11/zstd-jni-1.5.5-11.pom (2.0 kB at 65 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.4898977Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-interpolation/1.27/plexus-interpolation-1.27.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.5491833Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-interpolation/1.27/plexus-interpolation-1.27.pom (3.0 kB at 51 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.5536610Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/file-management/3.1.0/file-management-3.1.0.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.6001367Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/shared/file-management/3.1.0/file-management-3.1.0.jar (36 kB at 790 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.6005274Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-utils/4.0.1/plexus-utils-4.0.1.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.6014556Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/commons-io/commons-io/2.16.1/commons-io-2.16.1.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.6016007Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-archiver/3.6.2/maven-archiver-3.6.2.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.6017778Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-interpolation/1.27/plexus-interpolation-1.27.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.6021397Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-archiver/4.9.2/plexus-archiver-4.9.2.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.6265171Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-interpolation/1.27/plexus-interpolation-1.27.jar (86 kB at 3.3 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.6271498Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-io/3.4.2/plexus-io-3.4.2.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.6273612Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-archiver/3.6.2/maven-archiver-3.6.2.jar (27 kB at 1.0 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.6276032Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/commons/commons-compress/1.26.1/commons-compress-1.26.1.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.6306079Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-archiver/4.9.2/plexus-archiver-4.9.2.jar (225 kB at 7.8 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.6311317Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/commons/commons-lang3/3.14.0/commons-lang3-3.14.0.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.6331624Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/commons-io/commons-io/2.16.1/commons-io-2.16.1.jar (509 kB at 15 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.6333122Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/commons-codec/commons-codec/1.16.1/commons-codec-1.16.1.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.6371150Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-utils/4.0.1/plexus-utils-4.0.1.jar (193 kB at 5.2 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.6372739Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/iq80/snappy/snappy/0.4/snappy-0.4.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.6634699Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-io/3.4.2/plexus-io-3.4.2.jar (79 kB at 1.4 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.6636683Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/tukaani/xz/1.9/xz-1.9.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.6638351Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/commons/commons-compress/1.26.1/commons-compress-1.26.1.jar (1.1 MB at 17 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.6640087Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/com/github/luben/zstd-jni/1.5.5-11/zstd-jni-1.5.5-11.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.6652534Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/commons-codec/commons-codec/1.16.1/commons-codec-1.16.1.jar (365 kB at 5.9 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.6664150Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/commons/commons-lang3/3.14.0/commons-lang3-3.14.0.jar (658 kB at 10 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.6720537Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/iq80/snappy/snappy/0.4/snappy-0.4.jar (58 kB at 840 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.6941185Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/tukaani/xz/1.9/xz-1.9.jar (116 kB at 1.3 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.7492853Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/github/luben/zstd-jni/1.5.5-11/zstd-jni-1.5.5-11.jar (6.8 MB at 46 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.9289412Z [INFO] Building jar: /home/runner/work/shop-ease-enterprise-app/shop-ease-enterprise-app/services/test-utils/target/test-utils-0.1.0.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.9615299Z [INFO] 
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.9623177Z [INFO] --- install:3.1.3:install (default-install) @ test-utils ---
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.9660986Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/resolver/maven-resolver-util/1.9.18/maven-resolver-util-1.9.18.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.9973838Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/resolver/maven-resolver-util/1.9.18/maven-resolver-util-1.9.18.pom (2.9 kB at 92 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:04.9991632Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/resolver/maven-resolver/1.9.18/maven-resolver-1.9.18.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:05.0246594Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/resolver/maven-resolver/1.9.18/maven-resolver-1.9.18.pom (22 kB at 859 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:05.0286128Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/resolver/maven-resolver-api/1.9.18/maven-resolver-api-1.9.18.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:05.0524014Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/resolver/maven-resolver-api/1.9.18/maven-resolver-api-1.9.18.pom (2.7 kB at 112 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:05.0552787Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-xml/3.0.1/plexus-xml-3.0.1.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:05.0885527Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-xml/3.0.1/plexus-xml-3.0.1.pom (3.7 kB at 112 kB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:05.0901081Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus/18/plexus-18.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:05.1147660Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus/18/plexus-18.pom (29 kB at 1.2 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:05.1187080Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/resolver/maven-resolver-util/1.9.18/maven-resolver-util-1.9.18.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:05.1505406Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/resolver/maven-resolver-util/1.9.18/maven-resolver-util-1.9.18.jar (196 kB at 6.1 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:05.1509256Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/resolver/maven-resolver-api/1.9.18/maven-resolver-api-1.9.18.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:05.1510900Z [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-xml/3.0.1/plexus-xml-3.0.1.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:05.1766000Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-xml/3.0.1/plexus-xml-3.0.1.jar (94 kB at 3.6 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:05.1767822Z [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/resolver/maven-resolver-api/1.9.18/maven-resolver-api-1.9.18.jar (157 kB at 6.0 MB/s)
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:05.1932451Z [INFO] Installing /home/runner/work/shop-ease-enterprise-app/shop-ease-enterprise-app/services/test-utils/pom.xml to /home/runner/.m2/repository/org/kunlecreates/test-utils/0.1.0/test-utils-0.1.0.pom
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:05.1942367Z [INFO] Installing /home/runner/work/shop-ease-enterprise-app/shop-ease-enterprise-app/services/test-utils/target/test-utils-0.1.0.jar to /home/runner/.m2/repository/org/kunlecreates/test-utils/0.1.0/test-utils-0.1.0.jar
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:05.1978478Z [INFO] ------------------------------------------------------------------------
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:05.1979495Z [INFO] BUILD SUCCESS
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:05.1980039Z [INFO] ------------------------------------------------------------------------
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:05.1989368Z [INFO] Total time:  12.993 s
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:05.1990308Z [INFO] Finished at: 2025-11-27T02:31:05Z
+User Service Tests	Ensure test-utils (install if missing)	2025-11-27T02:31:05.1990885Z [INFO] ------------------------------------------------------------------------
+User Service Tests	Run Maven tests	﻿2025-11-27T02:31:05.2371067Z ##[group]Run ./services/user-service/mvnw -B -Dapi.version=1.44 -pl services/user-service test
+User Service Tests	Run Maven tests	2025-11-27T02:31:05.2371714Z [36;1m./services/user-service/mvnw -B -Dapi.version=1.44 -pl services/user-service test[0m
+User Service Tests	Run Maven tests	2025-11-27T02:31:05.2406271Z shell: /usr/bin/bash -e {0}
+User Service Tests	Run Maven tests	2025-11-27T02:31:05.2406494Z env:
+User Service Tests	Run Maven tests	2025-11-27T02:31:05.2406766Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.9-10/x64
+User Service Tests	Run Maven tests	2025-11-27T02:31:05.2407223Z   JAVA_HOME_21_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/21.0.9-10/x64
+User Service Tests	Run Maven tests	2025-11-27T02:31:05.2407556Z ##[endgroup]
+User Service Tests	Run Maven tests	2025-11-27T02:31:06.4217269Z [INFO] Scanning for projects...
+User Service Tests	Run Maven tests	2025-11-27T02:31:06.4624199Z [ERROR] [ERROR] Could not find the selected project in the reactor: services/user-service @ 
+User Service Tests	Run Maven tests	2025-11-27T02:31:06.4625712Z [ERROR] Could not find the selected project in the reactor: services/user-service -> [Help 1]
+User Service Tests	Run Maven tests	2025-11-27T02:31:06.4627253Z [ERROR] 
+User Service Tests	Run Maven tests	2025-11-27T02:31:06.4635482Z [ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+User Service Tests	Run Maven tests	2025-11-27T02:31:06.4636768Z [ERROR] Re-run Maven using the -X switch to enable full debug logging.
+User Service Tests	Run Maven tests	2025-11-27T02:31:06.4637515Z [ERROR] 
+User Service Tests	Run Maven tests	2025-11-27T02:31:06.4639097Z [ERROR] For more information about the errors and possible solutions, please read the following articles:
+User Service Tests	Run Maven tests	2025-11-27T02:31:06.4640190Z [ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MavenExecutionException
+User Service Tests	Run Maven tests	2025-11-27T02:31:06.4888082Z ##[error]Process completed with exit code 1.
+User Service Tests	Post Set up JDK 21	﻿2025-11-27T02:31:06.4977181Z Post job cleanup.
+User Service Tests	Post Checkout	﻿2025-11-27T02:31:06.6721323Z Post job cleanup.
+User Service Tests	Post Checkout	2025-11-27T02:31:06.7686242Z [command]/usr/bin/git version
+User Service Tests	Post Checkout	2025-11-27T02:31:06.7726879Z git version 2.51.2
+User Service Tests	Post Checkout	2025-11-27T02:31:06.7780403Z Temporarily overriding HOME='/home/runner/work/_temp/839c0032-0a88-46f6-b22b-370bcf115717' before making global git config changes
+User Service Tests	Post Checkout	2025-11-27T02:31:06.7781677Z Adding repository directory to the temporary git global config as a safe directory
+User Service Tests	Post Checkout	2025-11-27T02:31:06.7787157Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/shop-ease-enterprise-app/shop-ease-enterprise-app
+User Service Tests	Post Checkout	2025-11-27T02:31:06.7824687Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+User Service Tests	Post Checkout	2025-11-27T02:31:06.7860475Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+User Service Tests	Post Checkout	2025-11-27T02:31:06.8109402Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+User Service Tests	Post Checkout	2025-11-27T02:31:06.8133643Z http.https://github.com/.extraheader
+User Service Tests	Post Checkout	2025-11-27T02:31:06.8146812Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+User Service Tests	Post Checkout	2025-11-27T02:31:06.8178968Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+User Service Tests	Post Checkout	2025-11-27T02:31:06.8424690Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+User Service Tests	Post Checkout	2025-11-27T02:31:06.8462820Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+User Service Tests	Complete job	﻿2025-11-27T02:31:06.8819516Z Cleaning up orphan processes

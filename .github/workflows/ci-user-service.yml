@@ -2,66 +2,17 @@ name: CI — user-service
 
 on:
   push:
-    name: CI — user-service
+    paths:
+      - 'services/user-service/**'
+  pull_request:
+    paths:
+      - 'services/user-service/**'
 
-    on:
-      push:
-        paths:
-          - 'services/user-service/**'
-      pull_request:
-        paths:
-          - 'services/user-service/**'
-
-    jobs:
-      test:
-        name: User Service Tests
-        runs-on: ubuntu-latest
-        steps:
-          - name: Checkout
-            uses: actions/checkout@v4
-
-          - name: Set up JDK 21
-            uses: actions/setup-java@v4
-            with:
-              distribution: temurin
-              java-version: '21'
-
-          - name: Make service Maven wrapper executable
-            run: |
-              if [ -f ./services/user-service/mvnw ]; then
-                chmod +x ./services/user-service/mvnw || true
-              fi
-
-          - name: Ensure test-utils (install if missing)
-            run: |
-              # If test-utils artifact already exists in local Maven repo, skip rebuild.
-              if [ -f "$HOME/.m2/repository/org/kunlecreates/test-utils/0.1.0/test-utils-0.1.0.jar" ]; then
-                echo "test-utils found in local Maven repo; skipping build"
-              else
-                echo "test-utils not found; building and installing from sources"
-                if [ -f ./services/test-utils/pom.xml ]; then
-                  mvn -B -DskipTests -f services/test-utils/pom.xml install
-                else
-                  echo "test-utils sources not present in checkout; continuing without install"
-                fi
-              fi
-
-          # NOTE: Avoid caching the entire ~/.m2/repository here because it can
-          # overwrite artifacts installed earlier in the job (e.g. test-utils installed
-          # by the Build & install test-utils step). This prevents missing-class
-          # compilation errors during integration test runs.
-
-          - name: Run Maven tests
-            run: |
-              # Prefer running the repository root mvnw so Maven runs in the multi-module reactor
-              if [ -f ./mvnw ]; then
-                chmod +x ./mvnw || true
-                ./mvnw -B -Dapi.version=1.44 -f services/user-service/pom.xml test
-              elif [ -f ./services/user-service/mvnw ]; then
-                # Fallback to the service wrapper but pass -f to point directly at the module POM
-                chmod +x ./services/user-service/mvnw || true
-                ./services/user-service/mvnw -B -Dapi.version=1.44 -f services/user-service/pom.xml test
-              else
-                # Final fallback to system mvn if no wrapper is present
-                mvn -B -Dapi.version=1.44 -f services/user-service/pom.xml test
-              fi
+jobs:
+  test:
+    name: User Service Tests (reusable)
+    uses: ./.github/workflows/reusable-java-test.yml
+    with:
+      module_path: 'services/user-service'
+      maven_goal: 'test'
+      jdk_version: '21'
