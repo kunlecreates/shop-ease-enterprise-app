@@ -30,6 +30,15 @@ pnpm-lock.yaml
 .logs/
 gh-artifacts/
 
+# Local temporary artifacts created by helper scripts or CI artifact downloads
+# Examples: `tmp/gh-run-artifacts-<id>`, `./ci-artifacts/...`
+tmp/
+ci-artifacts/
+
+# Playwright and test debug artifacts (created by workflows or local triage scripts)
+playwright-debug-artifacts/
+frontend/test-results/
+
 # Misc
 /.env
 /.env.local
