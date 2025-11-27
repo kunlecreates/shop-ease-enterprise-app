@@ -34,8 +34,11 @@ else
 fi
 
 # Run Maven pointing explicitly at the module POM to avoid reactor selection issues
-echo "Using Maven command: ${MVN_CMD[*]} -B -f $POM_FILE $GOAL ${EXTRA_ARGS[*]}"
-"${MVN_CMD[@]}" -B -f "$POM_FILE" "$GOAL" "${EXTRA_ARGS[@]}"
+# Ensure we use the same local repository location so previously installed artifacts
+# (e.g. test-utils) are visible to this Maven invocation.
+MAVEN_LOCAL_REPO="$HOME/.m2/repository"
+echo "Using Maven command: ${MVN_CMD[*]} -B -Dmaven.repo.local=$MAVEN_LOCAL_REPO -f $POM_FILE $GOAL ${EXTRA_ARGS[*]}"
+"${MVN_CMD[@]}" -B -Dmaven.repo.local="$MAVEN_LOCAL_REPO" -f "$POM_FILE" "$GOAL" "${EXTRA_ARGS[@]}"
 
 EXIT_CODE=$?
 if [ $EXIT_CODE -ne 0 ]; then

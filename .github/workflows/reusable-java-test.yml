@@ -62,12 +62,12 @@ jobs:
               # Prefer repo mvnw, fallback to module wrapper or system mvn to ensure consistent install
               if [ -f ./mvnw ]; then
                 chmod +x ./mvnw || true
-                ./mvnw -B -DskipTests -f services/test-utils/pom.xml install
+                ./mvnw -B -DskipTests -Dmaven.repo.local="$HOME/.m2/repository" -f services/test-utils/pom.xml install
               elif [ -f ./services/test-utils/mvnw ]; then
                 chmod +x ./services/test-utils/mvnw || true
-                ./services/test-utils/mvnw -B -DskipTests -f services/test-utils/pom.xml install
+                ./services/test-utils/mvnw -B -DskipTests -Dmaven.repo.local="$HOME/.m2/repository" -f services/test-utils/pom.xml install
               else
-                mvn -B -DskipTests -f services/test-utils/pom.xml install
+                mvn -B -DskipTests -Dmaven.repo.local="$HOME/.m2/repository" -f services/test-utils/pom.xml install
               fi
             else
               echo "test-utils sources not present in checkout; continuing without install"
