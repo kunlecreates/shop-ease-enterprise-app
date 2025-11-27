@@ -49,4 +49,15 @@ jobs:
 
       - name: Run Maven tests
         run: |
-          ./services/user-service/mvnw -B -Dapi.version=1.44 -pl services/user-service test
+          # Prefer running the repository root mvnw so Maven runs in the multi-module reactor
+          if [ -f ./mvnw ]; then
+            chmod +x ./mvnw || true
+            ./mvnw -B -Dapi.version=1.44 -f services/user-service/pom.xml test
+          elif [ -f ./services/user-service/mvnw ]; then
+            # Fallback to the service wrapper but pass -f to point directly at the module POM
+            chmod +x ./services/user-service/mvnw || true
+            ./services/user-service/mvnw -B -Dapi.version=1.44 -f services/user-service/pom.xml test
+          else
+            # Final fallback to system mvn if no wrapper is present
+            mvn -B -Dapi.version=1.44 -f services/user-service/pom.xml test
+          fi
