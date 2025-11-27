@@ -59,7 +59,16 @@ jobs:
           else
             echo "test-utils not found; building and installing from sources"
             if [ -f ./services/test-utils/pom.xml ]; then
-              mvn -B -DskipTests -f services/test-utils/pom.xml install
+              # Prefer repo mvnw, fallback to module wrapper or system mvn to ensure consistent install
+              if [ -f ./mvnw ]; then
+                chmod +x ./mvnw || true
+                ./mvnw -B -DskipTests -f services/test-utils/pom.xml install
+              elif [ -f ./services/test-utils/mvnw ]; then
+                chmod +x ./services/test-utils/mvnw || true
+                ./services/test-utils/mvnw -B -DskipTests -f services/test-utils/pom.xml install
+              else
+                mvn -B -DskipTests -f services/test-utils/pom.xml install
+              fi
             else
               echo "test-utils sources not present in checkout; continuing without install"
             fi
