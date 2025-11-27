@@ -264,6 +264,35 @@ jobs:
             echo '--- file inventory (all files) ---'
             find playwright-debug-artifacts -type f -print || true
 
+      - name: Final summarize Playwright report and echo one-line summary
+        if: always()
+        run: |
+          set -euo pipefail
+          OUTDIR="$GITHUB_WORKSPACE/playwright-debug-artifacts/logs/playwright-report-summary"
+          mkdir -p "$OUTDIR"
+          # Prefer copied report in debug-artifacts, fallback to common locations
+          if [ -f "$GITHUB_WORKSPACE/playwright-debug-artifacts/playwright-report/index.html" ]; then
+            REPORT_HTML="$GITHUB_WORKSPACE/playwright-debug-artifacts/playwright-report/index.html"
+          elif [ -f "$GITHUB_WORKSPACE/frontend/test-results/playwright-report/index.html" ]; then
+            REPORT_HTML="$GITHUB_WORKSPACE/frontend/test-results/playwright-report/index.html"
+          else
+            REPORT_HTML=""
+          fi
+          if [ -n "$REPORT_HTML" ] && [ -f "$REPORT_HTML" ]; then
+            echo "Summarizing Playwright HTML report into $OUTDIR/summary.json"
+            python3 scripts/summarize_playwright_report.py "$REPORT_HTML" "$OUTDIR" || true
+            # Copy the summary into the consolidated logs folder so the artifact upload captures it
+            if [ -f "$OUTDIR/summary.json" ]; then
+              mkdir -p "$GITHUB_WORKSPACE/playwright-debug-artifacts/logs"
+              cp "$OUTDIR/summary.json" "$GITHUB_WORKSPACE/playwright-debug-artifacts/logs/summary.json" || true
+              echo 'Playwright summary:' $(python3 -c "import json,sys;print('total=%s passed=%s failed=%s skipped=%s'%tuple([json.load(open(sys.argv[1])).get(k,0) for k in ('total','passed','failed','skipped')]))" "$GITHUB_WORKSPACE/playwright-debug-artifacts/logs/summary.json")
+            else
+              echo 'Playwright summarizer did not produce summary.json'
+            fi
+          else
+            echo 'No Playwright HTML report found to summarize'
+          fi
+
       - name: Upload Playwright report and logs
         if: always()
         uses: actions/upload-artifact@v4
