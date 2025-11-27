@@ -49,4 +49,10 @@ jobs:
 
       - name: Run Maven tests
         run: |
-          ./services/user-service/mvnw -B -Dapi.version=1.44 -pl services/user-service test
+          # Use the root mvnw so Maven's reactor can locate the requested module
+          if [ -f ./mvnw ]; then
+            ./mvnw -B -Dapi.version=1.44 -pl services/user-service test
+          else
+            # Fallback: run the service's wrapper but point to its pom explicitly
+            ./services/user-service/mvnw -B -Dapi.version=1.44 -f services/user-service/pom.xml test
+          fi
