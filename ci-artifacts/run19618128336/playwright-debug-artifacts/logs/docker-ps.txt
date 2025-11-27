@@ -1,2 +1,0 @@
-NAMES     STATUS          IMAGE
-ci-pg     Up 11 seconds   postgres:15
