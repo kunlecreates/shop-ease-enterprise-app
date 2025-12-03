@@ -51,28 +51,40 @@ jobs:
             chmod +x "${{ inputs.module_path }}/mvnw" || true
           fi
 
-      - name: Ensure test-utils (install if missing)
+      - name: Ensure test-utils (build & install; add diagnostics)
         run: |
-          # If test-utils artifact already exists in local Maven repo, skip rebuild.
-          if [ -f "$HOME/.m2/repository/org/kunlecreates/test-utils/0.1.0/test-utils-0.1.0.jar" ]; then
-            echo "test-utils found in local Maven repo; skipping build"
-          else
-            echo "test-utils not found; building and installing from sources"
-            if [ -f ./services/test-utils/pom.xml ]; then
-              # Prefer repo mvnw, fallback to module wrapper or system mvn to ensure consistent install
-              if [ -f ./mvnw ]; then
-                chmod +x ./mvnw || true
-                ./mvnw -B -DskipTests -Dmaven.repo.local="$HOME/.m2/repository" -f services/test-utils/pom.xml install
-              elif [ -f ./services/test-utils/mvnw ]; then
-                chmod +x ./services/test-utils/mvnw || true
-                ./services/test-utils/mvnw -B -DskipTests -Dmaven.repo.local="$HOME/.m2/repository" -f services/test-utils/pom.xml install
-              else
-                mvn -B -DskipTests -Dmaven.repo.local="$HOME/.m2/repository" -f services/test-utils/pom.xml install
-              fi
+          echo "Ensuring test-utils is installed into local Maven repo ($HOME/.m2/repository)"
+          if [ -f ./services/test-utils/pom.xml ]; then
+            echo "Found test-utils sources; building and installing (will overwrite existing)"
+            # Prefer repo mvnw, fallback to module wrapper or system mvn to ensure consistent install
+            if [ -f ./mvnw ]; then
+              chmod +x ./mvnw || true
+              ./mvnw -B -DskipTests -Dmaven.repo.local="$HOME/.m2/repository" -f services/test-utils/pom.xml install
+            elif [ -f ./services/test-utils/mvnw ]; then
+              chmod +x ./services/test-utils/mvnw || true
+              ./services/test-utils/mvnw -B -DskipTests -Dmaven.repo.local="$HOME/.m2/repository" -f services/test-utils/pom.xml install
             else
-              echo "test-utils sources not present in checkout; continuing without install"
+              mvn -B -DskipTests -Dmaven.repo.local="$HOME/.m2/repository" -f services/test-utils/pom.xml install
             fi
+            echo "Installed test-utils. Verifying contents in local repo:"
+            ls -la "$HOME/.m2/repository/org/kunlecreates/test-utils/" || true
+            if [ -f "$HOME/.m2/repository/org/kunlecreates/test-utils/0.1.0/test-utils-0.1.0.jar" ]; then
+              echo "Jar exists; showing listing and checksum"
+              jar -tf "$HOME/.m2/repository/org/kunlecreates/test-utils/0.1.0/test-utils-0.1.0.jar" | sed -n '1,200p' || true
+              sha256sum "$HOME/.m2/repository/org/kunlecreates/test-utils/0.1.0/test-utils-0.1.0.jar" || true
+            else
+              echo "Warning: test-utils jar still missing after install"
+            fi
+          else
+            echo "test-utils sources not present in checkout; skipping build/install"
           fi
+
+      - name: 'Pre-run diagnostics: module test classpath and dependency tree'
+        run: |
+          echo "Listing installed test-utils in local repo (if any):"
+          ls -la "$HOME/.m2/repository/org/kunlecreates/test-utils" || true
+          echo "Show dependency:tree for module (test scope) to verify test-utils presence"
+          mvn -B -f "${{ inputs.module_path }}" dependency:tree -Dscope=test || true
 
       - name: Docker diagnostics (optional)
         if: ${{ inputs.run_docker_diagnostics }}
@@ -92,7 +104,7 @@ jobs:
           fi
 
       - name: Upload Maven test artifacts
-        if: always()
+        if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.module_path }}-maven-artifacts
