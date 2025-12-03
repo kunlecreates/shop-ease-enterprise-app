@@ -107,7 +107,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.module_path }}-maven-artifacts
+          name: ${{ replace(inputs.module_path, '/', '-') }}-maven-artifacts
           path: |
             ${{ inputs.module_path }}/target/failsafe-reports/**
             ${{ inputs.module_path }}/target/surefire-reports/**
