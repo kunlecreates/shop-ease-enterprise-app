@@ -103,11 +103,19 @@ jobs:
             ./scripts/run_maven_module.sh "${{ inputs.module_path }}" "${{ inputs.maven_goal }}"
           fi
 
+      - name: Prepare artifact name
+        id: prepare-artifact
+        run: |
+          module_path="${{ inputs.module_path }}"
+          # replace forward slashes with hyphens for filesystem-safe artifact names
+          safe_name="${module_path//\//-}-maven-artifacts"
+          echo "artifact_name=${safe_name}" >> $GITHUB_OUTPUT
+
       - name: Upload Maven test artifacts
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ replace(inputs.module_path, '/', '-') }}-maven-artifacts
+          name: ${{ steps.prepare-artifact.outputs.artifact_name }}
           path: |
             ${{ inputs.module_path }}/target/failsafe-reports/**
             ${{ inputs.module_path }}/target/surefire-reports/**
