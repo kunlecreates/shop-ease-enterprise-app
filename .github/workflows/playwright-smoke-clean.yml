@@ -2,9 +2,30 @@ name: Playwright Smoke Tests (clean)
 
 on:
   push:
-    branches: ['**']
+    # Run Playwright for changes that affect the frontend, tests, or Playwright config/scripts
+    paths:
+      - 'frontend/**'
+      - 'frontend/tests/**'
+      - 'frontend/__tests__/**'
+      - 'frontend/playwright.config.*'
+      - 'frontend/package.json'
+      - 'frontend/package-lock.json'
+      - '.github/workflows/playwright-*.yml'
+      - 'scripts/summarize_playwright_report.py'
+      - 'scripts/echo_playwright_summary.py'
+      - 'scripts/extract_playwright_failures.py'
   pull_request:
-    branches: ['**']
+    paths:
+      - 'frontend/**'
+      - 'frontend/tests/**'
+      - 'frontend/__tests__/**'
+      - 'frontend/playwright.config.*'
+      - 'frontend/package.json'
+      - 'frontend/package-lock.json'
+      - '.github/workflows/playwright-*.yml'
+      - 'scripts/summarize_playwright_report.py'
+      - 'scripts/echo_playwright_summary.py'
+      - 'scripts/extract_playwright_failures.py'
   workflow_dispatch: {}
 
 jobs:
