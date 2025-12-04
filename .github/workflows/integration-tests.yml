@@ -13,8 +13,6 @@ on:
       - 'scripts/**'
       - 'helm-charts/**'
     # Still explicitly ignore per-service changes to avoid duplicate matrix runs
-    paths-ignore:
-      - 'services/**'
   pull_request:
     branches: [ main, master ]
     paths:
@@ -22,8 +20,6 @@ on:
       - '.github/workflows/**'
       - 'scripts/**'
       - 'helm-charts/**'
-    paths-ignore:
-      - 'services/**'
   # Allow manual runs for diagnostics or ad-hoc verification
   workflow_dispatch: {}
 
