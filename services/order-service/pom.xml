@@ -161,5 +161,44 @@
                 </dependency>
             </dependencies>
         </profile>
+        <profile>
+            <id>testcontainers</id>
+            <activation>
+                <property>
+                    <name>testcontainers.enabled</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <properties>
+                <!-- Allow tests to pick a specific Postgres image via property -->
+                <testcontainers.postgres.image>postgres:15</testcontainers.postgres.image>
+            </properties>
+            <build>
+                <plugins>
+                    <!-- Pass useful system properties into test JVM so tests can decide to
+                         start Postgres containers or configure connection strings. -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <configuration>
+                            <systemPropertyVariables>
+                                <testcontainers.enabled>true</testcontainers.enabled>
+                                <testcontainers.postgres.image>${testcontainers.postgres.image}</testcontainers.postgres.image>
+                            </systemPropertyVariables>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <systemPropertyVariables>
+                                <testcontainers.enabled>true</testcontainers.enabled>
+                                <testcontainers.postgres.image>${testcontainers.postgres.image}</testcontainers.postgres.image>
+                            </systemPropertyVariables>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
     </profiles>
 </project>

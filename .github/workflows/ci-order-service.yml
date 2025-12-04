@@ -10,71 +10,13 @@ on:
 
 jobs:
   test:
-    name: Order Service Tests
-    runs-on: ubuntu-latest
-    env:
-      DOCKER_API_VERSION: '1.52'
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '21'
-
-      - name: Make service Maven wrapper executable
-        run: |
-          if [ -f ./services/order-service/mvnw ]; then
-            chmod +x ./services/order-service/mvnw || true
-          fi
-
-      - name: Ensure test-utils (install if missing)
-        run: |
-          # If test-utils artifact already exists in local Maven repo, skip rebuild.
-          if [ -f "$HOME/.m2/repository/org/kunlecreates/test-utils/0.1.0/test-utils-0.1.0.jar" ]; then
-            echo "test-utils found in local Maven repo; skipping build"
-          else
-            echo "test-utils not found; building and installing from sources"
-            if [ -f ./services/test-utils/pom.xml ]; then
-              mvn -B -DskipTests -f services/test-utils/pom.xml install
-            else
-              echo "test-utils sources not present in checkout; continuing without install"
-            fi
-          fi
-
-      # NOTE: Avoid caching the entire ~/.m2/repository here because it can
-      # overwrite artifacts installed earlier in the job (e.g. test-utils installed
-      # by the Build & install test-utils step). This prevents missing-class
-      # compilation errors during integration test runs.
-
-      - name: Ensure Docker available (Testcontainers)
-        run: |
-          echo "Docker diagnostics"
-          docker --version || true
-          # show info to help debug Testcontainers connectivity in CI
-          docker info || true
-
-      - name: Run Maven verify (runs Failsafe integration tests)
-        run: |
-          set -x
-          # Diagnostics to help CI log inspection
-          pwd
-          ls -la services || true
-          ls -la services/order-service || true
-          # show Docker again before running integration tests
-          docker --version || true
-          docker info || true
-          # Run the full verify lifecycle so integration tests named *IT are executed by Failsafe
-          ./services/order-service/mvnw -B -Dapi.version=1.44 -f services/order-service/pom.xml verify
-
-      - name: Upload Maven test artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: order-service-maven-artifacts
-          path: |
-            services/order-service/target/failsafe-reports/**
-            services/order-service/target/surefire-reports/**
-            services/order-service/target/*.log
+    name: Order Service Tests (reusable)
+    uses: ./.github/workflows/reusable-java-test.yml
+    with:
+      module_path: 'services/order-service'
+      maven_goal: 'verify'
+      jdk_version: '21'
+      # enable docker diagnostics for Testcontainers troubleshooting
+      run_docker_diagnostics: true
+      # Enable testcontainers properties so integration tests run against Postgres containers
+      maven_args: '-Dtestcontainers.enabled=true -Dapi.version=1.44'
