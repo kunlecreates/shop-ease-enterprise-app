@@ -1,15 +1,15 @@
-name: Publish test-utils to GitHub Packages
-
-# Grant explicit permissions so the workflow can publish packages using GITHUB_TOKEN
-permissions:
-  contents: read
-  packages: write
+name: Publish test-utils
 
 on:
   push:
+    branches: [ main, master ]
     paths:
       - 'services/test-utils/**'
   workflow_dispatch: {}
+
+permissions:
+  contents: read
+  packages: write
 
 jobs:
   publish:
@@ -25,29 +25,10 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Configure Maven settings for GitHub Packages (use GITHUB_TOKEN)
-        env:
-          MAVEN_USERNAME: ${{ github.actor }}
-          MAVEN_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+      - name: Write maven settings (for deploy)
         run: |
-          mkdir -p ~/.m2
-          cat > ~/.m2/settings.xml <<EOF
-          <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
-                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                    xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
-            <servers>
-              <server>
-                <id>github</id>
-                <username>${MAVEN_USERNAME}</username>
-                <password>${MAVEN_PASSWORD}</password>
-              </server>
-            </servers>
-          </settings>
-          EOF
+          bash ./scripts/write_maven_settings.sh "${{ github.actor }}" "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Build and deploy test-utils
-        working-directory: services/test-utils
-        env:
-          MAVEN_OPTS: -Xmx1024m
         run: |
-          mvn -B -s ~/.m2/settings.xml -DskipTests deploy
+          mvn -B -s $HOME/.m2/settings.xml -DskipTests -f services/test-utils/pom.xml deploy
