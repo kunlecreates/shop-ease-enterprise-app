@@ -112,6 +112,18 @@ jobs:
             mvn -B -f ./services/test-utils/pom.xml install
           fi
 
+      - name: Clean bad Maven cache entries before upload (prepare)
+        if: success()
+        run: |
+          DIR="$HOME/.m2/repository/org/kunlecreates/test-utils"
+          if [ -d "$DIR" ]; then
+            echo "Cleaning Maven cache marker files under $DIR"
+            find "$DIR" -name "*.lastUpdated" -print -delete || true
+            find "$DIR" -name "_remote.repositories" -print -delete || true
+          else
+            echo "$DIR does not exist; nothing to clean"
+          fi
+
       - name: Upload built test-utils to share with matrix jobs
         if: success()
         uses: actions/upload-artifact@v4
