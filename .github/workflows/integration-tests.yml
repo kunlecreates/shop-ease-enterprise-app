@@ -29,6 +29,10 @@ on:
   # Allow manual runs for diagnostics or ad-hoc verification
   workflow_dispatch: {}
 
+# Ensure the workflow can read GitHub Packages so we can fetch published test-utils
+permissions:
+  contents: read
+  packages: read
 jobs:
   prepare:
     name: Prepare shared test artifacts
@@ -43,9 +47,46 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Build & install test-utils
+      - name: Configure Maven settings for GitHub Packages
         run: |
-          mvn -B -f ./services/test-utils/pom.xml install
+          # Write a minimal settings.xml that includes server credentials for GitHub Packages
+          mkdir -p "$HOME/.m2"
+          cat > $HOME/.m2/settings.xml <<'EOF'
+          <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
+            <servers>
+              <server>
+                <id>github</id>
+                <username>${env.GITHUB_ACTOR}</username>
+                <password>${{ secrets.GITHUB_TOKEN }}</password>
+              </server>
+            </servers>
+          </settings>
+          EOF
+
+      - name: Try fetching published test-utils from GitHub Packages
+        run: |
+          set -e
+          echo "Attempting to download org.kunlecreates:test-utils:0.1.0 from GitHub Packages into local repo"
+          mvn -B org.apache.maven.plugins:maven-dependency-plugin:3.5.0:get \
+            -Dartifact=org.kunlecreates:test-utils:0.1.0 || true
+          # Verify artifact presence
+          if [ -f "$HOME/.m2/repository/org/kunlecreates/test-utils/0.1.0/test-utils-0.1.0.jar" ]; then
+            echo "Downloaded test-utils from GitHub Packages"
+          else
+            echo "test-utils not found in GitHub Packages; will build from source"
+          fi
+
+      - name: Build & install test-utils (only if not fetched)
+        run: |
+          # Only build/install test-utils from source if it was not fetched from GitHub Packages
+          if [ -f "$HOME/.m2/repository/org/kunlecreates/test-utils/0.1.0/test-utils-0.1.0.jar" ]; then
+            echo "test-utils already present in local repo; skipping build"
+          else
+            echo "test-utils not present; building and installing from source"
+            mvn -B -f ./services/test-utils/pom.xml install
+          fi
 
       - name: Upload built test-utils to share with matrix jobs
         if: success()
