@@ -75,13 +75,17 @@ jobs:
           # Instruct Maven to use the GitHub Packages repository when resolving the artifact.
           mvn -B -s $HOME/.m2/settings.xml \
             org.apache.maven.plugins:maven-dependency-plugin:3.5.0:get \
+            -Dartifact=org.kunlecreates:test-utils:0.1.0:pom \
+            -DremoteRepositories=github::default::https://maven.pkg.github.com/kunlecreates/shop-ease-enterprise-app || true
+          mvn -B -s $HOME/.m2/settings.xml \
+            org.apache.maven.plugins:maven-dependency-plugin:3.5.0:get \
             -Dartifact=org.kunlecreates:test-utils:0.1.0 \
             -DremoteRepositories=github::default::https://maven.pkg.github.com/kunlecreates/shop-ease-enterprise-app || true
-          # Verify artifact presence
-          if [ -f "$HOME/.m2/repository/org/kunlecreates/test-utils/0.1.0/test-utils-0.1.0.jar" ]; then
-            echo "Downloaded test-utils from GitHub Packages"
+          # Verify artifact and POM presence
+          if [ -f "$HOME/.m2/repository/org/kunlecreates/test-utils/0.1.0/test-utils-0.1.0.jar" ] && [ -f "$HOME/.m2/repository/org/kunlecreates/test-utils/0.1.0/test-utils-0.1.0.pom" ]; then
+            echo "Downloaded test-utils (jar + pom) from GitHub Packages"
           else
-            echo "test-utils not found in GitHub Packages; will build from source"
+            echo "test-utils jar or POM not found in GitHub Packages; will build from source"
           fi
 
       - name: Build & install test-utils (only if not fetched)
@@ -192,14 +196,26 @@ jobs:
             echo "test-utils jar not present in local repo; building/installing from sources"
             mvn -B -DskipTests -f ./services/test-utils/pom.xml install || true
           fi
-          # Clear any Maven 'not found' cache entries that may prevent re-resolution
+          # Ensure the POM is present; if not, attempt to fetch POM+jar explicitly from GitHub Packages
           if [ -d "$HOME/.m2/repository/org/kunlecreates/test-utils" ]; then
             echo "Removing Maven lastUpdated and remote cache files for test-utils"
             find "$HOME/.m2/repository/org/kunlecreates/test-utils" -name "*.lastUpdated" -print -delete || true
             find "$HOME/.m2/repository/org/kunlecreates/test-utils" -name "_remote.repositories" -print -delete || true
           fi
-          # Force Maven to attempt to retrieve the artifact from configured repos
-          # Use dependency:get (works without a project POM) and explicitly point to GitHub Packages
+          # If POM is missing but JAR present, try to fetch the POM from GitHub Packages
+          if [ ! -f "$HOME/.m2/repository/org/kunlecreates/test-utils/0.1.0/test-utils-0.1.0.pom" ]; then
+            echo "POM missing for test-utils; attempting to download pom + jar from GitHub Packages"
+            mvn -B -s $HOME/.m2/settings.xml \
+              org.apache.maven.plugins:maven-dependency-plugin:3.5.0:get \
+              -Dartifact=org.kunlecreates:test-utils:0.1.0:pom \
+              -DremoteRepositories=github::default::https://maven.pkg.github.com/kunlecreates/shop-ease-enterprise-app -U || true
+            mvn -B -s $HOME/.m2/settings.xml \
+              org.apache.maven.plugins:maven-dependency-plugin:3.5.0:get \
+              -Dartifact=org.kunlecreates:test-utils:0.1.0 \
+              -DremoteRepositories=github::default::https://maven.pkg.github.com/kunlecreates/shop-ease-enterprise-app -U || true
+          fi
+          # Final defensive purge of any stale metadata and force Maven to re-check remotes if needed
+          mvn -B -s $HOME/.m2/settings.xml -U org.apache.maven.plugins:maven-dependency-plugin:3.5.0:get -Dartifact=org.kunlecreates:test-utils:0.1.0 || true
           mvn -B -s $HOME/.m2/settings.xml \
             org.apache.maven.plugins:maven-dependency-plugin:3.5.0:get \
             -Dartifact=org.kunlecreates:test-utils:0.1.0 \
