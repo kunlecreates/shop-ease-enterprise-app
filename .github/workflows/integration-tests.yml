@@ -162,7 +162,6 @@ jobs:
           esac
 
       - name: Write maven settings
-        if: ${{ matrix.service == 'order-service' || matrix.service == 'user-service' }}
         run: |
           bash ./scripts/write_maven_settings.sh "${{ github.actor }}" "${{ secrets.GITHUB_TOKEN }}"
 
