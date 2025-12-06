@@ -1,5 +1,10 @@
 name: Publish test-utils to GitHub Packages
 
+# Grant explicit permissions so the workflow can publish packages using GITHUB_TOKEN
+permissions:
+  contents: read
+  packages: write
+
 on:
   push:
     paths:
@@ -20,22 +25,25 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Configure Maven settings for GitHub Packages
+      - name: Configure Maven settings for GitHub Packages (use GITHUB_TOKEN)
+        env:
+          MAVEN_USERNAME: ${{ github.actor }}
+          MAVEN_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir -p ~/.m2
-          cat > ~/.m2/settings.xml <<'XML'
+          cat > ~/.m2/settings.xml <<EOF
           <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
                     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                     xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
             <servers>
               <server>
                 <id>github</id>
-                <username>${env.GITHUB_ACTOR}</username>
-                <password>${{ secrets.GITHUB_TOKEN }}</password>
+                <username>${MAVEN_USERNAME}</username>
+                <password>${MAVEN_PASSWORD}</password>
               </server>
             </servers>
           </settings>
-          XML
+          EOF
 
       - name: Build and deploy test-utils
         working-directory: services/test-utils
