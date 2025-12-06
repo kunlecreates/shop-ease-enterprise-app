@@ -47,40 +47,9 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Configure Maven settings for GitHub Packages
-        env:
-          GITHUB_ACTOR: ${{ github.actor }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Write maven settings
         run: |
-          # Write a minimal settings.xml that includes server credentials for GitHub Packages
-          mkdir -p "$HOME/.m2"
-          cat > $HOME/.m2/settings.xml <<EOF
-          <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
-                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                    xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
-            <servers>
-              <server>
-                <id>github</id>
-                <username>${GITHUB_ACTOR}</username>
-                <password>${GITHUB_TOKEN}</password>
-              </server>
-            </servers>
-            <profiles>
-              <profile>
-                <id>github</id>
-                <repositories>
-                  <repository>
-                    <id>github</id>
-                    <url>https://maven.pkg.github.com/kunlecreates/shop-ease-enterprise-app</url>
-                  </repository>
-                </repositories>
-              </profile>
-            </profiles>
-            <activeProfiles>
-              <activeProfile>github</activeProfile>
-            </activeProfiles>
-          </settings>
-          EOF
+          bash ./scripts/write_maven_settings.sh "${{ github.actor }}" "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Try fetching published test-utils from GitHub Packages
         run: |
@@ -176,40 +145,10 @@ jobs:
               ;;
           esac
 
-      - name: Configure Maven settings for GitHub Packages (matrix jobs)
+      - name: Write maven settings
         if: ${{ matrix.service == 'order-service' || matrix.service == 'user-service' }}
-        env:
-          GITHUB_ACTOR: ${{ github.actor }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          mkdir -p "$HOME/.m2"
-          cat > $HOME/.m2/settings.xml <<EOF
-          <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
-                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                    xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
-            <servers>
-              <server>
-                <id>github</id>
-                <username>${GITHUB_ACTOR}</username>
-                <password>${GITHUB_TOKEN}</password>
-              </server>
-            </servers>
-            <profiles>
-              <profile>
-                <id>github</id>
-                <repositories>
-                  <repository>
-                    <id>github</id>
-                    <url>https://maven.pkg.github.com/kunlecreates/shop-ease-enterprise-app</url>
-                  </repository>
-                </repositories>
-              </profile>
-            </profiles>
-            <activeProfiles>
-              <activeProfile>github</activeProfile>
-            </activeProfiles>
-          </settings>
-          EOF
+          bash ./scripts/write_maven_settings.sh "${{ github.actor }}" "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Set up JDK 21 for Java services
         if: ${{ matrix.service == 'order-service' || matrix.service == 'user-service' }}
@@ -226,35 +165,7 @@ jobs:
 
       - name: Ensure test-utils available in local Maven repo
         run: |
-          # If prepare uploaded an artifact we copied it into workspace, install into the runner's ~/.m2
-          if [ -d ./.m2/repository/org/kunlecreates/test-utils ]; then
-            mkdir -p "$HOME/.m2/repository/org/kunlecreates" || true
-            cp -a ./.m2/repository/org/kunlecreates/test-utils "$HOME/.m2/repository/org/kunlecreates/" || true
-          fi
-
-          # Remove stale Maven marker files under the installed test-utils subtree
-          if [ -d "$HOME/.m2/repository/org/kunlecreates/test-utils" ]; then
-            find "$HOME/.m2/repository/org/kunlecreates/test-utils" -name "*.lastUpdated" -delete || true
-            find "$HOME/.m2/repository/org/kunlecreates/test-utils" -name "_remote.repositories" -delete || true
-          fi
-
-          # If POM is missing, try a single explicit fetch (force update). If still missing and sources exist, build+install.
-          if [ ! -f "$HOME/.m2/repository/org/kunlecreates/test-utils/0.1.0/test-utils-0.1.0.pom" ]; then
-            echo "POM missing for test-utils; attempting to download pom+jar from GitHub Packages (one attempt)"
-            mvn -B -s $HOME/.m2/settings.xml \
-              org.apache.maven.plugins:maven-dependency-plugin:3.5.0:get \
-              -Dartifact=org.kunlecreates:test-utils:0.1.0:pom \
-              -DremoteRepositories=github::default::https://maven.pkg.github.com/kunlecreates/shop-ease-enterprise-app -U || true
-            mvn -B -s $HOME/.m2/settings.xml \
-              org.apache.maven.plugins:maven-dependency-plugin:3.5.0:get \
-              -Dartifact=org.kunlecreates:test-utils:0.1.0 \
-              -DremoteRepositories=github::default::https://maven.pkg.github.com/kunlecreates/shop-ease-enterprise-app -U || true
-          fi
-
-          if [ ! -f "$HOME/.m2/repository/org/kunlecreates/test-utils/0.1.0/test-utils-0.1.0.jar" ] && [ -f ./services/test-utils/pom.xml ]; then
-            echo "test-utils still missing; building and installing from source"
-            mvn -B -DskipTests -f ./services/test-utils/pom.xml install
-          fi
+          bash ./scripts/ensure_test_utils.sh "$GITHUB_WORKSPACE"
 
 
       - name: Run tests for ${{ matrix.service }}
