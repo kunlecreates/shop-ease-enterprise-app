@@ -3,6 +3,7 @@ name: Publish test-utils
 on:
   push:
     branches: [ main, master ]
+    tags: ['v*', 'refs/tags/v*']
     paths:
       - 'services/test-utils/**'
   workflow_dispatch: {}
@@ -28,6 +29,15 @@ jobs:
       - name: Write maven settings (for deploy)
         run: |
           bash ./scripts/write_maven_settings.sh "${{ github.actor }}" "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Verify build inputs
+        run: |
+          echo "Listing test-utils project files"
+          ls -la services/test-utils || true
+          echo "Displaying POM coordinates"
+          xmllint --xpath "/*[local-name()='project']/*[local-name()='groupId']/text()" services/test-utils/pom.xml || true
+          xmllint --xpath "/*[local-name()='project']/*[local-name()='artifactId']/text()" services/test-utils/pom.xml || true
+          xmllint --xpath "/*[local-name()='project']/*[local-name()='version']/text()" services/test-utils/pom.xml || true
 
       - name: Build and deploy test-utils
         run: |
