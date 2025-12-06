@@ -60,4 +60,11 @@
             </resource>
         </resources>
     </build>
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/kunlecreates/shop-ease-enterprise-app</url>
+        </repository>
+    </distributionManagement>
 </project>

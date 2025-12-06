@@ -39,6 +39,10 @@ ci-artifacts/
 playwright-debug-artifacts/
 frontend/test-results/
 
+# Ignore built distribution artifacts and virtualenvs that should not be committed
+services/product-service/dist/
+services/notification-service/.venv/
+
 # Misc
 /.env
 /.env.local
