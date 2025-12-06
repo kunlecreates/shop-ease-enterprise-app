@@ -51,7 +51,8 @@ jobs:
         run: |
           bash ./scripts/write_maven_settings.sh "${{ github.actor }}" "${{ secrets.GITHUB_TOKEN }}"
 
-      - name: Try fetching published test-utils from GitHub Packages
+      - id: fetch_test_utils
+        name: Try fetching published test-utils from GitHub Packages
         run: |
           set -e
           echo "Attempting to download org.kunlecreates:test-utils:0.1.0 from GitHub Packages into local repo"
@@ -67,8 +68,10 @@ jobs:
           # Verify artifact and POM presence
           if [ -f "$HOME/.m2/repository/org/kunlecreates/test-utils/0.1.0/test-utils-0.1.0.jar" ] && [ -f "$HOME/.m2/repository/org/kunlecreates/test-utils/0.1.0/test-utils-0.1.0.pom" ]; then
             echo "Downloaded test-utils (jar + pom) from GitHub Packages"
+            echo "from_registry=true" >> "$GITHUB_OUTPUT"
           else
             echo "test-utils jar or POM not found in GitHub Packages; will build from source"
+            echo "from_registry=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Build & install test-utils (only if not fetched)
@@ -79,6 +82,19 @@ jobs:
           else
             echo "test-utils not present; building and installing from source"
             mvn -B -f ./services/test-utils/pom.xml install
+          fi
+
+      - name: Verify test-utils artifact contents (before upload)
+        if: success()
+        run: |
+          DIR="$HOME/.m2/repository/org/kunlecreates/test-utils"
+          if [ -d "$DIR" ]; then
+            echo "Listing contents of $DIR"
+            ls -al "$DIR" || true
+            echo "Checking for marker files"
+            find "$DIR" -name "*.lastUpdated" -o -name "_remote.repositories" -print || true
+          else
+            echo "$DIR does not exist; nothing to list"
           fi
 
       - name: Clean bad Maven cache entries before upload (prepare)
@@ -94,7 +110,7 @@ jobs:
           fi
 
       - name: Upload built test-utils to share with matrix jobs
-        if: success()
+        if: ${{ success() && steps.fetch_test_utils.outputs.from_registry == 'false' }}
         uses: actions/upload-artifact@v4
         with:
           name: test-utils-m2
