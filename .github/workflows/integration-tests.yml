@@ -48,18 +48,21 @@ jobs:
           java-version: '21'
 
       - name: Configure Maven settings for GitHub Packages
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Write a minimal settings.xml that includes server credentials for GitHub Packages
           mkdir -p "$HOME/.m2"
-          cat > $HOME/.m2/settings.xml <<'EOF'
+          cat > $HOME/.m2/settings.xml <<EOF
           <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
                     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                     xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
             <servers>
               <server>
                 <id>github</id>
-                <username>${env.GITHUB_ACTOR}</username>
-                <password>${{ secrets.GITHUB_TOKEN }}</password>
+                <username>${GITHUB_ACTOR}</username>
+                <password>${GITHUB_TOKEN}</password>
               </server>
             </servers>
           </settings>
@@ -69,8 +72,11 @@ jobs:
         run: |
           set -e
           echo "Attempting to download org.kunlecreates:test-utils:0.1.0 from GitHub Packages into local repo"
-          mvn -B org.apache.maven.plugins:maven-dependency-plugin:3.5.0:get \
-            -Dartifact=org.kunlecreates:test-utils:0.1.0 || true
+          # Instruct Maven to use the GitHub Packages repository when resolving the artifact.
+          mvn -B -s $HOME/.m2/settings.xml \
+            org.apache.maven.plugins:maven-dependency-plugin:3.5.0:get \
+            -Dartifact=org.kunlecreates:test-utils:0.1.0 \
+            -DremoteRepositories=github::default::https://maven.pkg.github.com/kunlecreates/shop-ease-enterprise-app || true
           # Verify artifact presence
           if [ -f "$HOME/.m2/repository/org/kunlecreates/test-utils/0.1.0/test-utils-0.1.0.jar" ]; then
             echo "Downloaded test-utils from GitHub Packages"
