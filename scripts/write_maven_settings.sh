@@ -8,7 +8,8 @@ GITHUB_ACTOR="${1:-${GITHUB_ACTOR:-}}"
 GITHUB_TOKEN="${2:-${GITHUB_TOKEN:-}}"
 
 mkdir -p "$HOME/.m2"
-cat > "$HOME/.m2/settings.xml" <<EOF
+if [ -n "$GITHUB_TOKEN" ]; then
+  cat > "$HOME/.m2/settings.xml" <<EOF
 <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
           xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
@@ -35,5 +36,15 @@ cat > "$HOME/.m2/settings.xml" <<EOF
   </activeProfiles>
 </settings>
 EOF
-
-printf "Wrote $HOME/.m2/settings.xml (server id=github)\n"
+  printf "Wrote $HOME/.m2/settings.xml with GitHub Packages credentials (server id=github)\n"
+else
+  # Write a minimal settings xml without credentials/profile so we don't accidentally
+  # attempt authenticated calls in contexts where secrets are unavailable (forked PRs).
+  cat > "$HOME/.m2/settings.xml" <<EOF
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
+</settings>
+EOF
+  printf "Wrote minimal $HOME/.m2/settings.xml (no credentials available)\n"
+fi

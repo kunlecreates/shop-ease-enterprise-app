@@ -43,6 +43,17 @@ mvn -B -s "$HOME/.m2/settings.xml" \
   -DremoteRepositories=github::default::https://maven.pkg.github.com/kunlecreates/shop-ease-enterprise-app \
   -Dtransitive=false || true
 
+# Debug: show whether settings.xml exists and basic info (not printing secrets)
+if [ -f "$HOME/.m2/settings.xml" ]; then
+  echo "Found settings.xml; contents (first 50 chars):"
+  head -c 200 "$HOME/.m2/settings.xml" | sed -n '1,5p' || true
+else
+  echo "No settings.xml found at $HOME/.m2/settings.xml"
+fi
+
+# Check for HTTP status code 401 in the Maven logs (helpful to diagnose unauthorized)
+echo "Checking for downloaded files after mvn attempts..."
+
 # Check if download succeeded
 if [ -f "$HOME/.m2/repository/org/kunlecreates/test-utils/0.1.0/test-utils-0.1.0.jar" ]; then
   echo "Downloaded test-utils into local repo"
@@ -51,7 +62,7 @@ if [ -f "$HOME/.m2/repository/org/kunlecreates/test-utils/0.1.0/test-utils-0.1.0
   exit 0
 fi
 
-echo "test-utils not available remotely or via provided artifact. Building from source..."
+echo "test-utils not available via provided artifact or remote. Will attempt to build from source..."
 
 # If source is present in workspace, build and install it
 if [ -d "$WORKDIR/services/test-utils" ]; then
