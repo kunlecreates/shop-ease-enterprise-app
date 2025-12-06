@@ -124,6 +124,10 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DOCKER_API_VERSION: '1.52'
+      # Ensure the GitHub token and actor are exported into the job environment so
+      # helper scripts invoked via `bash` can read them reliably.
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_ACTOR: ${{ github.actor }}
     strategy:
       matrix:
         service: [order-service, user-service, product-service, notification-service]
