@@ -14,5 +14,7 @@ jobs:
     uses: ./.github/workflows/reusable-java-test.yml
     with:
       module_path: 'services/user-service'
-      maven_goal: 'test'
+      maven_goal: 'verify'
       jdk_version: '21'
+      # Enable Testcontainers-based integration tests (Postgres) in CI.
+      maven_args: '-Dtestcontainers.enabled=true -Dapi.version=1.44'

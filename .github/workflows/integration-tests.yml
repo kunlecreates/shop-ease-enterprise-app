@@ -4,7 +4,14 @@ name: Integration Tests
 
 on:
   push:
-    branches: [ main, master ]
+    # Run on main/master and on CI topic branches used for testing.
+    # Add the shared PR branch and a glob for test/* branches so pushes
+    # to topics like `test/ci-*` will trigger the workflow.
+    branches:
+      - main
+      - master
+      - feat/dev-tests
+      - 'test/**'
     # Only run this expensive integration matrix when cross-cutting, shared or infra
     # changes occur. Service-local changes are handled by per-service CI jobs.
     paths:
@@ -12,7 +19,6 @@ on:
       - '.github/workflows/**'
       - 'scripts/**'
       - 'helm-charts/**'
-    # Still explicitly ignore per-service changes to avoid duplicate matrix runs
   pull_request:
     branches: [ main, master ]
     paths:
