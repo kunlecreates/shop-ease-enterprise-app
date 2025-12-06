@@ -263,7 +263,7 @@ jobs:
           echo "Checking $SERVICE_DIR"
           if [ -f "$SERVICE_DIR/pom.xml" ]; then
             echo "Detected Maven service. Running mvn verify (includes integration tests)"
-            mvn -B -f "$SERVICE_DIR" -Dapi.version=1.44 verify
+            mvn -B -s $HOME/.m2/settings.xml -U -f "$SERVICE_DIR" -Dapi.version=1.44 verify
           elif [ -f "$SERVICE_DIR/package.json" ]; then
             echo "Detected Node service. Installing and running npm test"
             pushd "$SERVICE_DIR"
