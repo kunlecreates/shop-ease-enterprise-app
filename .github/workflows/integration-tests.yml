@@ -65,6 +65,20 @@ jobs:
                 <password>${GITHUB_TOKEN}</password>
               </server>
             </servers>
+            <profiles>
+              <profile>
+                <id>github</id>
+                <repositories>
+                  <repository>
+                    <id>github</id>
+                    <url>https://maven.pkg.github.com/kunlecreates/shop-ease-enterprise-app</url>
+                  </repository>
+                </repositories>
+              </profile>
+            </profiles>
+            <activeProfiles>
+              <activeProfile>github</activeProfile>
+            </activeProfiles>
           </settings>
           EOF
 
@@ -168,6 +182,20 @@ jobs:
                 <password>${GITHUB_TOKEN}</password>
               </server>
             </servers>
+            <profiles>
+              <profile>
+                <id>github</id>
+                <repositories>
+                  <repository>
+                    <id>github</id>
+                    <url>https://maven.pkg.github.com/kunlecreates/shop-ease-enterprise-app</url>
+                  </repository>
+                </repositories>
+              </profile>
+            </profiles>
+            <activeProfiles>
+              <activeProfile>github</activeProfile>
+            </activeProfiles>
           </settings>
           EOF
 
