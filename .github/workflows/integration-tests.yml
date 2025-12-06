@@ -37,6 +37,8 @@ jobs:
   prepare:
     name: Prepare shared test artifacts
     runs-on: ubuntu-latest
+    outputs:
+      from_registry: ${{ steps.fetch_test_utils.outputs.from_registry }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -173,6 +175,7 @@ jobs:
           java-version: '21'
 
       - name: Download built test-utils from prepare job
+        if: ${{ needs.prepare.outputs.from_registry == 'false' }}
         uses: actions/download-artifact@v4
         with:
           name: test-utils-m2
