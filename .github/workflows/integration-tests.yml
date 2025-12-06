@@ -198,8 +198,12 @@ jobs:
             find "$HOME/.m2/repository/org/kunlecreates/test-utils" -name "*.lastUpdated" -print -delete || true
             find "$HOME/.m2/repository/org/kunlecreates/test-utils" -name "_remote.repositories" -print -delete || true
           fi
-          # Force Maven to attempt to resolve the artifact from configured repos
-          mvn -B -s $HOME/.m2/settings.xml org.apache.maven.plugins:maven-dependency-plugin:3.5.0:resolve -Dartifact=org.kunlecreates:test-utils:0.1.0 || true
+          # Force Maven to attempt to retrieve the artifact from configured repos
+          # Use dependency:get (works without a project POM) and explicitly point to GitHub Packages
+          mvn -B -s $HOME/.m2/settings.xml \
+            org.apache.maven.plugins:maven-dependency-plugin:3.5.0:get \
+            -Dartifact=org.kunlecreates:test-utils:0.1.0 \
+            -DremoteRepositories=github::default::https://maven.pkg.github.com/kunlecreates/shop-ease-enterprise-app || true
 
 
       - name: Run tests for ${{ matrix.service }}
