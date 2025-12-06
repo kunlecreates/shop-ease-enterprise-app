@@ -226,25 +226,21 @@ jobs:
 
       - name: Ensure test-utils available in local Maven repo
         run: |
-          # If prepare uploaded an artifact we copied it into workspace and now install into the runner's ~/.m2
+          # If prepare uploaded an artifact we copied it into workspace, install into the runner's ~/.m2
           if [ -d ./.m2/repository/org/kunlecreates/test-utils ]; then
             mkdir -p "$HOME/.m2/repository/org/kunlecreates" || true
             cp -a ./.m2/repository/org/kunlecreates/test-utils "$HOME/.m2/repository/org/kunlecreates/" || true
           fi
-          # If still missing (cache may have overwritten the install), build & install test-utils locally if the sources exist
-          if [ ! -f "$HOME/.m2/repository/org/kunlecreates/test-utils/0.1.0/test-utils-0.1.0.jar" ] && [ -f ./services/test-utils/pom.xml ]; then
-            echo "test-utils jar not present in local repo; building/installing from sources"
-            mvn -B -DskipTests -f ./services/test-utils/pom.xml install || true
-          fi
-          # Ensure the POM is present; if not, attempt to fetch POM+jar explicitly from GitHub Packages
+
+          # Remove stale Maven marker files under the installed test-utils subtree
           if [ -d "$HOME/.m2/repository/org/kunlecreates/test-utils" ]; then
-            echo "Removing Maven lastUpdated and remote cache files for test-utils"
-            find "$HOME/.m2/repository/org/kunlecreates/test-utils" -name "*.lastUpdated" -print -delete || true
-            find "$HOME/.m2/repository/org/kunlecreates/test-utils" -name "_remote.repositories" -print -delete || true
+            find "$HOME/.m2/repository/org/kunlecreates/test-utils" -name "*.lastUpdated" -delete || true
+            find "$HOME/.m2/repository/org/kunlecreates/test-utils" -name "_remote.repositories" -delete || true
           fi
-          # If POM is missing but JAR present, try to fetch the POM from GitHub Packages
+
+          # If POM is missing, try a single explicit fetch (force update). If still missing and sources exist, build+install.
           if [ ! -f "$HOME/.m2/repository/org/kunlecreates/test-utils/0.1.0/test-utils-0.1.0.pom" ]; then
-            echo "POM missing for test-utils; attempting to download pom + jar from GitHub Packages"
+            echo "POM missing for test-utils; attempting to download pom+jar from GitHub Packages (one attempt)"
             mvn -B -s $HOME/.m2/settings.xml \
               org.apache.maven.plugins:maven-dependency-plugin:3.5.0:get \
               -Dartifact=org.kunlecreates:test-utils:0.1.0:pom \
@@ -254,22 +250,16 @@ jobs:
               -Dartifact=org.kunlecreates:test-utils:0.1.0 \
               -DremoteRepositories=github::default::https://maven.pkg.github.com/kunlecreates/shop-ease-enterprise-app -U || true
           fi
-          # Final defensive purge of any stale metadata and force Maven to re-check remotes if needed
-          mvn -B -s $HOME/.m2/settings.xml -U org.apache.maven.plugins:maven-dependency-plugin:3.5.0:get -Dartifact=org.kunlecreates:test-utils:0.1.0 || true
-          mvn -B -s $HOME/.m2/settings.xml \
-            org.apache.maven.plugins:maven-dependency-plugin:3.5.0:get \
-            -Dartifact=org.kunlecreates:test-utils:0.1.0 \
-            -DremoteRepositories=github::default::https://maven.pkg.github.com/kunlecreates/shop-ease-enterprise-app || true
+
+          if [ ! -f "$HOME/.m2/repository/org/kunlecreates/test-utils/0.1.0/test-utils-0.1.0.jar" ] && [ -f ./services/test-utils/pom.xml ]; then
+            echo "test-utils still missing; building and installing from source"
+            mvn -B -DskipTests -f ./services/test-utils/pom.xml install
+          fi
 
 
       - name: Run tests for ${{ matrix.service }}
         run: |
-          # If prepare job produced test-utils, copy it into this runner's local Maven repo
-          if [ -d ./.m2/repository/org/kunlecreates/test-utils ]; then
-            echo "Found test-utils in workspace cache; installing into ~/.m2"
-            mkdir -p $HOME/.m2/repository/org/kunlecreates || true
-            cp -a ./.m2/repository/org/kunlecreates/test-utils $HOME/.m2/repository/org/kunlecreates/ || true
-          fi
+          # test-utils (if provided) should already be installed into ~/.m2 by the previous step
           set -e
           SERVICE_DIR="./services/${{ matrix.service }}"
           echo "Checking $SERVICE_DIR"
