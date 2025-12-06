@@ -31,8 +31,16 @@ fi
 
 # Otherwise, try to download POM+JAR directly using mvn dependency:get (forces remote)
 echo "Attempting to download test-utils from configured remote repositories..."
-mvn -B -U org.apache.maven.plugins:maven-dependency-plugin:3.5.0:get \
+# Use explicit settings.xml and explicit GitHub Packages remote in case the runner
+# default Maven configuration doesn't include our repository.
+mvn -B -s "$HOME/.m2/settings.xml" \
+  org.apache.maven.plugins:maven-dependency-plugin:3.5.0:get \
+  -Dartifact=org.kunlecreates:test-utils:0.1.0:pom \
+  -DremoteRepositories=github::default::https://maven.pkg.github.com/kunlecreates/shop-ease-enterprise-app || true
+mvn -B -s "$HOME/.m2/settings.xml" \
+  org.apache.maven.plugins:maven-dependency-plugin:3.5.0:get \
   -Dartifact=org.kunlecreates:test-utils:0.1.0:jar \
+  -DremoteRepositories=github::default::https://maven.pkg.github.com/kunlecreates/shop-ease-enterprise-app \
   -Dtransitive=false || true
 
 # Check if download succeeded
