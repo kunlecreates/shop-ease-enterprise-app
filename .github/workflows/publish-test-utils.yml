@@ -39,6 +39,33 @@ jobs:
           xmllint --xpath "/*[local-name()='project']/*[local-name()='artifactId']/text()" services/test-utils/pom.xml || true
           xmllint --xpath "/*[local-name()='project']/*[local-name()='version']/text()" services/test-utils/pom.xml || true
 
+      - name: Check package version in GitHub Packages
+        id: check
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Get version from POM
+          version=$(xmllint --xpath "string(/*[local-name()='project']/*[local-name()='version'])" services/test-utils/pom.xml)
+          echo "Found version: $version"
+
+          # Query GitHub Packages for versions
+          resp=$(curl -s -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            "https://api.github.com/orgs/kunlecreates/packages/maven/test-utils/versions")
+
+          if echo "$resp" | jq -e --arg v "$version" '.[] | select(.metadata.name==$v)' >/dev/null 2>&1; then
+            echo "Version $version already exists in GitHub Packages. Skipping deploy."
+            echo "skip_deploy=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip_deploy=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Build and deploy test-utils
+        if: steps.check.outputs.skip_deploy != 'true'
         run: |
           mvn -B -s $HOME/.m2/settings.xml -DskipTests -f services/test-utils/pom.xml deploy
+
+      - name: Skip deploy notice
+        if: steps.check.outputs.skip_deploy == 'true'
+        run: |
+          echo "Deploy skipped because package version already exists in GitHub Packages."
