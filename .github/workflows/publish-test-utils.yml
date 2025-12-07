@@ -35,17 +35,17 @@ jobs:
           echo "Listing test-utils project files"
           ls -la services/test-utils || true
           echo "Displaying POM coordinates"
-          xmllint --xpath "/*[local-name()='project']/*[local-name()='groupId']/text()" services/test-utils/pom.xml || true
-          xmllint --xpath "/*[local-name()='project']/*[local-name()='artifactId']/text()" services/test-utils/pom.xml || true
-          xmllint --xpath "/*[local-name()='project']/*[local-name()='version']/text()" services/test-utils/pom.xml || true
+          echo "groupId: $(mvn -f services/test-utils/pom.xml help:evaluate -Dexpression=project.groupId -q -DforceStdout || true)"
+          echo "artifactId: $(mvn -f services/test-utils/pom.xml help:evaluate -Dexpression=project.artifactId -q -DforceStdout || true)"
+          echo "version: $(mvn -f services/test-utils/pom.xml help:evaluate -Dexpression=project.version -q -DforceStdout || true)"
 
       - name: Check package version in GitHub Packages
         id: check
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Get version from POM
-          version=$(xmllint --xpath "string(/*[local-name()='project']/*[local-name()='version'])" services/test-utils/pom.xml)
+          # Get version from POM using Maven (avoids xmllint dependency)
+          version=$(mvn -f services/test-utils/pom.xml help:evaluate -Dexpression=project.version -q -DforceStdout)
           echo "Found version: $version"
 
           # Query GitHub Packages for versions
