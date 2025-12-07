@@ -39,6 +39,12 @@ ci-artifacts/
 playwright-debug-artifacts/
 frontend/test-results/
 
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyc
+
 # Ignore built distribution artifacts and virtualenvs that should not be committed
 services/product-service/dist/
 services/notification-service/.venv/
