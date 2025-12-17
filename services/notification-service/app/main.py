@@ -14,3 +14,8 @@ def test_notification():
     return {"sent": True}
 
 app.include_router(router)
+
+# Also expose a root-level health endpoint used by CI/tests
+@app.get("/health")
+def root_health():
+    return {"status": "ok"}
