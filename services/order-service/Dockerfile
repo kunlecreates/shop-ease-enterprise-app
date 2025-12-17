@@ -11,7 +11,7 @@ RUN mvn -B -DskipTests package -DskipTests
 FROM eclipse-temurin:21-jre-alpine AS runtime
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 WORKDIR /app
-ENV JAVA_OPTS=-XX:MaxRAMPercentage=75.0 -XX:+UseG1GC
+ENV JAVA_OPTS="-XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"
 # Copy the built artifact from the builder stage
 COPY --from=builder /workspace/target/order-service-*.jar /app/app.jar
 
