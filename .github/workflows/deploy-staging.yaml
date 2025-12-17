@@ -1,5 +1,8 @@
 name: Deploy Staging
 
+permissions:
+  actions: read
+
 on:
   workflow_dispatch:
     inputs:
