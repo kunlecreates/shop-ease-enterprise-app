@@ -1,12 +1,15 @@
 FROM maven:3.9.6-eclipse-temurin-21 AS builder
 WORKDIR /workspace
-# Copy only Maven metadata first to leverage layer caching
-# Use the Maven base image to run Maven directly; avoid requiring mvnw/.mvn
-# to be present in the build context which can cause build failures.
-COPY pom.xml ./
-COPY src ./src
+# Copy repository modules required for build from the repo root context.
+# Install shared test-utils if present so order-service tests/dependencies
+# that reference it will resolve during the build.
+COPY services/test-utils/pom.xml services/test-utils/pom.xml
+COPY services/test-utils/src services/test-utils/src
+RUN if [ -f services/test-utils/pom.xml ]; then mvn -B -DskipTests -f services/test-utils/pom.xml install; fi
 
-# Build the application jar (skip tests in CI build image)
+# Copy the service sources and build the service jar (skip tests in CI build image)
+COPY services/order-service/pom.xml ./pom.xml
+COPY services/order-service/src ./src
 RUN mvn -B -DskipTests -f pom.xml package
 
 FROM eclipse-temurin:21-jre-alpine AS runtime
@@ -14,7 +17,7 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 WORKDIR /app
 ENV JAVA_OPTS="-XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"
 # Copy the built artifact from the builder stage
-COPY --from=builder /workspace/target/order-service-*.jar /app/app.jar
+COPY --from=builder /workspace/services/order-service/target/order-service-*.jar /app/app.jar
 
 # Use a non-root user
 USER appuser

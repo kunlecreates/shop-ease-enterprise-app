@@ -1,14 +1,18 @@
 FROM maven:3.9.6-eclipse-temurin-21 AS builder
 WORKDIR /workspace
-# Copy only Maven metadata first to leverage layer caching
-# The repo uses the official Maven base image, so the Maven wrapper and .mvn
-# directory aren't required inside the build context. Copy pom.xml and sources
-# and run Maven directly inside the image to avoid failing builds when mvnw
-# or .mvn are absent.
-COPY pom.xml ./
-COPY src ./src
+# Copy repository modules required for build from the repo root context.
+# We run Maven inside the builder image and install any local helper modules
+# (e.g. services/test-utils) into the local Maven repo so service builds
+# that depend on them can succeed without requiring a published package.
+# Copy only the files we need to keep the context small.
+# Copy test-utils (if present) and install it into local repo first.
+COPY services/test-utils/pom.xml services/test-utils/pom.xml
+COPY services/test-utils/src services/test-utils/src
+RUN if [ -f services/test-utils/pom.xml ]; then mvn -B -DskipTests -f services/test-utils/pom.xml install; fi
 
-# Build the application jar (skip tests in CI build image)
+# Copy the service sources and build the service jar (skip tests in CI build image)
+COPY services/user-service/pom.xml ./pom.xml
+COPY services/user-service/src ./src
 RUN mvn -B -DskipTests -f pom.xml package
 
 FROM eclipse-temurin:21-jre-alpine AS runtime
@@ -16,7 +20,7 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 WORKDIR /app
 ENV JAVA_OPTS="-XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"
 # Copy the built artifact from the builder stage
-COPY --from=builder /workspace/target/user-service-*.jar /app/app.jar
+COPY --from=builder /workspace/services/user-service/target/user-service-*.jar /app/app.jar
 
 # Use a non-root user
 USER appuser
