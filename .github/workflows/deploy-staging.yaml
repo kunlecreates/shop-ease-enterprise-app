@@ -19,7 +19,35 @@ on:
       - feat/dev-tests
 
 jobs:
+  # Early check to fail fast if no self-hosted ARC runner is available
+  check-runner:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+    steps:
+      - name: Check repo self-hosted runners for label arc-runnerset
+        env:
+          GITHUB_API: https://api.github.com
+          REPO: ${{ github.repository }}
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LABEL: arc-runnerset
+        run: |
+          set -euo pipefail
+          echo "Querying self-hosted runners for repository $REPO"
+          resp=$(curl -s -H "Authorization: token $TOKEN" "$GITHUB_API/repos/$REPO/actions/runners")
+          # Count runners that are online and contain the requested label
+          cnt=$(printf '%s' "$resp" | jq --arg lbl "$LABEL" '[.runners[] | select(.status=="online" and (.labels[]?.name==$lbl))] | length')
+          if [ "$cnt" -eq 0 ]; then
+            echo "ERROR: No online self-hosted runners with label '$LABEL' found for $REPO"
+            echo "Register a runner with label '$LABEL' or modify the workflow 'runs-on' temporarily to use a GitHub-hosted runner."
+            echo "Runner API response summary:"
+            printf '%s' "$resp" | jq '{total: .total_count, online: [.runners[] | select(.status=="online") | {name: .name, labels: .labels}][0:10]}' || true
+            exit 1
+          fi
+          echo "Found $cnt online runner(s) with label '$LABEL'. Continuing."
+
   prepare:
+    needs: check-runner
     runs-on: arc-runnerset
     steps:
       - name: Checkout
