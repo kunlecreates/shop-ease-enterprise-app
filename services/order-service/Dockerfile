@@ -4,7 +4,6 @@ WORKDIR /workspace
 # Use the Maven base image to run Maven directly; avoid requiring mvnw/.mvn
 # to be present in the build context which can cause build failures.
 COPY pom.xml ./
-COPY settings.xml* . 2>/dev/null || true
 COPY src ./src
 
 # Build the application jar (skip tests in CI build image)

@@ -6,7 +6,6 @@ WORKDIR /workspace
 # and run Maven directly inside the image to avoid failing builds when mvnw
 # or .mvn are absent.
 COPY pom.xml ./
-COPY settings.xml* . 2>/dev/null || true
 COPY src ./src
 
 # Build the application jar (skip tests in CI build image)
