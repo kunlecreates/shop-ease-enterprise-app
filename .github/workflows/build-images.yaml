@@ -103,7 +103,7 @@ jobs:
           # Limit to the host architecture to avoid creating extra builders for multi-platform builds
           platforms: linux/amd64
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # NOTE: remove cache-from/cache-to (GH Actions GHA cache backend) for host docker driver
+          # to avoid build-cache-backend errors when using the host driver.
           # Pull base images to reduce transient network failures during build
           pull: true
