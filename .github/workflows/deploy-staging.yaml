@@ -34,14 +34,30 @@ jobs:
         run: |
           set -euo pipefail
           echo "Querying self-hosted runners for repository $REPO"
-          resp=$(curl -s -H "Authorization: token $TOKEN" "$GITHUB_API/repos/$REPO/actions/runners")
-          # Count runners that are online and contain the requested label
-          cnt=$(printf '%s' "$resp" | jq --arg lbl "$LABEL" '[.runners[] | select(.status=="online" and (.labels[]?.name==$lbl))] | length')
+          # Fetch with status code appended so we can handle API errors
+          raw=$(curl -s -H "Authorization: token $TOKEN" -w "\n%{http_code}" "$GITHUB_API/repos/$REPO/actions/runners") || true
+          http=$(printf '%s' "$raw" | tail -n1)
+          body=$(printf '%s' "$raw" | sed '$d')
+          if [ "$http" != "200" ]; then
+            echo "ERROR: GitHub API returned HTTP $http when querying runners for $REPO"
+            echo "Response body:"; printf '%s' "$body" | jq . || printf '%s' "$body"
+            echo "Ensure the workflow has 'actions: read' permission and the token can access the Actions API."
+            exit 1
+          fi
+          # Safely handle missing or null .runners
+          runners_count=$(printf '%s' "$body" | jq 'if has("runners") and (.runners!=null) then (.runners | length) else 0 end')
+          if [ "$runners_count" -eq 0 ]; then
+            echo "ERROR: No self-hosted runners registered for repository $REPO (runners array empty)."
+            printf '%s' "$body" | jq '{total: .total_count, message: .message} // {}' || true
+            echo "Register a self-hosted runner with label '$LABEL' or update the workflow 'runs-on'."
+            exit 1
+          fi
+          cnt=$(printf '%s' "$body" | jq --arg lbl "$LABEL" '[.runners[] | select(.status=="online" and ((.labels // []) | map(.name) | index($lbl) != null))] | length')
           if [ "$cnt" -eq 0 ]; then
             echo "ERROR: No online self-hosted runners with label '$LABEL' found for $REPO"
+            echo "Runners registered (up to 10 shown):"
+            printf '%s' "$body" | jq '[.runners[] | {name: .name, status: .status, labels: (.labels // [])}][0:10]'
             echo "Register a runner with label '$LABEL' or modify the workflow 'runs-on' temporarily to use a GitHub-hosted runner."
-            echo "Runner API response summary:"
-            printf '%s' "$resp" | jq '{total: .total_count, online: [.runners[] | select(.status=="online") | {name: .name, labels: .labels}][0:10]}' || true
             exit 1
           fi
           echo "Found $cnt online runner(s) with label '$LABEL'. Continuing."
