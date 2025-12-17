@@ -20,7 +20,7 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 WORKDIR /app
 ENV JAVA_OPTS="-XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"
 # Copy the built artifact from the builder stage
-COPY --from=builder /workspace/services/user-service/target/user-service-*.jar /app/app.jar
+COPY --from=builder /workspace/target/user-service-*.jar /app/app.jar
 
 # Use a non-root user
 USER appuser
