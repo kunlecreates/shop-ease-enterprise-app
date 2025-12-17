@@ -1,0 +1,95 @@
+name: Build and Push Images
+
+permissions:
+  contents: read
+  packages: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      services:
+        description: "Comma-separated services to build (user,product,order,notification,frontend or 'all')"
+        required: true
+        default: "all"
+  push:
+    paths:
+      - 'services/**'
+      - 'frontend/**'
+    branches:
+      - feat/dev-tests
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [user-service, product-service, order-service, notification-service, frontend]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Filter services
+        id: filter
+        run: |
+          input="${{ github.event.inputs.services }}"
+          [[ -z "$input" ]] && input="all"
+          svc="${{ matrix.service }}"
+          if [[ "$input" != "all" ]]; then
+            IFS=',' read -r -a items <<< "$input"
+            keep=0
+            for i in "${items[@]}"; do
+              [[ "$i" == "$svc" || "$i" == "${svc%-service}" ]] && keep=1
+            done
+            if [[ $keep -eq 0 ]]; then echo "skip" > skip; fi
+          fi
+      - name: Skip if filtered
+        if: ${{ hashFiles('skip') != '' }}
+        run: echo "Skipping ${{ matrix.service }}"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set image vars
+        if: ${{ hashFiles('skip') == '' }}
+        id: vars
+        run: |
+          case "${{ matrix.service }}" in
+            user-service|order-service|product-service|notification-service)
+              image="${{ matrix.service }}"
+              context="services/${{ matrix.service }}"
+              ;;
+            frontend)
+              image="shopease-frontend"
+              context="frontend"
+              ;;
+          esac
+          echo "image=$image" >> $GITHUB_OUTPUT
+          echo "context=$context" >> $GITHUB_OUTPUT
+
+      - name: Docker meta
+        if: ${{ hashFiles('skip') == '' }}
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/${{ steps.vars.outputs.image }}
+          tags: |
+            type=raw,value=staging-${{ github.sha }}
+            type=raw,value=latest
+
+      - name: Build & Push (buildx)
+        if: ${{ hashFiles('skip') == '' }}
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ steps.vars.outputs.context }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

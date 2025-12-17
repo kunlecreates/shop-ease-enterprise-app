@@ -1,0 +1,481 @@
+name: Deploy Staging
+
+on:
+  workflow_dispatch:
+    inputs:
+      services:
+        description: "Comma-separated services to deploy (user,product,order,notification,frontend or 'all')"
+        required: true
+        default: "all"
+      image_tag:
+        description: "Container image tag (defaults to staging-${{ github.sha }}) or use 'latest'"
+        required: false
+      values_file:
+        description: "Path to Helm values file (defaults to helm-charts/values-staging.yaml)"
+        required: false
+  push:
+    branches:
+      - feat/dev-tests
+
+jobs:
+  prepare:
+    runs-on: arc-runnerset
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.15.3
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: v1.30.0
+
+      - name: Configure kubeconfig (ARC in-cluster only)
+        run: |
+          set -euo pipefail
+          if [ -z "${KUBERNETES_SERVICE_HOST:-}" ]; then
+            echo "ERROR: This job requires running inside the cluster on an ARC runner (KUBERNETES_SERVICE_HOST not set)."
+            exit 1
+          fi
+          echo "Configuring in-cluster kubeconfig (ARC runner)"
+          APISERVER="https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT}"
+          SA_TOKEN_FILE="/var/run/secrets/kubernetes.io/serviceaccount/token"
+          CA_CERT_FILE="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+          KUBECONFIG_PATH="$PWD/kubeconfig"
+          kubectl config set-cluster arc --server="$APISERVER" --certificate-authority="$CA_CERT_FILE" --embed-certs=true --kubeconfig="$KUBECONFIG_PATH"
+          kubectl config set-credentials runner --token="$(cat "$SA_TOKEN_FILE")" --kubeconfig="$KUBECONFIG_PATH"
+          kubectl config set-context arc --cluster=arc --user=runner --kubeconfig="$KUBECONFIG_PATH"
+          kubectl config use-context arc --kubeconfig="$KUBECONFIG_PATH"
+          echo "KUBECONFIG=$KUBECONFIG_PATH" >> $GITHUB_ENV
+
+      - name: Ensure rbac release namespace exists
+        run: kubectl create namespace shopease-system --dry-run=client -o yaml | kubectl apply -f -
+        env:
+          KUBECONFIG: ${{ env.KUBECONFIG }}
+
+      - name: Create selected service namespaces
+        run: |
+          export KUBECONFIG=${{ env.KUBECONFIG }}
+          INPUT_SERVICES='${{ github.event.inputs.services }}'
+          [[ -z "$INPUT_SERVICES" ]] && INPUT_SERVICES=all
+          if [[ "$INPUT_SERVICES" == "all" ]]; then
+            NAMESPACES=(shopease-user shopease-product shopease-order shopease-notification shopease-frontend)
+          else
+            IFS=',' read -r -a items <<< "$INPUT_SERVICES"
+            NAMESPACES=()
+            for s in "${items[@]}"; do
+              case "$s" in
+                user) NAMESPACES+=(shopease-user) ;;
+                product) NAMESPACES+=(shopease-product) ;;
+                order) NAMESPACES+=(shopease-order) ;;
+                notification) NAMESPACES+=(shopease-notification) ;;
+                frontend) NAMESPACES+=(shopease-frontend) ;;
+              esac
+            done
+          fi
+          for ns in "${NAMESPACES[@]}"; do
+            kubectl create namespace "$ns" --dry-run=client -o yaml | kubectl apply -f -
+          done
+
+      - name: Install/Upgrade RBAC Helm chart (limited to selected namespaces)
+        run: |
+          export KUBECONFIG=${{ env.KUBECONFIG }}
+          set -euo pipefail
+          # Build temporary values.yaml containing only the selected targets
+          tmpvals=$(mktemp)
+          echo "targets:" > "$tmpvals"
+          for ns in "${NAMESPACES[@]}"; do
+            cat >> "$tmpvals" <<-EOF
+            - namespace: $ns
+              serviceAccount: arc-runner-sa
+              subjectNamespace: arc-runners
+              roleName: deployer
+              bindingName: deployer-binding
+            EOF
+          done
+          echo "Using temporary RBAC values file:" "$tmpvals"
+          helm lint helm-charts/rbac || true
+          # templates validated with `helm lint` above
+          helm upgrade --install shopease-rbac helm-charts/rbac \
+            --namespace shopease-system --create-namespace --atomic --wait --timeout 5m \
+            -f "$tmpvals"
+          rm -f "$tmpvals"
+
+  
+  deploy-helm:
+    runs-on: arc-runnerset
+    needs: prepare
+    strategy:
+      matrix:
+        service: [user, product, order, notification, frontend]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.15.3
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: v1.30.0
+
+      - name: Configure kubeconfig (ARC in-cluster only)
+        run: |
+          set -euo pipefail
+          if [ -z "${KUBERNETES_SERVICE_HOST:-}" ]; then
+            echo "ERROR: This workflow requires running inside the cluster on an ARC runner (KUBERNETES_SERVICE_HOST not set)."
+            exit 1
+          fi
+          echo "Configuring in-cluster kubeconfig (ARC runner)"
+          APISERVER="https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT}"
+          SA_TOKEN_FILE="/var/run/secrets/kubernetes.io/serviceaccount/token"
+          CA_CERT_FILE="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+          KUBECONFIG_PATH="$PWD/kubeconfig"
+          kubectl config set-cluster arc --server="$APISERVER" --certificate-authority="$CA_CERT_FILE" --embed-certs=true --kubeconfig="$KUBECONFIG_PATH"
+          kubectl config set-credentials runner --token="$(cat "$SA_TOKEN_FILE")" --kubeconfig="$KUBECONFIG_PATH"
+          kubectl config set-context arc --cluster=arc --user=runner --kubeconfig="$KUBECONFIG_PATH"
+          kubectl config use-context arc --kubeconfig="$KUBECONFIG_PATH"
+          echo "KUBECONFIG=$KUBECONFIG_PATH" >> $GITHUB_ENV
+
+      - name: Filter services
+        run: |
+          input="${{ inputs.services }}"
+          [[ -z "$input" ]] && input="all"
+          svc="${{ matrix.service }}"
+          if [[ "$input" != "all" ]]; then
+            IFS=',' read -r -a items <<< "$input"
+            keep=0
+            for i in "${items[@]}"; do
+              [[ "$i" == "$svc" ]] && keep=1
+            done
+            if [[ $keep -eq 0 ]]; then echo "skip" > skip; fi
+          fi
+      - name: Skip if filtered
+        if: ${{ hashFiles('skip') != '' }}
+        run: echo "Skipping ${{ matrix.service }}"
+
+      - name: Compute parameters (per service)
+        if: ${{ hashFiles('skip') == '' }}
+        run: |
+          # Map service to release/namespace and enable flags
+          SERVICE="${{ matrix.service }}"
+          RELEASE_NAME="shopease-${SERVICE}"
+          NAMESPACE="shopease-${SERVICE}"
+          VALUES_FILE="${{ inputs.values_file }}"
+          if [ -z "$VALUES_FILE" ]; then VALUES_FILE="helm-charts/values-staging.yaml"; fi
+          IMAGE_TAG_INPUT="${{ inputs.image_tag }}"
+          if [ -z "$IMAGE_TAG_INPUT" ]; then IMAGE_TAG_INPUT="staging-${{ github.sha }}"; fi
+          echo "RELEASE_NAME=$RELEASE_NAME" >> $GITHUB_ENV
+          echo "NAMESPACE=$NAMESPACE" >> $GITHUB_ENV
+          echo "VALUES_FILE=$VALUES_FILE" >> $GITHUB_ENV
+          echo "IMAGE_TAG_INPUT=$IMAGE_TAG_INPUT" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Ensure namespace exists
+        if: ${{ hashFiles('skip') == '' }}
+        run: kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
+        env:
+          KUBECONFIG: ${{ env.KUBECONFIG }}
+
+      
+
+      - name: Create/Update DB Secret from GitHub Secrets (user/product/order only)
+        if: ${{ hashFiles('skip') == '' }}
+        run: |
+          set -euo pipefail
+          SERVICE="${{ matrix.service }}"
+          NAMESPACE="$NAMESPACE"
+          case "$SERVICE" in
+            product)
+              SECRET_NAME="shopease-product-db"
+              ;;
+            user)
+              SECRET_NAME="shopease-user-db"
+              ;;
+            order)
+              SECRET_NAME="shopease-order-db"
+              ;;
+            *)
+              echo "No DB secret required for $SERVICE"; exit 0;
+              ;;
+          esac
+          # Build secret manifest only if any matching GitHub secrets are present
+          # Expected envs (set as GitHub Secrets at repo/org):
+          # <SERVICE>_DB_HOST, <SERVICE>_DB_PORT, <SERVICE>_DB_NAME, <SERVICE>_DB_USER, <SERVICE>_DB_PASSWORD, <SERVICE>_DATABASE_URL
+          # Example: PRODUCT_DB_HOST, PRODUCT_DB_USER, PRODUCT_DB_PASSWORD, etc.
+          upper=$(echo "$SERVICE" | tr '[:lower:]' '[:upper:]')
+          keys=(DB_HOST DB_PORT DB_NAME DB_USER DB_PASSWORD DATABASE_URL)
+          has_any=0
+          tmpfile=$(mktemp)
+          echo "apiVersion: v1" > "$tmpfile"
+          echo "kind: Secret" >> "$tmpfile"
+          echo "metadata:" >> "$tmpfile"
+          echo "  name: $SECRET_NAME" >> "$tmpfile"
+          echo "type: Opaque" >> "$tmpfile"
+          echo "stringData:" >> "$tmpfile"
+          for k in "${keys[@]}"; do
+            varname="${upper}_${k}"
+            val="${!varname:-}"
+            if [ -n "$val" ]; then
+              has_any=1
+              echo "  $k: \"$val\"" >> "$tmpfile"
+            fi
+          done
+          if [ $has_any -eq 1 ]; then
+            kubectl -n "$NAMESPACE" apply -f "$tmpfile"
+            rm -f "$tmpfile"
+            echo "DB secret $SECRET_NAME applied in $NAMESPACE"
+            echo "DB_SECRET_NAME=$SECRET_NAME" >> $GITHUB_ENV
+          else
+            echo "No GitHub Secrets found for $SERVICE DB; skipping secret creation."
+            echo "DB_SECRET_NAME=" >> $GITHUB_ENV
+          fi
+        env:
+          KUBECONFIG: ${{ env.KUBECONFIG }}
+
+      - name: Create/Update Notification credentials Secret from GitHub Secrets (notification only)
+        if: ${{ hashFiles('skip') == '' && matrix.service == 'notification' }}
+        run: |
+          set -euo pipefail
+          NAMESPACE="$NAMESPACE"
+          SECRET_NAME="shopease-notification-credentials"
+          # Expected GitHub Secrets:
+          # NOTIFICATION_MAIL_HOST, NOTIFICATION_MAIL_PORT, NOTIFICATION_MAIL_USER, NOTIFICATION_MAIL_PASSWORD, NOTIFICATION_MAIL_FROM
+          # Optional: NOTIFICATION_SMS_API_KEY, NOTIFICATION_SMS_API_URL, NOTIFICATION_MAIL_API_KEY, NOTIFICATION_MAIL_API_URL
+          tmpfile=$(mktemp)
+          echo "apiVersion: v1" > "$tmpfile"
+          echo "kind: Secret" >> "$tmpfile"
+          echo "metadata:" >> "$tmpfile"
+          echo "  name: $SECRET_NAME" >> "$tmpfile"
+          echo "type: Opaque" >> "$tmpfile"
+          echo "stringData:" >> "$tmpfile"
+          has_any=0
+          add_var() {
+            local key="$1"; local val="${!key:-}";
+            if [ -n "$val" ]; then
+              has_any=1
+              echo "  $key: \"$val\"" >> "$tmpfile"
+            fi
+          }
+          add_var NOTIFICATION_MAIL_HOST
+          add_var NOTIFICATION_MAIL_PORT
+          add_var NOTIFICATION_MAIL_USER
+          add_var NOTIFICATION_MAIL_PASSWORD
+          add_var NOTIFICATION_MAIL_FROM
+          add_var NOTIFICATION_MAIL_API_KEY
+          add_var NOTIFICATION_MAIL_API_URL
+          add_var NOTIFICATION_SMS_API_KEY
+          add_var NOTIFICATION_SMS_API_URL
+          if [ $has_any -eq 1 ]; then
+            kubectl -n "$NAMESPACE" apply -f "$tmpfile"
+            rm -f "$tmpfile"
+            echo "Credentials secret $SECRET_NAME applied in $NAMESPACE"
+            echo "CREDENTIALS_SECRET_NAME=$SECRET_NAME" >> $GITHUB_ENV
+          else
+            echo "No GitHub Secrets found for notification credentials; skipping creation."
+            echo "CREDENTIALS_SECRET_NAME=" >> $GITHUB_ENV
+          fi
+        env:
+          KUBECONFIG: ${{ env.KUBECONFIG }}
+
+      # Namespace creation moved earlier (immediately after Compute parameters)
+
+      - name: Create/Update imagePullSecret for GHCR (optional)
+        if: ${{ hashFiles('skip') == '' }}
+        env:
+          GHCR_READ_USERNAME: ${{ secrets.GHCR_READ_USERNAME }}
+          GHCR_READ_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
+          KUBECONFIG: ${{ env.KUBECONFIG }}
+        run: |
+          if [ -n "$GHCR_READ_USERNAME" ] && [ -n "$GHCR_READ_TOKEN" ]; then
+            kubectl -n "$NAMESPACE" create secret docker-registry ghcr-pull-secret \
+              --docker-server=ghcr.io \
+              --docker-username="$GHCR_READ_USERNAME" \
+              --docker-password="$GHCR_READ_TOKEN" \
+              --docker-email="noreply@github.com" \
+              --dry-run=client -o yaml | kubectl apply -f -
+          else
+            echo "GHCR_READ_USERNAME/GHCR_READ_TOKEN not provided; skipping imagePullSecret creation"
+          fi
+      
+      - name: Pre-deploy readiness checks
+        if: ${{ hashFiles('skip') == '' }}
+        env:
+          KUBECONFIG: ${{ env.KUBECONFIG }}
+        run: |
+          set -euo pipefail
+          echo "Running pre-deploy readiness checks in namespace $NAMESPACE"
+
+          # Wait for DB secret if provided
+          if [ -n "${DB_SECRET_NAME:-}" ]; then
+            echo "Checking DB secret: $DB_SECRET_NAME"
+            for i in $(seq 1 12); do
+              if kubectl -n "$NAMESPACE" get secret "$DB_SECRET_NAME" >/dev/null 2>&1; then
+                echo "Found secret $DB_SECRET_NAME"; break
+              fi
+              echo "Waiting for secret $DB_SECRET_NAME... ($i/12)"; sleep 5
+            done
+            if ! kubectl -n "$NAMESPACE" get secret "$DB_SECRET_NAME" >/dev/null 2>&1; then
+              echo "ERROR: required DB secret $DB_SECRET_NAME not found in $NAMESPACE"; exit 1
+            fi
+          else
+            echo "No DB secret required for this service"
+          fi
+
+          # Wait for notification credentials secret if provided
+          if [ -n "${CREDENTIALS_SECRET_NAME:-}" ]; then
+            echo "Checking credentials secret: $CREDENTIALS_SECRET_NAME"
+            for i in $(seq 1 12); do
+              if kubectl -n "$NAMESPACE" get secret "$CREDENTIALS_SECRET_NAME" >/dev/null 2>&1; then
+                echo "Found secret $CREDENTIALS_SECRET_NAME"; break
+              fi
+              echo "Waiting for secret $CREDENTIALS_SECRET_NAME... ($i/12)"; sleep 5
+            done
+            if ! kubectl -n "$NAMESPACE" get secret "$CREDENTIALS_SECRET_NAME" >/dev/null 2>&1; then
+              echo "ERROR: required credentials secret $CREDENTIALS_SECRET_NAME not found in $NAMESPACE"; exit 1
+            fi
+          else
+            echo "No credentials secret required for this service"
+          fi
+
+          # Check imagePullSecret if exists (optional)
+          if kubectl -n "$NAMESPACE" get secret ghcr-pull-secret >/dev/null 2>&1; then
+            echo "imagePullSecret ghcr-pull-secret present in $NAMESPACE"
+          else
+            echo "imagePullSecret ghcr-pull-secret not present; helm may still succeed if images are public"
+          fi
+
+          echo "Pre-deploy readiness checks passed."
+
+      - name: Deploy selected service via helm (per-service chart)
+        if: ${{ hashFiles('skip') == '' }}
+        run: |
+          set -euo pipefail
+          OWNER="${{ github.repository_owner }}"
+          # Optional: read env values from umbrella values-staging.yaml using yq
+          if ! command -v yq >/dev/null 2>&1; then
+            echo "Installing yq"
+            curl -fsSL https://github.com/mikefarah/yq/releases/download/v4.44.1/yq_linux_amd64 -o /usr/local/bin/yq
+            chmod +x /usr/local/bin/yq
+          fi
+          # Helper: build env --set flags from umbrella values for a given yq path
+          build_env_sets() {
+            local base_path="$1"; local file="$2"; local out="";
+            if [ -f "$file" ]; then
+              # extract the env object and pass as JSON for nested maps/arrays
+              local envjson; envjson=$(yq -o=json "$base_path.env // {}" "$file" 2>/dev/null || echo '{}')
+              # Resolve ${global.otel.collectorEndpoint} placeholders for robustness
+              local otelEndpoint; otelEndpoint=$(yq -r '.global.otel.collectorEndpoint // empty' "$file" 2>/dev/null || true)
+              if [ -n "$otelEndpoint" ] && [ "$envjson" != "{}" ]; then
+                # Use jq for safe JSON substitution if available; fallback to sed
+                if command -v jq >/dev/null 2>&1; then
+                  envjson=$(printf '%s' "$envjson" | jq --arg ep "$otelEndpoint" 'walk(if type == "string" then gsub("\${global.otel.collectorEndpoint}"; $ep) else . end)')
+                else
+                  envjson=$(printf '%s' "$envjson" | sed "s#\${global\.otel\.collectorEndpoint}#$otelEndpoint#g")
+                fi
+              fi
+              # If not empty or {}, pass via --set-json env=...
+              if [ "$envjson" != "{}" ]; then
+                out="--set-json env=$envjson"
+              fi
+            fi
+            echo "$out"
+          }
+
+          case "${{ matrix.service }}" in
+            user)
+              CHART_DIR="services/user-service/helm";
+              IMAGE_REPO="ghcr.io/${OWNER}/user-service";
+              HELM_SET_ENV="$(build_env_sets '.services.user' "$VALUES_FILE")";
+              HELM_SET_DB="--set db.secretName=${DB_SECRET_NAME}"
+              ;;
+            product)
+              CHART_DIR="services/product-service/helm";
+              IMAGE_REPO="ghcr.io/${OWNER}/product-service";
+              HELM_SET_ENV="$(build_env_sets '.services.product' "$VALUES_FILE")";
+              HELM_SET_DB="--set db.secretName=${DB_SECRET_NAME}"
+              ;;
+            order)
+              CHART_DIR="services/order-service/helm";
+              IMAGE_REPO="ghcr.io/${OWNER}/order-service";
+              HELM_SET_ENV="$(build_env_sets '.services.order' "$VALUES_FILE")";
+              HELM_SET_DB="--set db.secretName=${DB_SECRET_NAME}"
+              ;;
+            notification)
+              CHART_DIR="services/notification-service/helm";
+              IMAGE_REPO="ghcr.io/${OWNER}/notification-service";
+              HELM_SET_ENV="$(build_env_sets '.services.notification' "$VALUES_FILE")";
+              HELM_SET_DB="--set credentials.secretName=${CREDENTIALS_SECRET_NAME}"
+              ;;
+            frontend)
+              CHART_DIR="frontend/helm";
+              IMAGE_REPO="ghcr.io/${OWNER}/shopease-frontend";
+              # Wire public env from umbrella staging values: frontend.env.NEXT_PUBLIC_PRODUCT_API
+              HELM_SET_ENV="$(build_env_sets '.frontend' "$VALUES_FILE")"
+              HELM_SET_DB=""
+              ;;
+          esac
+          # Optional: imagePullSecrets from umbrella values
+          # Use the ghcr-pull-secret if present, otherwise skip
+          HELM_SET_PULLSECRET="--set imagePullSecrets[0].name=ghcr-pull-secret"
+          helm lint "$CHART_DIR"
+          # templates validated with `helm lint` above
+
+          helm upgrade --install "$RELEASE_NAME" "$CHART_DIR" \
+            --namespace "$NAMESPACE" \
+            --set image.repository="$IMAGE_REPO" \
+            --set image.tag="$IMAGE_TAG_INPUT" \
+            $HELM_SET_ENV \
+            $HELM_SET_DB \
+            $HELM_SET_PULLSECRET \
+            --atomic --wait --timeout 10m
+        env:
+          KUBECONFIG: ${{ env.KUBECONFIG }}
+
+      - name: Wait for rollout
+        if: ${{ hashFiles('skip') == '' }}
+        run: |
+          kubectl -n "$NAMESPACE" rollout status deployment/$(kubectl -n "$NAMESPACE" get deploy -l app.kubernetes.io/instance=$RELEASE_NAME -o jsonpath='{.items[0].metadata.name}') --timeout=600s
+        env:
+          KUBECONFIG: ${{ env.KUBECONFIG }}
+
+      - name: Run Playwright smoke against staging (frontend only)
+        if: ${{ matrix.service == 'frontend' }}
+        env:
+          BASE_URL: https://staging.shopease.local
+        run: |
+          cd frontend
+          npm ci
+          npm i -D @playwright/test
+          npx playwright install --with-deps
+          npx playwright test --project=chromium
+
+      - name: Smoke test (per service)
+        if: ${{ hashFiles('skip') == '' }}
+        run: |
+          case "${{ matrix.service }}" in
+            frontend)
+              SERVICE_NAME="frontend"; PORT=80; PATH="/" ;;
+            product)
+              SERVICE_NAME="product-service"; PORT=80; PATH="/api/product" ;;
+            user)
+              SERVICE_NAME="user-service"; PORT=80; PATH="/api/user" ;;
+            order)
+              SERVICE_NAME="order-service"; PORT=80; PATH="/api/order" ;;
+            notification)
+              SERVICE_NAME="notification-service"; PORT=80; PATH="/api/notification/health" ;;
+          esac
+          echo "Detected Service: $SERVICE_NAME"
+          kubectl -n "$NAMESPACE" run curl-test --restart=Never --image=curlimages/curl:8.8.0 -- sleep 60
+          kubectl -n "$NAMESPACE" wait --for=condition=Ready pod/curl-test --timeout=30s
+          kubectl -n "$NAMESPACE" exec curl-test -- curl -fsS http://$SERVICE_NAME.$NAMESPACE.svc.cluster.local:$PORT$PATH || (echo "Service unreachable" && exit 1)
+          kubectl -n "$NAMESPACE" delete pod curl-test
+        env:
+          KUBECONFIG: ${{ env.KUBECONFIG }}
