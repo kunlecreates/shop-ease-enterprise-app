@@ -80,19 +80,17 @@ jobs:
         if: ${{ hashFiles('skip') == '' }}
         id: vars
         run: |
-          case "${{ matrix.service }}" in
-            # Java services: use their service directory as build context (mvnw/.mvn are per-service)
-            user-service|order-service)
-              image="${{ matrix.service }}"
-              # Build context should be the service directory so Dockerfile COPY paths are correct
-              context="services/${{ matrix.service }}"
-              dockerfile="services/${{ matrix.service }}/Dockerfile"
-              ;;
-            # Node / other services can use their service directory as build context
-            product-service|notification-service)
-              image="${{ matrix.service }}"
-              context="services/${{ matrix.service }}"
-              dockerfile="services/${{ matrix.service }}/Dockerfile"
+          set -euo pipefail
+          svc="${{ matrix.service }}"
+          image="${svc}"
+          dockerfile=""
+          context=""
+
+          case "$svc" in
+            user-service|order-service|product-service|notification-service)
+              # default to service subdirectory
+              context="services/${svc}"
+              dockerfile="services/${svc}/Dockerfile"
               ;;
             frontend)
               image="shopease-frontend"
@@ -100,6 +98,23 @@ jobs:
               dockerfile="frontend/Dockerfile"
               ;;
           esac
+
+          # For Java builds we need to ensure mvnw/.mvn/pom.xml exist inside the chosen context.
+          # If they are at repo root instead, fallback to repo root as build context and keep
+          # the Dockerfile path pointing to the service Dockerfile location.
+          if [[ "$svc" == "user-service" || "$svc" == "order-service" ]]; then
+            if [[ ! -f "$context/pom.xml" && ! -f "$context/mvnw" && ! -d "$context/.mvn" ]]; then
+              echo "Service-local Maven files not found in $context, checking repo root..."
+              if [[ -f "pom.xml" || -f "mvnw" || -d ".mvn" ]]; then
+                echo "Found Maven wrapper at repo root — using repo root as build context."
+                context="."
+                # dockerfile remains the service Dockerfile path
+              else
+                echo "Warning: Maven wrapper not found in service dir or repo root; continuing with $context"
+              fi
+            fi
+          fi
+
           echo "image=$image" >> $GITHUB_OUTPUT
           echo "context=$context" >> $GITHUB_OUTPUT
           echo "dockerfile=${dockerfile:-}" >> $GITHUB_OUTPUT

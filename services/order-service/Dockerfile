@@ -1,12 +1,14 @@
 FROM maven:3.9.6-eclipse-temurin-21 AS builder
 WORKDIR /workspace
 # Copy only Maven metadata first to leverage layer caching
-COPY pom.xml mvnw .mvn/ ./
+# Use the Maven base image to run Maven directly; avoid requiring mvnw/.mvn
+# to be present in the build context which can cause build failures.
+COPY pom.xml ./
 COPY settings.xml* . 2>/dev/null || true
 COPY src ./src
 
 # Build the application jar (skip tests in CI build image)
-RUN mvn -B -DskipTests package -DskipTests
+RUN mvn -B -DskipTests -f pom.xml package
 
 FROM eclipse-temurin:21-jre-alpine AS runtime
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
