@@ -8,8 +8,9 @@ on:
         required: true
         default: "all"
       image_tag:
-        description: "Container image tag (defaults to staging-${{ github.sha }}) or use 'latest'"
+        description: "Container image tag (defaults to staging-<commit-sha>) or use 'latest'"
         required: false
+        default: ""
       values_file:
         description: "Path to Helm values file (defaults to helm-charts/values-staging.yaml)"
         required: false
