@@ -29,6 +29,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # Fetch the full repository so Docker build contexts that use repo-root
+          # (for Java services referencing mvnw and .mvn/) contain all files.
+          fetch-depth: 0
+          # Keep credentials available for later git operations if needed
+          persist-credentials: true
+          # Ensure working directory is clean before build
+          clean: true
+          # Do not use sparse checkout; we need full tree for repo-root contexts
+          sparse-checkout-cone-mode: false
 
       - name: Filter services
         id: filter
