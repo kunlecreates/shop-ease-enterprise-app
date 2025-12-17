@@ -26,3 +26,6 @@ Authentication, authorization (RBAC), and profile management.
 ## Security Notes
 - All secrets must come from Kubernetes Secrets / GitHub Actions secrets.
 - Use bcrypt for password hashing (implemented in later phase).
+
+## Deployment
+See `helm/README.md` for Helm values and Secrets required in Kubernetes.

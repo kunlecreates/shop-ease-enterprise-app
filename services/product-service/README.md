@@ -43,3 +43,6 @@ Sum of all movement quantities for a product. Decrement rejected if result would
 
 ## Roadmap
 Add auth, tracing, metrics, price rules, caching.
+
+## Deployment
+See `helm/README.md` for Helm values and Secrets required in Kubernetes.

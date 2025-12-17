@@ -29,10 +29,15 @@ export class ProductService {
     return this.products.save(prod);
   }
 
-  async listProducts(): Promise<Product[]> {
+  async listProducts(pagination?: { page: number; limit: number }): Promise<Product[]> {
     // For compatibility with an existing DB schema we avoid eager-loading
     // the categories join here and return products only for the smoke test.
-    return this.products.find();
+    if (!pagination) {
+      return this.products.find();
+    }
+    const { page, limit } = pagination;
+    const skip = (page - 1) * limit;
+    return this.products.find({ skip, take: limit, order: { name: 'ASC' } });
   }
 
   async adjustStock(sku: string, quantity: number, reason: string) {

@@ -9,3 +9,6 @@ Order & cart management plus mock payment transactions.
 
 ## Env Vars
 MSSQL_HOST, MSSQL_DB=order_svc, MSSQL_USER, MSSQL_PASSWORD.
+
+## Deployment
+See `helm/README.md` for Helm values and Secrets required in Kubernetes.

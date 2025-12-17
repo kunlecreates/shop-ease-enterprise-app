@@ -12,7 +12,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/orders")
+@RequestMapping("/api/order")
 public class OrderController {
     private final OrderService orderService;
 
@@ -35,7 +35,7 @@ public class OrderController {
     @PostMapping
     public ResponseEntity<Void> create(@Valid @RequestBody CreateOrderRequest req, UriComponentsBuilder uriBuilder) {
         Order created = orderService.createOrder(req.userId(), req.status(), req.total());
-        URI location = uriBuilder.path("/api/orders/{id}").buildAndExpand(created.getId()).toUri();
+        URI location = uriBuilder.path("/api/order/{id}").buildAndExpand(created.getId()).toUri();
         return ResponseEntity.created(location).build();
     }
 }

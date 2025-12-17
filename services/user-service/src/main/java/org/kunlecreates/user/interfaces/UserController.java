@@ -12,7 +12,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api/user")
 public class UserController {
     private final UserService userService;
 
@@ -36,7 +36,7 @@ public class UserController {
     public ResponseEntity<Void> create(@Valid @RequestBody CreateUserRequest req, UriComponentsBuilder uriBuilder) {
         // For demo: password is expected to be pre-hashed by client; in real app hash server-side
         User created = userService.createUser(req.email(), req.password());
-        URI location = uriBuilder.path("/api/users/{id}").buildAndExpand(created.getId()).toUri();
+        URI location = uriBuilder.path("/api/user/{id}").buildAndExpand(created.getId()).toUri();
         return ResponseEntity.created(location).build();
     }
 }
