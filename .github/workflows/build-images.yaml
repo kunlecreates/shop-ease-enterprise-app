@@ -71,17 +71,28 @@ jobs:
         id: vars
         run: |
           case "${{ matrix.service }}" in
-            user-service|order-service|product-service|notification-service)
+            # Java services require the repo root as build context (they reference /.mvn and mvnw)
+            user-service|order-service)
+              image="${{ matrix.service }}"
+              # Build context must be repository root so Dockerfile can COPY pom.xml, mvnw, .mvn/
+              context="."
+              dockerfile="services/${{ matrix.service }}/Dockerfile"
+              ;;
+            # Node / other services can use their service directory as build context
+            product-service|notification-service)
               image="${{ matrix.service }}"
               context="services/${{ matrix.service }}"
+              dockerfile="services/${{ matrix.service }}/Dockerfile"
               ;;
             frontend)
               image="shopease-frontend"
               context="frontend"
+              dockerfile="frontend/Dockerfile"
               ;;
           esac
           echo "image=$image" >> $GITHUB_OUTPUT
           echo "context=$context" >> $GITHUB_OUTPUT
+          echo "dockerfile=${dockerfile:-}" >> $GITHUB_OUTPUT
 
       - name: Docker meta
         if: ${{ hashFiles('skip') == '' }}
@@ -97,7 +108,10 @@ jobs:
         if: ${{ hashFiles('skip') == '' }}
         uses: docker/build-push-action@v5
         with:
+          # Use the per-service build context. For Java services this is repo root so Dockerfile can access /.mvn
           context: ${{ steps.vars.outputs.context }}
+          # Specify the Dockerfile path when the file is not at the context root
+          file: ${{ steps.vars.outputs.dockerfile }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           # Limit to the host architecture to avoid creating extra builders for multi-platform builds
