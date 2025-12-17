@@ -87,19 +87,25 @@ jobs:
           context=""
 
           case "$svc" in
-            user-service|order-service|product-service|notification-service)
-              # For Java services we need the full repository available so
-              # Maven can resolve sibling-module dependencies (e.g. test-utils).
-              # Use repo root as build context and keep the service Dockerfile
-              # path so Docker can still use the per-service Dockerfile.
-              context="."
-              dockerfile="services/${svc}/Dockerfile"
-              ;;
-            frontend)
-              image="shopease-frontend"
-              context="frontend"
-              dockerfile="frontend/Dockerfile"
-              ;;
+          user-service|order-service)
+            # Java services need the full repository available so Maven can
+            # resolve sibling-module dependencies (e.g. test-utils). Use
+            # repo root as build context and keep the service Dockerfile path.
+            context="."
+            dockerfile="services/${svc}/Dockerfile"
+            ;;
+          product-service|notification-service)
+            # Node/Python services expect their package files inside the
+            # service directory; use the service folder as the build context
+            # so Docker COPY instructions remain service-relative.
+            context="services/${svc}"
+            dockerfile="services/${svc}/Dockerfile"
+            ;;
+          frontend)
+            image="shopease-frontend"
+            context="frontend"
+            dockerfile="frontend/Dockerfile"
+            ;;
           esac
 
           # For Java builds we need to ensure mvnw/.mvn/pom.xml exist inside the chosen context.
