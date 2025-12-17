@@ -1,0 +1,141 @@
+global:
+  imagePullPolicy: IfNotPresent
+  otel:
+    collectorEndpoint: http://otel-collector.operators:4317
+  imagePullSecretName: ghcr-pull-secret
+  # Frontend namespace used in NetworkPolicies when allowedNamespaces not explicitly set
+  frontendNamespace: shopease-frontend
+  ingress:
+    enabled: true
+    className: nginx
+    hosts:
+      - host: shop.kunlecreates.org
+        paths:
+          - path: /
+            pathType: Prefix
+services:
+  user:
+    image: user-service
+    tag: "staging-${GITHUB_SHA}"
+    resources:
+      requests:
+        cpu: 200m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+    env:
+      OTEL_EXPORTER_OTLP_ENDPOINT: "${global.otel.collectorEndpoint}"
+      SPRING_PROFILES_ACTIVE: "staging"
+      SECURITY:
+        CORS:
+          ALLOWED_ORIGINS:
+            - "https://staging.shopease.local"
+            - "http://staging.shopease.local"
+    networkPolicy:
+      allowedNamespaces:
+        - shopease-frontend
+  product:
+    image: product-service
+    tag: "staging-${GITHUB_SHA}"
+    resources:
+      requests:
+        cpu: 200m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+    env:
+      OTEL_EXPORTER_OTLP_ENDPOINT: "${global.otel.collectorEndpoint}"
+      NODE_ENV: "staging"
+      FEATURE_FLAGS:
+        ENABLE_INVENTORY_CACHE: true
+        ENABLE_PRICE_RULES: false
+    networkPolicy:
+      allowedNamespaces:
+        - shopease-frontend
+  order:
+    image: order-service
+    tag: "staging-${GITHUB_SHA}"
+    resources:
+      requests:
+        cpu: 200m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+    env:
+      OTEL_EXPORTER_OTLP_ENDPOINT: "${global.otel.collectorEndpoint}"
+      SPRING_PROFILES_ACTIVE: "staging"
+      PAYMENT:
+        PROVIDERS:
+          - name: "mock"
+            timeoutMs: 3000
+          - name: "stripe"
+            timeoutMs: 5000
+    networkPolicy:
+      allowedNamespaces:
+        - shopease-frontend
+  notification:
+    image: notification-service
+    tag: "staging-${GITHUB_SHA}"
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 300m
+        memory: 256Mi
+    env:
+      OTEL_EXPORTER_OTLP_ENDPOINT: "${global.otel.collectorEndpoint}"
+      LOG_LEVEL: "info"
+    networkPolicy:
+      allowedNamespaces:
+        - shopease-frontend
+frontend:
+  image: shopease-frontend
+  tag: "staging-${GITHUB_SHA}"
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 300m
+      memory: 256Mi
+  env:
+    NEXT_PUBLIC_PRODUCT_API: "/api/product"
+    NEXT_PUBLIC_USER_API: "/api/user"
+    NEXT_PUBLIC_ORDER_API: "/api/order"
+    NEXT_PUBLIC_NOTIFICATION_API: "/api/notification"
+    PRODUCT_SERVICE_INTERNAL_URL: "http://product-service.shopease-product.svc.cluster.local:80"
+    USER_SERVICE_INTERNAL_URL: "http://user-service.shopease-user.svc.cluster.local:80"
+    ORDER_SERVICE_INTERNAL_URL: "http://order-service.shopease-order.svc.cluster.local:80"
+    NOTIFICATION_SERVICE_INTERNAL_URL: "http://notification-service.shopease-notification.svc.cluster.local:80"
+  networkPolicy:
+    backendNamespaces:
+      - shopease-product
+      - shopease-user
+      - shopease-order
+      - shopease-notification
+autoscaling:
+  enabled: true
+  frontend:
+    minReplicas: 1
+    maxReplicas: 2
+    targetCPUUtilizationPercentage: 70
+  product:
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 70
+  user:
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 70
+  order:
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 70
+  notification:
+    minReplicas: 1
+    maxReplicas: 2
+    targetCPUUtilizationPercentage: 70

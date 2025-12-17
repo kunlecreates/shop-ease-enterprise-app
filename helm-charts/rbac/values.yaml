@@ -1,0 +1,24 @@
+# Default targets for which RBAC Role + RoleBinding will be created
+# Each target renders a Role in target.namespace and a RoleBinding pointing
+# the serviceAccount in subjectNamespace
+targets:
+  - namespace: shopease-user
+    serviceAccount: arc-runner-sa
+    subjectNamespace: arc-runners
+    roleName: deployer
+    bindingName: deployer-binding
+  - namespace: shopease-product
+    serviceAccount: arc-runner-sa
+    subjectNamespace: arc-runners
+    roleName: deployer
+    bindingName: deployer-binding
+  - namespace: shopease-order
+    serviceAccount: arc-runner-sa
+    subjectNamespace: arc-runners
+    roleName: deployer
+    bindingName: deployer-binding
+  - namespace: shopease-notification
+    serviceAccount: arc-runner-sa
+    subjectNamespace: arc-runners
+    roleName: deployer
+    bindingName: deployer-binding

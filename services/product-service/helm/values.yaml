@@ -1,0 +1,42 @@
+image:
+  repository: ghcr.io/kunlecreates/product-service
+  tag: latest
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+env: {}
+
+db:
+  # Name of a pre-created Secret containing DB connection envs.
+  # The deploy workflow can create this as `shopease-product-db` from GitHub Secrets
+  # (PRODUCT_DB_HOST, PRODUCT_DB_PORT, PRODUCT_DB_NAME, PRODUCT_DB_USER, PRODUCT_DB_PASSWORD, PRODUCT_DATABASE_URL).
+  # Leave empty to disable.
+  secretName: ""
+  # Dev-only: when true, create a Secret from the map below (do NOT use in prod).
+  createDevSecret: false
+  # Keys are written as-is; values here are examples/placeholders only.
+  dev: {}
+  #  DB_HOST: postgresql.postgres-system.svc.cluster.local
+  #  DB_PORT: "5432"
+  #  DB_NAME: productdb
+  #  DB_USER: devuser
+  #  DB_PASSWORD: devpass
+  #  DATABASE_URL: postgresql://devuser:devpass@postgresql.postgres-system.svc.cluster.local:5432/productdb
+
+service:
+  port: 80
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 70

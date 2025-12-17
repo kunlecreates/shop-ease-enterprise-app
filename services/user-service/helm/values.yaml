@@ -1,0 +1,42 @@
+image:
+  repository: ghcr.io/kunlecreates/user-service
+  tag: latest
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+env: {}
+
+db:
+  # Name of a pre-created Secret containing DB connection envs.
+  # The deploy workflow can create this as `shopease-user-db` from GitHub Secrets
+  # (USER_DB_HOST, USER_DB_PORT, USER_DB_NAME, USER_DB_USER, USER_DB_PASSWORD, USER_DATABASE_URL).
+  # Leave empty to disable.
+  secretName: ""
+  # Dev-only: when true, create a Secret from the map below (do NOT use in prod).
+  createDevSecret: false
+  # Keys are written as-is; values here are examples/placeholders only.
+  dev: {}
+  #  DB_HOST: oracledb.oracle-system.svc.cluster.local
+  #  DB_PORT: "1521"
+  #  DB_NAME: XE
+  #  DB_USER: devuser
+  #  DB_PASSWORD: devpass
+  #  DATABASE_URL: oracle+thin:@oracledb.oracle-system.svc.cluster.local:1521/XE
+
+service:
+  port: 80
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 70
