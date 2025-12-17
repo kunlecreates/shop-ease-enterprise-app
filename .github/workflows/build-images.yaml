@@ -81,11 +81,11 @@ jobs:
         id: vars
         run: |
           case "${{ matrix.service }}" in
-            # Java services require the repo root as build context (they reference /.mvn and mvnw)
+            # Java services: use their service directory as build context (mvnw/.mvn are per-service)
             user-service|order-service)
               image="${{ matrix.service }}"
-              # Build context must be repository root so Dockerfile can COPY pom.xml, mvnw, .mvn/
-              context="."
+              # Build context should be the service directory so Dockerfile COPY paths are correct
+              context="services/${{ matrix.service }}"
               dockerfile="services/${{ matrix.service }}/Dockerfile"
               ;;
             # Node / other services can use their service directory as build context
