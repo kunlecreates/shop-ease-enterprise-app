@@ -88,8 +88,11 @@ jobs:
 
           case "$svc" in
             user-service|order-service|product-service|notification-service)
-              # default to service subdirectory
-              context="services/${svc}"
+              # For Java services we need the full repository available so
+              # Maven can resolve sibling-module dependencies (e.g. test-utils).
+              # Use repo root as build context and keep the service Dockerfile
+              # path so Docker can still use the per-service Dockerfile.
+              context="."
               dockerfile="services/${svc}/Dockerfile"
               ;;
             frontend)
