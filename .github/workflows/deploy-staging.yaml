@@ -33,10 +33,13 @@ jobs:
           GITHUB_API: https://api.github.com
           REPO: ${{ github.repository }}
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUNNER_CHECK_TOKEN: ${{ secrets.RUNNER_CHECK_TOKEN }}
           LABEL: arc-runnerset
         run: |
           set -euo pipefail
           echo "Querying self-hosted runners for repository $REPO"
+          # Prefer a PAT provided in secrets.RUNNER_CHECK_TOKEN (useful if GITHUB_TOKEN can't access Actions API)
+          TOKEN="${RUNNER_CHECK_TOKEN:-$TOKEN}"
           # Fetch with status code appended so we can handle API errors
           raw=$(curl -s -H "Authorization: token $TOKEN" -w "\n%{http_code}" "$GITHUB_API/repos/$REPO/actions/runners") || true
           http=$(printf '%s' "$raw" | tail -n1)
