@@ -439,6 +439,23 @@ jobs:
               HELM_SET_DB=""
               ;;
           esac
+          # Verify image exists in GHCR (fast-fail) when credentials are provided
+          if [ -n "${GHCR_READ_USERNAME:-}" ] && [ -n "${GHCR_READ_TOKEN:-}" ]; then
+            # IMAGE_REPO is like ghcr.io/<owner>/<repo>
+            registry_repo="${IMAGE_REPO#ghcr.io/}"
+            manifest_url="https://ghcr.io/v2/${registry_repo}/manifests/${IMAGE_TAG_INPUT}"
+            echo "Checking image manifest URL: $manifest_url"
+            http_code=$(curl -sS -o /dev/null -w "%{http_code}" -u "${GHCR_READ_USERNAME}:${GHCR_READ_TOKEN}" -H "Accept: application/vnd.docker.distribution.manifest.v2+json, application/vnd.oci.image.manifest.v1+json" "$manifest_url" || true)
+            if [ "$http_code" != "200" ]; then
+              echo "ERROR: image $IMAGE_REPO:$IMAGE_TAG_INPUT not found in GHCR (HTTP $http_code)."
+              echo "Ensure the image has been built and pushed to ghcr.io and that GHCR_READ_USERNAME / GHCR_READ_TOKEN repo secrets are set."
+              exit 1
+            else
+              echo "Image $IMAGE_REPO:$IMAGE_TAG_INPUT found in GHCR"
+            fi
+          else
+            echo "GHCR_READ_USERNAME/GHCR_READ_TOKEN not provided; skipping registry manifest check"
+          fi
           # Optional: imagePullSecrets from umbrella values (use ghcr-pull-secret if present)
           HELM_SET_PULLSECRET_VAL="imagePullSecrets[0].name=ghcr-pull-secret"
           helm lint "$CHART_DIR"
