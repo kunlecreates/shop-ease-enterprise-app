@@ -1,4 +1,4 @@
-name: CD - Kubernetes Deploy (Helm)
+name: CD — Kubernetes Deploy (Helm)
 
 on:
   workflow_dispatch:
