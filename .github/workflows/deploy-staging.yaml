@@ -90,13 +90,7 @@ jobs:
           tmpvals=$(mktemp)
           echo "targets:" > "$tmpvals"
           for ns in "${NAMESPACES[@]}"; do
-            cat >> "$tmpvals" <<-EOF
-            - namespace: $ns
-              serviceAccount: arc-runner-sa
-              subjectNamespace: arc-runners
-              roleName: deployer
-              bindingName: deployer-binding
-            EOF
+            printf '%s\n' "- namespace: ${ns}" "  serviceAccount: arc-runner-sa" "  subjectNamespace: arc-runners" "  roleName: deployer" "  bindingName: deployer-binding" >> "$tmpvals"
           done
           echo "Using temporary RBAC values file:" "$tmpvals"
           helm lint helm-charts/rbac || true
