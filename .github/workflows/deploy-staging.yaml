@@ -103,6 +103,9 @@ jobs:
   
   deploy-helm:
     runs-on: arc-runnerset
+    env:
+      GHCR_READ_USERNAME: ${{ secrets.GHCR_READ_USERNAME }}
+      GHCR_READ_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
     needs: prepare
     strategy:
       matrix:
@@ -484,7 +487,34 @@ jobs:
           echo "Chart dir: $CHART_DIR"
           echo "Helm args: ${HELM_ARGS[*]}"
 
-          helm upgrade --install "$RELEASE_NAME" "$CHART_DIR" "${HELM_ARGS[@]}" --atomic --wait --timeout 10m
+          # Retry helm upgrade/install when a concurrent helm operation lock exists
+          max_retries=6
+          retry_delay=10
+          attempt=1
+          while true; do
+            set +e
+            out=$(helm upgrade --install "$RELEASE_NAME" "$CHART_DIR" "${HELM_ARGS[@]}" --atomic --wait --timeout 10m 2>&1)
+            rc=$?
+            set -e
+            if [ $rc -eq 0 ]; then
+              echo "$out"
+              break
+            fi
+            if printf '%s' "$out" | grep -qi "another operation (install/upgrade/rollback) is in progress"; then
+              if [ $attempt -ge $max_retries ]; then
+                echo "Helm still locked after $attempt attempts, failing"
+                echo "$out"
+                exit $rc
+              fi
+              echo "Helm reports a concurrent operation; sleeping $retry_delay seconds (attempt $attempt/$max_retries)"
+              sleep $retry_delay
+              attempt=$((attempt+1))
+              continue
+            fi
+            # Non-retryable helm error — surface it and fail
+            echo "$out"
+            exit $rc
+          done
 
           # Cleanup any temporary values files produced by build_env_sets (they are returned as '-f <file>')
           if [ -n "${HELM_SET_ENV:-}" ]; then
