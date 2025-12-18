@@ -1,4 +1,4 @@
-name: Deploy Staging
+name: CD - Kubernetes Deploy (Helm)
 
 on:
   workflow_dispatch:
@@ -107,6 +107,8 @@ jobs:
     strategy:
       matrix:
         service: [user, product, order, notification, frontend]
+      # Limit concurrent matrix jobs to reduce runner/builder/registry contention
+      max-parallel: 2
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -359,13 +361,26 @@ jobs:
             echo "Installing yq into workspace"
             YQ_BIN="${RUNNER_TEMP:-/tmp}/yq"
             mkdir -p "$(dirname "$YQ_BIN")"
-            curl -fsSL --retry 3 --retry-delay 2 https://github.com/mikefarah/yq/releases/download/v4.44.1/yq_linux_amd64 -o "$YQ_BIN"
-            chmod +x "$YQ_BIN"
-            export PATH="$(dirname "$YQ_BIN"):$PATH"
+            if curl -fsSL --retry 3 --retry-delay 2 https://github.com/mikefarah/yq/releases/download/v4.44.1/yq_linux_amd64 -o "$YQ_BIN"; then
+              chmod +x "$YQ_BIN"
+              if ! "$YQ_BIN" --version >/dev/null 2>&1; then
+                echo "Warning: downloaded yq failed to run; continuing without yq"
+                unset YQ_BIN
+              else
+                export PATH="$(dirname "$YQ_BIN"):$PATH"
+              fi
+            else
+              echo "Warning: failed to download yq; continuing without yq"
+            fi
           fi
+
           # Helper: build env --set flags from umbrella values for a given yq path
           build_env_sets() {
             local base_path="$1"; local file="$2"; local out="";
+            # If yq is not available, skip building env flags
+            if ! command -v yq >/dev/null 2>&1; then
+              echo ""; return
+            fi
             if [ -f "$file" ]; then
               # extract the env object and pass as JSON for nested maps/arrays
               local envjson; envjson=$(yq -o=json "$base_path.env // {}" "$file" 2>/dev/null || echo '{}')
@@ -376,7 +391,7 @@ jobs:
                 if command -v jq >/dev/null 2>&1; then
                   envjson=$(printf '%s' "$envjson" | jq --arg ep "$otelEndpoint" 'walk(if type == "string" then gsub("\${global.otel.collectorEndpoint}"; $ep) else . end)')
                 else
-                  envjson=$(printf '%s' "$envjson" | sed "s#\${global\.otel\.collectorEndpoint}#$otelEndpoint#g")
+                  envjson=$(printf '%s' "$envjson" | sed "s#\${global\\.otel\\.collectorEndpoint}#$otelEndpoint#g")
                 fi
               fi
               # If not empty or {}, pass via --set-json env=...
@@ -420,20 +435,29 @@ jobs:
               HELM_SET_DB=""
               ;;
           esac
-          # Optional: imagePullSecrets from umbrella values
-          # Use the ghcr-pull-secret if present, otherwise skip
+          # Optional: imagePullSecrets from umbrella values (use ghcr-pull-secret if present)
           HELM_SET_PULLSECRET="--set imagePullSecrets[0].name=ghcr-pull-secret"
           helm lint "$CHART_DIR"
           # templates validated with `helm lint` above
 
-          helm upgrade --install "$RELEASE_NAME" "$CHART_DIR" \
-            --namespace "$NAMESPACE" \
-            --set image.repository="$IMAGE_REPO" \
-            --set image.tag="$IMAGE_TAG_INPUT" \
-            $HELM_SET_ENV \
-            $HELM_SET_DB \
-            $HELM_SET_PULLSECRET \
-            --atomic --wait --timeout 10m
+          # Build helm args safely into an array to avoid word-splitting and malformed invocations
+          HELM_ARGS=( --namespace "$NAMESPACE" --set "image.repository=$IMAGE_REPO" --set "image.tag=$IMAGE_TAG_INPUT" )
+          if [ -n "${HELM_SET_ENV:-}" ]; then
+            HELM_ARGS+=( "$HELM_SET_ENV" )
+          fi
+          if [ -n "${HELM_SET_DB:-}" ]; then
+            HELM_ARGS+=( "$HELM_SET_DB" )
+          fi
+          if [ -n "${HELM_SET_PULLSECRET:-}" ]; then
+            HELM_ARGS+=( "$HELM_SET_PULLSECRET" )
+          fi
+
+          # Debug: show resolved values for troubleshooting
+          echo "Helm release: $RELEASE_NAME"
+          echo "Chart dir: $CHART_DIR"
+          echo "Helm args: ${HELM_ARGS[*]}"
+
+          helm upgrade --install "$RELEASE_NAME" "$CHART_DIR" "${HELM_ARGS[@]}" --atomic --wait --timeout 10m
         env:
           KUBECONFIG: ${{ env.KUBECONFIG }}
 
