@@ -357,11 +357,11 @@ jobs:
           # Optional: read env values from umbrella values-staging.yaml using yq
           if ! command -v yq >/dev/null 2>&1; then
             echo "Installing yq into workspace"
-            YQ_BIN="$PWD/.bin/yq"
-            mkdir -p "$(dirname \"$YQ_BIN\")"
-            curl -fsSL https://github.com/mikefarah/yq/releases/download/v4.44.1/yq_linux_amd64 -o "$YQ_BIN"
+            YQ_BIN="${RUNNER_TEMP:-/tmp}/yq"
+            mkdir -p "$(dirname "$YQ_BIN")"
+            curl -fsSL --retry 3 --retry-delay 2 https://github.com/mikefarah/yq/releases/download/v4.44.1/yq_linux_amd64 -o "$YQ_BIN"
             chmod +x "$YQ_BIN"
-            export PATH="$PWD/.bin:$PATH"
+            export PATH="$(dirname "$YQ_BIN"):$PATH"
           fi
           # Helper: build env --set flags from umbrella values for a given yq path
           build_env_sets() {
