@@ -411,25 +411,25 @@ jobs:
               CHART_DIR="services/user-service/helm";
               IMAGE_REPO="ghcr.io/${OWNER}/user-service";
               HELM_SET_ENV="$(build_env_sets '.services.user' "$VALUES_FILE")";
-              HELM_SET_DB="--set db.secretName=${DB_SECRET_NAME}"
+              HELM_SET_DB_VAL="db.secretName=${DB_SECRET_NAME}"
               ;;
             product)
               CHART_DIR="services/product-service/helm";
               IMAGE_REPO="ghcr.io/${OWNER}/product-service";
               HELM_SET_ENV="$(build_env_sets '.services.product' "$VALUES_FILE")";
-              HELM_SET_DB="--set db.secretName=${DB_SECRET_NAME}"
+              HELM_SET_DB_VAL="db.secretName=${DB_SECRET_NAME}"
               ;;
             order)
               CHART_DIR="services/order-service/helm";
               IMAGE_REPO="ghcr.io/${OWNER}/order-service";
               HELM_SET_ENV="$(build_env_sets '.services.order' "$VALUES_FILE")";
-              HELM_SET_DB="--set db.secretName=${DB_SECRET_NAME}"
+              HELM_SET_DB_VAL="db.secretName=${DB_SECRET_NAME}"
               ;;
             notification)
               CHART_DIR="services/notification-service/helm";
               IMAGE_REPO="ghcr.io/${OWNER}/notification-service";
               HELM_SET_ENV="$(build_env_sets '.services.notification' "$VALUES_FILE")";
-              HELM_SET_DB="--set credentials.secretName=${CREDENTIALS_SECRET_NAME}"
+              HELM_SET_DB_VAL="credentials.secretName=${CREDENTIALS_SECRET_NAME}"
               ;;
             frontend)
               CHART_DIR="frontend/helm";
@@ -440,7 +440,7 @@ jobs:
               ;;
           esac
           # Optional: imagePullSecrets from umbrella values (use ghcr-pull-secret if present)
-          HELM_SET_PULLSECRET="--set imagePullSecrets[0].name=ghcr-pull-secret"
+          HELM_SET_PULLSECRET_VAL="imagePullSecrets[0].name=ghcr-pull-secret"
           helm lint "$CHART_DIR"
           # templates validated with `helm lint` above
 
@@ -455,11 +455,11 @@ jobs:
               HELM_ARGS+=( "$HELM_SET_ENV" )
             fi
           fi
-          if [ -n "${HELM_SET_DB:-}" ]; then
-            HELM_ARGS+=( "$HELM_SET_DB" )
+          if [ -n "${HELM_SET_DB_VAL:-}" ]; then
+            HELM_ARGS+=( --set "$HELM_SET_DB_VAL" )
           fi
-          if [ -n "${HELM_SET_PULLSECRET:-}" ]; then
-            HELM_ARGS+=( "$HELM_SET_PULLSECRET" )
+          if [ -n "${HELM_SET_PULLSECRET_VAL:-}" ]; then
+            HELM_ARGS+=( --set "$HELM_SET_PULLSECRET_VAL" )
           fi
 
           # Debug: show resolved values for troubleshooting
