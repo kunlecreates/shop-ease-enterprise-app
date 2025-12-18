@@ -377,12 +377,12 @@ jobs:
           # Helper: build env --set flags from umbrella values for a given yq path
           build_env_sets() {
             local base_path="$1"; local file="$2"; local out="";
-            # If yq is not available, skip building env flags
+            # If yq is not available, skip building env value-file
             if ! command -v yq >/dev/null 2>&1; then
               echo ""; return
             fi
             if [ -f "$file" ]; then
-              # extract the env object and pass as JSON for nested maps/arrays
+              # extract the env object as JSON for nested maps/arrays
               local envjson; envjson=$(yq -o=json "$base_path.env // {}" "$file" 2>/dev/null || echo '{}')
               # Resolve ${global.otel.collectorEndpoint} placeholders for robustness
               local otelEndpoint; otelEndpoint=$(yq -r '.global.otel.collectorEndpoint // empty' "$file" 2>/dev/null || true)
@@ -394,9 +394,13 @@ jobs:
                   envjson=$(printf '%s' "$envjson" | sed "s#\${global\\.otel\\.collectorEndpoint}#$otelEndpoint#g")
                 fi
               fi
-              # If not empty or {}, pass via --set-json env=...
+              # If not empty or {}, write to a temporary values file and return -f <file>
               if [ "$envjson" != "{}" ]; then
-                out="--set-json env=$envjson"
+                local tmpenv
+                tmpenv=$(mktemp)
+                # Create a JSON values file with top-level 'env' key
+                printf '%s' "{\"env\":$envjson}" > "$tmpenv"
+                out="-f $tmpenv"
               fi
             fi
             echo "$out"
@@ -443,7 +447,13 @@ jobs:
           # Build helm args safely into an array to avoid word-splitting and malformed invocations
           HELM_ARGS=( --namespace "$NAMESPACE" --set "image.repository=$IMAGE_REPO" --set "image.tag=$IMAGE_TAG_INPUT" )
           if [ -n "${HELM_SET_ENV:-}" ]; then
-            HELM_ARGS+=( "$HELM_SET_ENV" )
+            # If build_env_sets returned a '-f <file>' pair, split into two array elements
+            if [[ "${HELM_SET_ENV}" == -f\ * ]]; then
+              read -r _flag _val <<< "$HELM_SET_ENV"
+              HELM_ARGS+=( "$_flag" "$_val" )
+            else
+              HELM_ARGS+=( "$HELM_SET_ENV" )
+            fi
           fi
           if [ -n "${HELM_SET_DB:-}" ]; then
             HELM_ARGS+=( "$HELM_SET_DB" )
@@ -458,6 +468,19 @@ jobs:
           echo "Helm args: ${HELM_ARGS[*]}"
 
           helm upgrade --install "$RELEASE_NAME" "$CHART_DIR" "${HELM_ARGS[@]}" --atomic --wait --timeout 10m
+
+          # Cleanup any temporary values files produced by build_env_sets (they are returned as '-f <file>')
+          if [ -n "${HELM_SET_ENV:-}" ]; then
+            case "$HELM_SET_ENV" in
+              -f\ *)
+                tmpfile="${HELM_SET_ENV#-f }"
+                if [ -n "$tmpfile" ] && [ -f "$tmpfile" ]; then
+                  rm -f "$tmpfile" || true
+                  echo "Removed temporary env values file: $tmpfile"
+                fi
+                ;;
+            esac
+          fi
         env:
           KUBECONFIG: ${{ env.KUBECONFIG }}
 
