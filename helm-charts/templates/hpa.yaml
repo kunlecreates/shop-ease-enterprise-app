@@ -1,6 +1,6 @@
 {{- if .Values.autoscaling.enabled }}
 {{- /* Frontend HPA */}}
-{{- if .Values.frontend.enabled }}
+{{- if .Values.frontend }}
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
@@ -23,7 +23,7 @@ spec:
 
 ---
 {{- /* Product Service HPA */}}
-{{- if .Values.product.enabled }}
+{{- if and .Values.services .Values.services.product }}
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
@@ -46,7 +46,7 @@ spec:
 
 ---
 {{- /* User Service HPA */}}
-{{- if .Values.user.enabled }}
+{{- if and .Values.services .Values.services.user }}
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
@@ -69,7 +69,7 @@ spec:
 
 ---
 {{- /* Order Service HPA */}}
-{{- if .Values.order.enabled }}
+{{- if and .Values.services .Values.services.order }}
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
@@ -92,7 +92,7 @@ spec:
 
 ---
 {{- /* Notification Service HPA */}}
-{{- if .Values.notification.enabled }}
+{{- if and .Values.services .Values.services.notification }}
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:

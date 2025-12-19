@@ -7,6 +7,13 @@ imagePullSecrets: []
 
 env:
   NEXT_PUBLIC_PRODUCT_API: "/api/product"
+  NEXT_PUBLIC_USER_API: "/api/user"
+  NEXT_PUBLIC_ORDER_API: "/api/order"
+  NEXT_PUBLIC_NOTIFICATION_API: "/api/notification"
+  PRODUCT_SERVICE_INTERNAL_URL: "http://product-service.shopease-product.svc.cluster.local:80"
+  USER_SERVICE_INTERNAL_URL: "http://user-service.shopease-user.svc.cluster.local:80"
+  ORDER_SERVICE_INTERNAL_URL: "http://order-service.shopease-order.svc.cluster.local:80"
+  NOTIFICATION_SERVICE_INTERNAL_URL: "http://notification-service.shopease-notification.svc.cluster.local:80"
 
 service:
   port: 80

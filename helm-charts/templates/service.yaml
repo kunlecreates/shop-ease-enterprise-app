@@ -13,12 +13,12 @@ spec:
     - name: http
       port: 80
       targetPort: 3000
-    {{- end }}
+{{- end }}
 
 ---
-    {{- if .Values.enabled.product }}
-    apiVersion: v1
-    kind: Service
+{{- if .Values.enabled.product }}
+apiVersion: v1
+kind: Service
 metadata:
   name: product-service
   labels:
@@ -31,12 +31,12 @@ spec:
     - name: http
       port: 80
       targetPort: 3000
-    {{- end }}
+{{- end }}
 
 ---
-    {{- if .Values.enabled.user }}
-    apiVersion: v1
-    kind: Service
+{{- if .Values.enabled.user }}
+apiVersion: v1
+kind: Service
 metadata:
   name: user-service
   labels:
@@ -49,12 +49,12 @@ spec:
     - name: http
       port: 80
       targetPort: 8081
-    {{- end }}
+{{- end }}
 
 ---
-    {{- if .Values.enabled.order }}
-    apiVersion: v1
-    kind: Service
+{{- if .Values.enabled.order }}
+apiVersion: v1
+kind: Service
 metadata:
   name: order-service
   labels:
@@ -67,12 +67,12 @@ spec:
     - name: http
       port: 80
       targetPort: 8083
-    {{- end }}
+{{- end }}
 
 ---
-    {{- if .Values.enabled.notification }}
-    apiVersion: v1
-    kind: Service
+{{- if .Values.enabled.notification }}
+apiVersion: v1
+kind: Service
 metadata:
   name: notification-service
   labels:
@@ -85,4 +85,4 @@ spec:
     - name: http
       port: 80
       targetPort: 8084
-    {{- end }}
+{{- end }}

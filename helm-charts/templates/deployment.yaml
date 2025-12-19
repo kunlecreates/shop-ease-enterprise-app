@@ -41,15 +41,17 @@ spec:
             periodSeconds: 20
             timeoutSeconds: 2
             failureThreshold: 3
+          {{- if .Values.frontend.env }}
           env:
-            {{- if .Values.frontend.env }}
             {{- range $k, $v := .Values.frontend.env }}
             - name: {{ $k }}
               value: "{{ $v }}"
             {{- end }}
-            {{- end }}
+          {{- end }}
+          {{- if .Values.frontend.resources }}
           resources:
             {{- toYaml .Values.frontend.resources | nindent 12 }}
+          {{- end }}
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
@@ -102,7 +104,9 @@ spec:
             timeoutSeconds: 2
             failureThreshold: 3
           resources:
+            {{- if .Values.services.product.resources }}
             {{- toYaml .Values.services.product.resources | nindent 12 }}
+            {{- end }}
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
@@ -157,7 +161,9 @@ spec:
             timeoutSeconds: 2
             failureThreshold: 3
           resources:
+            {{- if .Values.services.user.resources }}
             {{- toYaml .Values.services.user.resources | nindent 12 }}
+            {{- end }}
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
@@ -212,7 +218,9 @@ spec:
             timeoutSeconds: 2
             failureThreshold: 3
           resources:
+            {{- if .Values.services.order.resources }}
             {{- toYaml .Values.services.order.resources | nindent 12 }}
+            {{- end }}
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
@@ -265,7 +273,9 @@ spec:
             timeoutSeconds: 2
             failureThreshold: 3
           resources:
+            {{- if .Values.services.notification.resources }}
             {{- toYaml .Values.services.notification.resources | nindent 12 }}
+            {{- end }}
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true

@@ -168,12 +168,31 @@ jobs:
           VALUES_FILE="${{ inputs.values_file }}"
           if [ -z "$VALUES_FILE" ]; then VALUES_FILE="helm-charts/values-staging.yaml"; fi
           IMAGE_TAG_INPUT="${{ inputs.image_tag }}"
-          if [ -z "$IMAGE_TAG_INPUT" ]; then IMAGE_TAG_INPUT="staging-${{ github.sha }}"; fi
+          # If no explicit tag supplied, use a short commit SHA for immutable staging tags
+          if [ -z "$IMAGE_TAG_INPUT" ]; then
+            # GITHUB_SHA is provided by Actions; take first 7 chars for short SHA
+            SHORT_SHA="${GITHUB_SHA:0:7}"
+            IMAGE_TAG_INPUT="staging-${SHORT_SHA}"
+          fi
           echo "RELEASE_NAME=$RELEASE_NAME" >> $GITHUB_ENV
           echo "NAMESPACE=$NAMESPACE" >> $GITHUB_ENV
           echo "VALUES_FILE=$VALUES_FILE" >> $GITHUB_ENV
           echo "IMAGE_TAG_INPUT=$IMAGE_TAG_INPUT" >> $GITHUB_ENV
         shell: bash
+
+      - name: Validate image tag (prevent accidental 'latest' deploys)
+        if: ${{ hashFiles('skip') == '' }}
+        run: |
+          set -euo pipefail
+          # Allow override via repo secret or environment if explicitly intended
+          if [ "${IMAGE_TAG_INPUT:-}" = "latest" ] && [ "${ALLOW_LATEST:-false}" != "true" ]; then
+            echo "ERROR: IMAGE_TAG_INPUT resolved to 'latest'. Deploys must use an immutable tag."
+            echo "To allow 'latest' set ALLOW_LATEST=true in the workflow environment (not recommended)."
+            exit 1
+          fi
+        env:
+          IMAGE_TAG_INPUT: ${{ env.IMAGE_TAG_INPUT }}
+          ALLOW_LATEST: ${{ secrets.ALLOW_LATEST }}
 
       - name: Ensure namespace exists
         if: ${{ hashFiles('skip') == '' }}
@@ -185,6 +204,26 @@ jobs:
 
       - name: Create/Update DB Secret from GitHub Secrets (user/product/order only)
         if: ${{ hashFiles('skip') == '' }}
+        env:
+          KUBECONFIG: ${{ env.KUBECONFIG }}
+          # Product DB secrets
+          PRODUCT_DB_HOST: ${{ secrets.PRODUCT_DB_HOST }}
+          PRODUCT_DB_PORT: ${{ secrets.PRODUCT_DB_PORT }}
+          PRODUCT_DB_NAME: ${{ secrets.PRODUCT_DB_NAME }}
+          PRODUCT_DB_USER: ${{ secrets.PRODUCT_DB_USER }}
+          PRODUCT_DB_PASSWORD: ${{ secrets.PRODUCT_DB_PASSWORD }}
+          # User DB secrets
+          USER_DB_HOST: ${{ secrets.USER_DB_HOST }}
+          USER_DB_PORT: ${{ secrets.USER_DB_PORT }}
+          USER_DB_NAME: ${{ secrets.USER_DB_NAME }}
+          USER_DB_USER: ${{ secrets.USER_DB_USER }}
+          USER_DB_PASSWORD: ${{ secrets.USER_DB_PASSWORD }}
+          # Order DB secrets
+          ORDER_DB_HOST: ${{ secrets.ORDER_DB_HOST }}
+          ORDER_DB_PORT: ${{ secrets.ORDER_DB_PORT }}
+          ORDER_DB_NAME: ${{ secrets.ORDER_DB_NAME }}
+          ORDER_DB_USER: ${{ secrets.ORDER_DB_USER }}
+          ORDER_DB_PASSWORD: ${{ secrets.ORDER_DB_PASSWORD }}
         run: |
           set -euo pipefail
           SERVICE="${{ matrix.service }}"
@@ -205,10 +244,10 @@ jobs:
           esac
           # Build secret manifest only if any matching GitHub secrets are present
           # Expected envs (set as GitHub Secrets at repo/org):
-          # <SERVICE>_DB_HOST, <SERVICE>_DB_PORT, <SERVICE>_DB_NAME, <SERVICE>_DB_USER, <SERVICE>_DB_PASSWORD, <SERVICE>_DATABASE_URL
+          #   <SERVICE>_DB_HOST, <SERVICE>_DB_PORT, <SERVICE>_DB_NAME, <SERVICE>_DB_USER, <SERVICE>_DB_PASSWORD
           # Example: PRODUCT_DB_HOST, PRODUCT_DB_USER, PRODUCT_DB_PASSWORD, etc.
           upper=$(echo "$SERVICE" | tr '[:lower:]' '[:upper:]')
-          keys=(DB_HOST DB_PORT DB_NAME DB_USER DB_PASSWORD DATABASE_URL)
+          keys=(DB_HOST DB_PORT DB_NAME DB_USER DB_PASSWORD)
           has_any=0
           tmpfile=$(mktemp)
           echo "apiVersion: v1" > "$tmpfile"
@@ -234,18 +273,23 @@ jobs:
             echo "No GitHub Secrets found for $SERVICE DB; skipping secret creation."
             echo "DB_SECRET_NAME=" >> $GITHUB_ENV
           fi
-        env:
-          KUBECONFIG: ${{ env.KUBECONFIG }}
+        # env moved above
 
       - name: Create/Update Notification credentials Secret from GitHub Secrets (notification only)
         if: ${{ hashFiles('skip') == '' && matrix.service == 'notification' }}
+        env:
+          KUBECONFIG: ${{ env.KUBECONFIG }}
+          NOTIFICATION_MAIL_HOST: ${{ secrets.NOTIFICATION_MAIL_HOST }}
+          NOTIFICATION_MAIL_PORT: ${{ secrets.NOTIFICATION_MAIL_PORT }}
+          NOTIFICATION_MAIL_USER: ${{ secrets.NOTIFICATION_MAIL_USER }}
+          NOTIFICATION_MAIL_PASSWORD: ${{ secrets.NOTIFICATION_MAIL_PASSWORD }}
+          NOTIFICATION_MAIL_FROM: ${{ secrets.NOTIFICATION_MAIL_FROM }}
         run: |
           set -euo pipefail
           NAMESPACE="$NAMESPACE"
           SECRET_NAME="shopease-notification-credentials"
-          # Expected GitHub Secrets:
-          # NOTIFICATION_MAIL_HOST, NOTIFICATION_MAIL_PORT, NOTIFICATION_MAIL_USER, NOTIFICATION_MAIL_PASSWORD, NOTIFICATION_MAIL_FROM
-          # Optional: NOTIFICATION_SMS_API_KEY, NOTIFICATION_SMS_API_URL, NOTIFICATION_MAIL_API_KEY, NOTIFICATION_MAIL_API_URL
+          # Expected GitHub Secrets (mapped to shorter stringData keys):
+          #   MAIL_HOST, MAIL_PORT, MAIL_USER, MAIL_PASSWORD, MAIL_FROM
           tmpfile=$(mktemp)
           echo "apiVersion: v1" > "$tmpfile"
           echo "kind: Secret" >> "$tmpfile"
@@ -254,22 +298,16 @@ jobs:
           echo "type: Opaque" >> "$tmpfile"
           echo "stringData:" >> "$tmpfile"
           has_any=0
-          add_var() {
-            local key="$1"; local val="${!key:-}";
+          # Use loop like DB secret creation to map NOTIFICATION_<KEY> envs to shorter keys in stringData
+          keys=(MAIL_HOST MAIL_PORT MAIL_USER MAIL_PASSWORD MAIL_FROM)
+          for k in "${keys[@]}"; do
+            varname="NOTIFICATION_${k}"
+            val="${!varname:-}"
             if [ -n "$val" ]; then
               has_any=1
-              echo "  $key: \"$val\"" >> "$tmpfile"
+              echo "  $k: \"$val\"" >> "$tmpfile"
             fi
-          }
-          add_var NOTIFICATION_MAIL_HOST
-          add_var NOTIFICATION_MAIL_PORT
-          add_var NOTIFICATION_MAIL_USER
-          add_var NOTIFICATION_MAIL_PASSWORD
-          add_var NOTIFICATION_MAIL_FROM
-          add_var NOTIFICATION_MAIL_API_KEY
-          add_var NOTIFICATION_MAIL_API_URL
-          add_var NOTIFICATION_SMS_API_KEY
-          add_var NOTIFICATION_SMS_API_URL
+          done
           if [ $has_any -eq 1 ]; then
             kubectl -n "$NAMESPACE" apply -f "$tmpfile"
             rm -f "$tmpfile"
@@ -279,8 +317,6 @@ jobs:
             echo "No GitHub Secrets found for notification credentials; skipping creation."
             echo "CREDENTIALS_SECRET_NAME=" >> $GITHUB_ENV
           fi
-        env:
-          KUBECONFIG: ${{ env.KUBECONFIG }}
 
       # Namespace creation moved earlier (immediately after Compute parameters)
 
@@ -357,85 +393,35 @@ jobs:
           set -euo pipefail
           OWNER="${{ github.repository_owner }}"
           # Optional: read env values from umbrella values-staging.yaml using yq
-          if ! command -v yq >/dev/null 2>&1; then
-            echo "Installing yq into workspace"
-            YQ_BIN="${RUNNER_TEMP:-/tmp}/yq"
-            mkdir -p "$(dirname "$YQ_BIN")"
-            if curl -fsSL --retry 3 --retry-delay 2 https://github.com/mikefarah/yq/releases/download/v4.44.1/yq_linux_amd64 -o "$YQ_BIN"; then
-              chmod +x "$YQ_BIN"
-              if ! "$YQ_BIN" --version >/dev/null 2>&1; then
-                echo "Warning: downloaded yq failed to run; continuing without yq"
-                unset YQ_BIN
-              else
-                export PATH="$(dirname "$YQ_BIN"):$PATH"
-              fi
-            else
-              echo "Warning: failed to download yq; continuing without yq"
-            fi
-          fi
-
-          # Helper: build env --set flags from umbrella values for a given yq path
-          build_env_sets() {
-            local base_path="$1"; local file="$2"; local out="";
-            # If yq is not available, skip building env value-file
-            if ! command -v yq >/dev/null 2>&1; then
-              echo ""; return
-            fi
-            if [ -f "$file" ]; then
-              # extract the env object as JSON for nested maps/arrays
-              local envjson; envjson=$(yq -o=json "$base_path.env // {}" "$file" 2>/dev/null || echo '{}')
-              # Resolve ${global.otel.collectorEndpoint} placeholders for robustness
-              local otelEndpoint; otelEndpoint=$(yq -r '.global.otel.collectorEndpoint // empty' "$file" 2>/dev/null || true)
-              if [ -n "$otelEndpoint" ] && [ "$envjson" != "{}" ]; then
-                # Use jq for safe JSON substitution if available; fallback to sed
-                if command -v jq >/dev/null 2>&1; then
-                  envjson=$(printf '%s' "$envjson" | jq --arg ep "$otelEndpoint" 'walk(if type == "string" then gsub("\${global.otel.collectorEndpoint}"; $ep) else . end)')
-                else
-                  envjson=$(printf '%s' "$envjson" | sed "s#\${global\\.otel\\.collectorEndpoint}#$otelEndpoint#g")
-                fi
-              fi
-              # If not empty or {}, write to a temporary values file and return -f <file>
-              if [ "$envjson" != "{}" ]; then
-                local tmpenv
-                tmpenv=$(mktemp)
-                # Create a JSON values file with top-level 'env' key
-                printf '%s' "{\"env\":$envjson}" > "$tmpenv"
-                out="-f $tmpenv"
-              fi
-            fi
-            echo "$out"
-          }
+          # Per-service environment values are now owned by each service's Helm chart
+          # (services/<svc>/helm/values.yaml). We don't need to extract `env` from the
+          # umbrella values file anymore. If a custom values file was supplied via
+          # the `values_file` input, it will be passed directly to Helm below.
 
           case "${{ matrix.service }}" in
             user)
               CHART_DIR="services/user-service/helm";
               IMAGE_REPO="ghcr.io/${OWNER}/user-service";
-              HELM_SET_ENV="$(build_env_sets '.services.user' "$VALUES_FILE")";
               HELM_SET_DB_VAL="db.secretName=${DB_SECRET_NAME}"
               ;;
             product)
               CHART_DIR="services/product-service/helm";
               IMAGE_REPO="ghcr.io/${OWNER}/product-service";
-              HELM_SET_ENV="$(build_env_sets '.services.product' "$VALUES_FILE")";
               HELM_SET_DB_VAL="db.secretName=${DB_SECRET_NAME}"
               ;;
             order)
               CHART_DIR="services/order-service/helm";
               IMAGE_REPO="ghcr.io/${OWNER}/order-service";
-              HELM_SET_ENV="$(build_env_sets '.services.order' "$VALUES_FILE")";
               HELM_SET_DB_VAL="db.secretName=${DB_SECRET_NAME}"
               ;;
             notification)
               CHART_DIR="services/notification-service/helm";
               IMAGE_REPO="ghcr.io/${OWNER}/notification-service";
-              HELM_SET_ENV="$(build_env_sets '.services.notification' "$VALUES_FILE")";
               HELM_SET_DB_VAL="credentials.secretName=${CREDENTIALS_SECRET_NAME}"
               ;;
             frontend)
               CHART_DIR="frontend/helm";
               IMAGE_REPO="ghcr.io/${OWNER}/shopease-frontend";
-              # Wire public env from umbrella staging values: frontend.env.NEXT_PUBLIC_PRODUCT_API
-              HELM_SET_ENV="$(build_env_sets '.frontend' "$VALUES_FILE")"
               HELM_SET_DB=""
               ;;
           esac
@@ -446,14 +432,9 @@ jobs:
 
           # Build helm args safely into an array to avoid word-splitting and malformed invocations
           HELM_ARGS=( --namespace "$NAMESPACE" --set "image.repository=$IMAGE_REPO" --set "image.tag=$IMAGE_TAG_INPUT" )
-          if [ -n "${HELM_SET_ENV:-}" ]; then
-            # If build_env_sets returned a '-f <file>' pair, split into two array elements
-            if [[ "${HELM_SET_ENV}" == -f\ * ]]; then
-              read -r _flag _val <<< "$HELM_SET_ENV"
-              HELM_ARGS+=( "$_flag" "$_val" )
-            else
-              HELM_ARGS+=( "$HELM_SET_ENV" )
-            fi
+          # If an umbrella or custom values file was provided, pass it directly to Helm.
+          if [ -n "${VALUES_FILE:-}" ] && [ -f "$VALUES_FILE" ]; then
+            HELM_ARGS+=( -f "$VALUES_FILE" )
           fi
           if [ -n "${HELM_SET_DB_VAL:-}" ]; then
             HELM_ARGS+=( --set "$HELM_SET_DB_VAL" )
@@ -467,20 +448,63 @@ jobs:
           echo "Chart dir: $CHART_DIR"
           echo "Helm args: ${HELM_ARGS[*]}"
 
-          helm upgrade --install "$RELEASE_NAME" "$CHART_DIR" "${HELM_ARGS[@]}" --atomic --wait --timeout 10m
-
-          # Cleanup any temporary values files produced by build_env_sets (they are returned as '-f <file>')
-          if [ -n "${HELM_SET_ENV:-}" ]; then
-            case "$HELM_SET_ENV" in
-              -f\ *)
-                tmpfile="${HELM_SET_ENV#-f }"
-                if [ -n "$tmpfile" ] && [ -f "$tmpfile" ]; then
-                  rm -f "$tmpfile" || true
-                  echo "Removed temporary env values file: $tmpfile"
-                fi
-                ;;
-            esac
+          # --- Pre-deploy validations ---
+          # 1) Registry manifest exists (authenticated to GHCR when possible)
+          repo_name="${IMAGE_REPO##*/}"
+          manifest_url="https://ghcr.io/v2/${OWNER}/${repo_name}/manifests/${IMAGE_TAG_INPUT}"
+          if [ -n "${GHCR_READ_USERNAME:-}" ] && [ -n "${GHCR_READ_TOKEN:-}" ]; then
+            echo "Checking image manifest (authenticated) for $manifest_url"
+            if ! curl -sfI -u "${GHCR_READ_USERNAME}:${GHCR_READ_TOKEN}" -H "Accept: application/vnd.oci.image.manifest.v1+json" "$manifest_url"; then
+              echo "ERROR: authenticated manifest check failed for $manifest_url (missing tag or auth)."
+              echo "Attempting unauthenticated header for more info..."
+              curl -sI -H "Accept: application/vnd.oci.image.manifest.v1+json" "$manifest_url" || true
+              exit 1
+            fi
+          else
+            echo "GHCR credentials not provided; attempting unauthenticated manifest check for $manifest_url"
+            if ! curl -sfI -H "Accept: application/vnd.oci.image.manifest.v1+json" "$manifest_url"; then
+              echo "Warning: unauthenticated manifest check failed; image may be private or tag missing. Helm may fail with ImagePull errors."
+            fi
           fi
+
+          # 2) If an existing release is present, fail fast when pods show ImagePullBackOff/ErrImagePull
+          if helm -n "$NAMESPACE" status "$RELEASE_NAME" >/dev/null 2>&1; then
+            echo "Existing release $RELEASE_NAME detected; checking pods for ImagePullBackOff/ErrImagePull"
+            bad=$(kubectl -n "$NAMESPACE" get pods -l app.kubernetes.io/instance="$RELEASE_NAME" -o jsonpath='{range .items[*]}{.metadata.name}{":"}{range .status.containerStatuses[*]}{.state.waiting.reason}{";"}{end}{"\n"}{end}' 2>/dev/null || true)
+            if printf '%s' "$bad" | egrep -q 'ImagePullBackOff|ErrImagePull'; then
+              echo "ERROR: existing release $RELEASE_NAME has pods in ImagePullBackOff/ErrImagePull. Describe pods:"
+              kubectl -n "$NAMESPACE" describe pods -l app.kubernetes.io/instance="$RELEASE_NAME" --show-events || true
+              helm -n "$NAMESPACE" status "$RELEASE_NAME" || true
+              helm -n "$NAMESPACE" history "$RELEASE_NAME" || true
+              exit 1
+            fi
+          fi
+
+          # 3) Run helm upgrade/install and surface helpful diagnostics on concurrency lock
+          tmphelmout=$(mktemp)
+          if helm upgrade --install "$RELEASE_NAME" "$CHART_DIR" "${HELM_ARGS[@]}" --atomic --wait --timeout 10m 2>&1 | tee "$tmphelmout"; then
+            echo "Helm upgrade/install succeeded"
+          else
+            helm_out=$(cat "$tmphelmout" || true)
+            if printf '%s' "$helm_out" | grep -q "another operation (install/upgrade/rollback) is in progress"; then
+              echo "ERROR: Helm reported a concurrent operation lock for release $RELEASE_NAME"
+              echo "--- Helm status ---"
+              helm -n "$NAMESPACE" status "$RELEASE_NAME" || true
+              echo "--- Helm history ---"
+              helm -n "$NAMESPACE" history "$RELEASE_NAME" || true
+              echo "--- Helm output ---"
+              printf '%s' "$helm_out"
+              rm -f "$tmphelmout" || true
+              exit 1
+            else
+              echo "ERROR: Helm upgrade/install failed with unexpected error:"; printf '%s' "$helm_out"
+              rm -f "$tmphelmout" || true
+              exit 1
+            fi
+          fi
+          rm -f "$tmphelmout" || true
+
+          # No temporary env values files are created here (per-service charts own env values).
         env:
           KUBECONFIG: ${{ env.KUBECONFIG }}
 

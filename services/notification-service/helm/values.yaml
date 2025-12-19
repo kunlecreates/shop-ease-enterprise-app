@@ -5,7 +5,9 @@ image:
 
 imagePullSecrets: []
 
-env: {}
+env:
+  OTEL_EXPORTER_OTLP_ENDPOINT: "${global.otel.collectorEndpoint}"
+  LOG_LEVEL: "info"
 
 credentials:
   # Name of a pre-created Secret containing mail/SMS credentials.

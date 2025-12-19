@@ -5,7 +5,15 @@ image:
 
 imagePullSecrets: []
 
-env: {}
+env:
+  OTEL_EXPORTER_OTLP_ENDPOINT: "${global.otel.collectorEndpoint}"
+  SPRING_PROFILES_ACTIVE: "staging"
+  PAYMENT:
+    PROVIDERS:
+      - name: "mock"
+        timeoutMs: 3000
+      - name: "stripe"
+        timeoutMs: 5000
 
 db:
   # Name of a pre-created Secret containing DB connection envs.

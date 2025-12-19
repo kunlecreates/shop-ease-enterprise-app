@@ -30,10 +30,30 @@ spec:
                 name: {{ .Values.db.secretName }}
           {{- end }}
           {{- if .Values.env }}
+          {{- $root := . }}
           env:
             {{- range $key, $val := .Values.env }}
             - name: {{ $key }}
-              value: "{{ $val }}"
+              {{- if eq $key "OTEL_EXPORTER_OTLP_ENDPOINT" }}
+              {{- $raw := printf "%v" $val }}
+              {{- with $root.Values.global }}
+                {{- with .otel }}
+              value: {{ replace $raw "${global.otel.collectorEndpoint}" .collectorEndpoint | quote }}
+                {{- else }}
+              value: {{ $raw | quote }}
+                {{- end }}
+              {{- else }}
+              value: {{ $raw | quote }}
+              {{- end }}
+              {{- else }}
+              {{- if kindIs "map" $val }}
+              value: {{ toJson $val | quote }}
+              {{- else if kindIs "slice" $val }}
+              value: {{ toJson $val | quote }}
+              {{- else }}
+              value: {{ $val | quote }}
+              {{- end }}
+              {{- end }}
             {{- end }}
           {{- end }}
           ports:

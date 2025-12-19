@@ -5,7 +5,12 @@ image:
 
 imagePullSecrets: []
 
-env: {}
+env:
+  OTEL_EXPORTER_OTLP_ENDPOINT: "${global.otel.collectorEndpoint}"
+  NODE_ENV: "staging"
+  FEATURE_FLAGS:
+    ENABLE_INVENTORY_CACHE: true
+    ENABLE_PRICE_RULES: false
 
 db:
   # Name of a pre-created Secret containing DB connection envs.
