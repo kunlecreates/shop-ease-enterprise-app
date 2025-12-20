@@ -457,13 +457,20 @@ jobs:
           repo_name="${IMAGE_REPO##*/}"
           manifest_url="https://ghcr.io/v2/${OWNER}/${repo_name}/manifests/${IMAGE_TAG_INPUT}"
           if [ -n "${GHCR_READ_USERNAME:-}" ] && [ -n "${GHCR_READ_TOKEN:-}" ]; then
-            echo "Checking image manifest (authenticated) for $manifest_url"
-            if ! curl -sfI -u "${GHCR_READ_USERNAME}:${GHCR_READ_TOKEN}" -H "Accept: application/vnd.oci.image.manifest.v1+json" "$manifest_url"; then
-              echo "ERROR: authenticated manifest check failed for $manifest_url (missing tag or auth)."
-              echo "Attempting unauthenticated header for more info..."
-              curl -sI -H "Accept: application/vnd.oci.image.manifest.v1+json" "$manifest_url" || true
+            echo "Authenticating to GHCR with provided credentials"
+            # Use docker client to perform the token exchange and manifest inspection
+            echo "${GHCR_READ_TOKEN}" | docker login ghcr.io -u "${GHCR_READ_USERNAME}" --password-stdin >/dev/null 2>&1 || {
+              echo "ERROR: docker login to ghcr.io failed with provided credentials"; exit 1; }
+
+            echo "Inspecting manifest using docker manifest inspect ${IMAGE_REPO}:${IMAGE_TAG_INPUT}"
+            if ! docker manifest inspect "${IMAGE_REPO}:${IMAGE_TAG_INPUT}" >/dev/null 2>&1; then
+              echo "ERROR: docker manifest inspect failed for ${IMAGE_REPO}:${IMAGE_TAG_INPUT} (missing tag or access denied)."
+              docker logout ghcr.io >/dev/null 2>&1 || true
               exit 1
             fi
+
+            # cleanup docker login
+            docker logout ghcr.io >/dev/null 2>&1 || true
           else
             echo "GHCR credentials not provided; attempting unauthenticated manifest check for $manifest_url"
             if ! curl -sfI -H "Accept: application/vnd.oci.image.manifest.v1+json" "$manifest_url"; then
