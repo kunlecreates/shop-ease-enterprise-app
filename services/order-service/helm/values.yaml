@@ -48,3 +48,10 @@ autoscaling:
   minReplicas: 1
   maxReplicas: 3
   targetCPUUtilizationPercentage: 70
+
+# Pod-level security context. Set a numeric runAsUser to avoid issues when
+# images declare a non-numeric USER (e.g. 'app') which prevents kubelet from
+# verifying runAsNonRoot. Default `runAsUser` is a non-root UID (1000).
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000

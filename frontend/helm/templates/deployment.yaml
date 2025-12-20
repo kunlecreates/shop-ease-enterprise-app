@@ -19,7 +19,16 @@ spec:
         {{- toYaml .Values.imagePullSecrets | nindent 8 }}
       {{- end }}
       securityContext:
+        {{- if .Values.securityContext }}
+        {{- with .Values.securityContext }}
+        {{- if .runAsUser }}
+        runAsUser: {{ .runAsUser }}
+        {{- end }}
+        runAsNonRoot: {{ default true .runAsNonRoot }}
+        {{- end }}
+        {{- else }}
         runAsNonRoot: true
+        {{- end }}
       containers:
         - name: frontend
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"

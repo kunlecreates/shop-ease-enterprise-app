@@ -389,6 +389,10 @@ jobs:
 
       - name: Deploy selected service via helm (per-service chart)
         if: ${{ hashFiles('skip') == '' }}
+        env:
+          KUBECONFIG: ${{ env.KUBECONFIG }}
+          GHCR_READ_USERNAME: ${{ secrets.GHCR_READ_USERNAME }}
+          GHCR_READ_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
         run: |
           set -euo pipefail
           OWNER="${{ github.repository_owner }}"
