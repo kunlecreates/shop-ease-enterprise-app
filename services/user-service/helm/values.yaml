@@ -42,6 +42,20 @@ resources:
     cpu: 250m
     memory: 1Gi
 
+probes:
+  liveness:
+    path: /actuator/health/liveness
+    initialDelaySeconds: 60
+    timeoutSeconds: 5
+    periodSeconds: 10
+    failureThreshold: 6
+  readiness:
+    path: /actuator/health/readiness
+    initialDelaySeconds: 20
+    timeoutSeconds: 3
+    periodSeconds: 5
+    failureThreshold: 5
+
 autoscaling:
   enabled: true
   minReplicas: 1
