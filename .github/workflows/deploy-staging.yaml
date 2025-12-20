@@ -258,7 +258,8 @@ jobs:
             val="${!varname:-}"
             if [ -n "$val" ]; then
               has_any=1
-              echo "  $k: \"$val\"" >> "$tmpfile"
+              # Write keys using the <SERVICE>_DB_* naming convention (e.g. PRODUCT_DB_HOST)
+              echo "  ${varname}: \"$val\"" >> "$tmpfile"
             fi
           done
           if [ $has_any -eq 1 ]; then

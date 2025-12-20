@@ -117,8 +117,9 @@ EOF"
 
   if [[ "$SEED_EXAMPLE_SECRETS" == "true" ]]; then
     echo_info "Seeding example KV entries (placeholders; replace in production)"
-    kubectl -n "$VAULT_NAMESPACE" exec -it vault-0 -- sh -c "vault kv put ${VAULT_KV_PATH}/product-service-db POSTGRES_HOST=postgres.${NS_PRODUCT}.svc POSTGRES_PORT=5432 POSTGRES_DB=products POSTGRES_USER=appuser POSTGRES_PASSWORD=change-me"
-    kubectl -n "$VAULT_NAMESPACE" exec -it vault-0 -- sh -c "vault kv put ${VAULT_KV_PATH}/user-service-db USER_DB_HOST=oracle.${NS_USER}.svc USER_DB_PORT=1521 USER_DB_SID=ORCLCDB USER_DB_USER=appuser USER_DB_PASSWORD=change-me"
+    # Use canonical <SERVICE>_DB_* keys so ESO will sync them directly into Kubernetes Secrets
+    kubectl -n "$VAULT_NAMESPACE" exec -it vault-0 -- sh -c "vault kv put ${VAULT_KV_PATH}/product-service-db PRODUCT_DB_HOST=postgres.${NS_PRODUCT}.svc PRODUCT_DB_PORT=5432 PRODUCT_DB_NAME=products PRODUCT_DB_USER=appuser PRODUCT_DB_PASSWORD=change-me"
+    kubectl -n "$VAULT_NAMESPACE" exec -it vault-0 -- sh -c "vault kv put ${VAULT_KV_PATH}/user-service-db USER_DB_HOST=oracle.${NS_USER}.svc USER_DB_PORT=1521 USER_DB_NAME=oracledb USER_DB_USER=appuser USER_DB_PASSWORD=change-me"
     kubectl -n "$VAULT_NAMESPACE" exec -it vault-0 -- sh -c "vault kv put ${VAULT_KV_PATH}/order-service-db ORDER_DB_HOST=mssql.${NS_ORDER}.svc ORDER_DB_PORT=1433 ORDER_DB_NAME=orders ORDER_DB_USER=appuser ORDER_DB_PASSWORD=change-me"
     kubectl -n "$VAULT_NAMESPACE" exec -it vault-0 -- sh -c "vault kv put ${VAULT_KV_PATH}/notification-credentials NOTIFICATION_MAIL_HOST=smtp.example.com NOTIFICATION_MAIL_PORT=587 NOTIFICATION_MAIL_USER=mailer NOTIFICATION_MAIL_PASSWORD=change-me NOTIFICATION_MAIL_FROM=no-reply@example.com"
   fi

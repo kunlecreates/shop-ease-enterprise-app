@@ -16,11 +16,11 @@ import { ProductController } from './presentation/product.controller';
         }
         return {
           type: 'postgres',
-          host: process.env.POSTGRES_HOST || 'postgres',
-          port: +(process.env.POSTGRES_PORT || 5432),
-          username: process.env.POSTGRES_USER || 'product_app',
-          password: process.env.POSTGRES_PASSWORD || 'CHANGE_ME',
-          database: process.env.POSTGRES_DB || 'product_svc',
+          host: process.env.PRODUCT_DB_HOST || process.env.POSTGRES_HOST || 'postgres',
+          port: +(process.env.PRODUCT_DB_PORT || process.env.POSTGRES_PORT || 5432),
+          username: process.env.PRODUCT_DB_USER || process.env.POSTGRES_USER || 'product_app',
+          password: process.env.PRODUCT_DB_PASSWORD || process.env.POSTGRES_PASSWORD || 'CHANGE_ME',
+          database: process.env.PRODUCT_DB_NAME || process.env.POSTGRES_DB || 'product_svc',
           entities,
             synchronize: false,
             migrationsRun: process.env.MIGRATIONS_RUN === 'true',

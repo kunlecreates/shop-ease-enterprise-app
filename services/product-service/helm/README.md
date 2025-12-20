@@ -24,12 +24,12 @@ db:
   secretName: ""          # Set to the Secret name (e.g., shopease-product-db)
   createDevSecret: false   # Dev only: generate Secret from values.db.dev
   dev: {}
-  #  DB_HOST: postgresql.postgres-system.svc.cluster.local
-  #  DB_PORT: "5432"
-  #  DB_NAME: productdb
-  #  DB_USER: devuser
-  #  DB_PASSWORD: devpass
-  #  DATABASE_URL: postgresql://devuser:devpass@postgresql.postgres-system.svc.cluster.local:5432/productdb
+  #  PRODUCT_DB_HOST: postgresql.postgres-system.svc.cluster.local
+  #  PRODUCT_DB_PORT: "5432"
+  #  PRODUCT_DB_NAME: productdb
+  #  PRODUCT_DB_USER: devuser
+  #  PRODUCT_DB_PASSWORD: devpass
+  #  PRODUCT_DATABASE_URL: postgresql://devuser:devpass@postgresql.postgres-system.svc.cluster.local:5432/productdb
 ```
 
 Do not commit real credentials. Use GitHub Secrets or external secret managers in production.

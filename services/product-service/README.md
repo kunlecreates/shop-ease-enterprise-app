@@ -30,7 +30,7 @@ npm test
 ```
 
 ## Env Vars
-`POSTGRES_HOST` `POSTGRES_PORT` `POSTGRES_USER` `POSTGRES_PASSWORD` `POSTGRES_DB` (default product_svc) `TEST_SQLITE`
+`PRODUCT_DB_HOST` `PRODUCT_DB_PORT` `PRODUCT_DB_USER` `PRODUCT_DB_PASSWORD` `PRODUCT_DB_NAME` (default product_svc) `TEST_SQLITE`
 
 ## Migrations
 ```bash

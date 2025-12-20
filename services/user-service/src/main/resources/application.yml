@@ -4,9 +4,10 @@ spring:
   application:
     name: user-service
   datasource:
-    url: jdbc:oracle:thin:@${ORACLE_HOST:oracle}:${ORACLE_PORT:1521}/${ORACLE_PDB:FREEPDB1}
-    username: ${ORACLE_USER:USER_SVC_APP}
-    password: ${ORACLE_PASSWORD:CHANGE_ME}
+    # Use USER_DB_* env vars (canonical names). No legacy fallback.
+    url: jdbc:oracle:thin:@${USER_DB_HOST:oracle}:${USER_DB_PORT:1521}/${USER_DB_NAME:FREEPDB1}
+    username: ${USER_DB_USER:USER_SVC_APP}
+    password: ${USER_DB_PASSWORD:CHANGE_ME}
     driver-class-name: oracle.jdbc.OracleDriver
   flyway:
     enabled: true

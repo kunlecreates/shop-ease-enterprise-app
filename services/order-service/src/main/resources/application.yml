@@ -4,9 +4,10 @@ spring:
   application:
     name: order-service
   datasource:
-    url: jdbc:sqlserver://${MSSQL_HOST:mssql}:${MSSQL_PORT:1433};databaseName=${MSSQL_DB:order_svc};encrypt=true;trustServerCertificate=true
-    username: ${MSSQL_USER:order_app}
-    password: ${MSSQL_PASSWORD:CHANGE_ME}
+    # Use ORDER_DB_* env vars (canonical names). No legacy fallback.
+    url: jdbc:sqlserver://${ORDER_DB_HOST:mssql}:${ORDER_DB_PORT:1433};databaseName=${ORDER_DB_NAME:order_svc};encrypt=true;trustServerCertificate=true
+    username: ${ORDER_DB_USER:order_app}
+    password: ${ORDER_DB_PASSWORD:CHANGE_ME}
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
   flyway:
     enabled: true
