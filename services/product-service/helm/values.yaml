@@ -11,6 +11,8 @@ env:
   FEATURE_FLAGS:
     ENABLE_INVENTORY_CACHE: true
     ENABLE_PRICE_RULES: false
+  # Ensure the app listens on the containerPort (3000)
+  PORT: "3000"
 
 db:
   # Name of a pre-created Secret containing DB connection envs.

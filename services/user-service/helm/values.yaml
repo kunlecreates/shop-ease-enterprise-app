@@ -13,6 +13,8 @@ env:
       ALLOWED_ORIGINS:
         - "https://staging.shopease.local"
         - "http://staging.shopease.local"
+  # Ensure Spring Boot binds to the container port used by probes (8081)
+  SERVER_PORT: "8081"
 
 db:
   # Name of a pre-created Secret containing DB connection envs.
