@@ -509,8 +509,6 @@ jobs:
           rm -f "$tmphelmout" || true
 
           # No temporary env values files are created here (per-service charts own env values).
-        env:
-          KUBECONFIG: ${{ env.KUBECONFIG }}
 
       - name: Wait for rollout
         if: ${{ hashFiles('skip') == '' }}
