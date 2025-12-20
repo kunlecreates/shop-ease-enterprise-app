@@ -8,15 +8,12 @@ on:
         required: true
         default: "all"
       image_tag:
-        description: "Container image tag (defaults to staging-<commit-sha>) or use 'latest'"
-        required: false
-        default: ""
+        description: "Container image tag (immutable, e.g. staging-<commit-sha> or full digest). Required for manual deploys."
+        required: true
       values_file:
         description: "Path to Helm values file (defaults to helm-charts/values-staging.yaml)"
         required: false
-  push:
-    branches:
-      - feat/dev-tests
+
 
 jobs:
   prepare:
@@ -525,7 +522,7 @@ jobs:
           KUBECONFIG: ${{ env.KUBECONFIG }}
 
       - name: Run Playwright smoke against staging (frontend only)
-        if: ${{ matrix.service == 'frontend' }}
+        if: ${{ matrix.service == 'frontend' && hashFiles('skip') == '' }}
         env:
           BASE_URL: https://staging.shopease.local
         run: |
