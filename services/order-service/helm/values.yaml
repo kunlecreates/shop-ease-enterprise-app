@@ -14,6 +14,8 @@ env:
         timeoutMs: 3000
       - name: "stripe"
         timeoutMs: 5000
+  # Ensure Spring Boot binds to container port used by probes
+  SERVER_PORT: "8083"
 
 db:
   # Name of a pre-created Secret containing DB connection envs.

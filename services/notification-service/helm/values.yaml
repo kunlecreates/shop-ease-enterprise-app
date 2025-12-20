@@ -9,6 +9,9 @@ env:
   OTEL_EXPORTER_OTLP_ENDPOINT: "${global.otel.collectorEndpoint}"
   LOG_LEVEL: "info"
 
+  # Ensure app listens on container port used by probes
+  PORT: "8084"
+
 credentials:
   # Name of a pre-created Secret containing mail/SMS credentials.
   # The deploy workflow can create this as `shopease-notification-credentials` from GitHub Secrets

@@ -15,6 +15,9 @@ env:
   ORDER_SERVICE_INTERNAL_URL: "http://order-service.shopease-order.svc.cluster.local:80"
   NOTIFICATION_SERVICE_INTERNAL_URL: "http://notification-service.shopease-notification.svc.cluster.local:80"
 
+  # Ensure frontend process binds to container port used by probes
+  PORT: "3000"
+
 service:
   port: 80
 
