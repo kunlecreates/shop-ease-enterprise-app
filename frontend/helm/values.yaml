@@ -26,6 +26,20 @@ resources:
     cpu: 250m
     memory: 1Gi
 
+probes:
+  liveness:
+    port: 3000
+    initialDelaySeconds: 60
+    timeoutSeconds: 5
+    periodSeconds: 10
+    failureThreshold: 6
+  readiness:
+    port: 3000
+    initialDelaySeconds: 20
+    timeoutSeconds: 3
+    periodSeconds: 5
+    failureThreshold: 5
+
 ingress:
   enabled: true
   className: nginx

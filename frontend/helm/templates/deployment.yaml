@@ -66,9 +66,15 @@ spec:
             {{- toYaml .Values.resources | nindent 12 }}
           livenessProbe:
             tcpSocket:
-              port: 3000
-            initialDelaySeconds: 15
+              port: {{ default 3000 .Values.probes.liveness.port }}
+            initialDelaySeconds: {{ default 60 .Values.probes.liveness.initialDelaySeconds }}
+            timeoutSeconds: {{ default 5 .Values.probes.liveness.timeoutSeconds }}
+            periodSeconds: {{ default 10 .Values.probes.liveness.periodSeconds }}
+            failureThreshold: {{ default 6 .Values.probes.liveness.failureThreshold }}
           readinessProbe:
             tcpSocket:
-              port: 3000
-            initialDelaySeconds: 5
+              port: {{ default 3000 .Values.probes.readiness.port }}
+            initialDelaySeconds: {{ default 20 .Values.probes.readiness.initialDelaySeconds }}
+            timeoutSeconds: {{ default 3 .Values.probes.readiness.timeoutSeconds }}
+            periodSeconds: {{ default 5 .Values.probes.readiness.periodSeconds }}
+            failureThreshold: {{ default 5 .Values.probes.readiness.failureThreshold }}

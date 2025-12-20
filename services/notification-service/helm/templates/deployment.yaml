@@ -71,11 +71,17 @@ spec:
             {{- toYaml .Values.resources | nindent 12 }}
           livenessProbe:
             httpGet:
-              path: /
+              path: {{ default "/" .Values.probes.liveness.path }}
               port: 8084
-            initialDelaySeconds: 15
+            initialDelaySeconds: {{ default 60 .Values.probes.liveness.initialDelaySeconds }}
+            timeoutSeconds: {{ default 5 .Values.probes.liveness.timeoutSeconds }}
+            periodSeconds: {{ default 10 .Values.probes.liveness.periodSeconds }}
+            failureThreshold: {{ default 6 .Values.probes.liveness.failureThreshold }}
           readinessProbe:
             httpGet:
-              path: /
+              path: {{ default "/" .Values.probes.readiness.path }}
               port: 8084
-            initialDelaySeconds: 5
+            initialDelaySeconds: {{ default 20 .Values.probes.readiness.initialDelaySeconds }}
+            timeoutSeconds: {{ default 3 .Values.probes.readiness.timeoutSeconds }}
+            periodSeconds: {{ default 5 .Values.probes.readiness.periodSeconds }}
+            failureThreshold: {{ default 5 .Values.probes.readiness.failureThreshold }}
