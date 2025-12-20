@@ -20,7 +20,7 @@ on:
 
 jobs:
   prepare:
-    runs-on: arc-runnerset
+    runs-on: arc-runnerset-instance
     steps:
       - name: Checkout
         uses: actions/checkout@v4
