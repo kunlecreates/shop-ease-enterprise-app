@@ -13,6 +13,10 @@ on:
       values_file:
         description: "Path to Helm values file (defaults to helm-charts/values-staging.yaml)"
         required: false
+      allow_latest:
+        description: "Allow deploying the 'latest' image tag (dangerous)."
+        required: false
+        default: "false"
 
 
 jobs:
@@ -178,7 +182,7 @@ jobs:
             exit 1
           fi
         env:
-          ALLOW_LATEST: ${{ secrets.ALLOW_LATEST }}
+          ALLOW_LATEST: ${{ github.event.inputs.allow_latest }}
 
       - name: Ensure namespace exists
         if: ${{ hashFiles('skip') == '' }}
