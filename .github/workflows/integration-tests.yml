@@ -10,21 +10,18 @@ on:
     branches:
       - main
       - master
-      - feat/dev-tests
       - 'test/**'
     # Only run this expensive integration matrix when cross-cutting, shared or infra
     # changes occur. Service-local changes are handled by per-service CI jobs.
     paths:
       - 'services/test-utils/**'
-      - '.github/workflows/**'
-      - 'scripts/**'
+      - '.github/workflows/integration-tests.yml'
       - 'helm-charts/**'
   pull_request:
     branches: [ main, master ]
     paths:
       - 'services/test-utils/**'
       - '.github/workflows/**'
-      - 'scripts/**'
       - 'helm-charts/**'
   # Allow manual runs for diagnostics or ad-hoc verification
   workflow_dispatch: {}
