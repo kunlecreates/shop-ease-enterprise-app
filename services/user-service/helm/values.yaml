@@ -35,7 +35,6 @@ service:
   port: 80
 
 resources:
-resources:
   requests:
     cpu: 50m
     memory: 128Mi

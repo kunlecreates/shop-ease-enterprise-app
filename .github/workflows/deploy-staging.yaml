@@ -18,6 +18,8 @@ on:
 jobs:
   prepare:
     runs-on: arc-runnerset-instance
+    outputs:
+      kubeconfig: ${{ steps.configure.outputs.kubeconfig }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -33,6 +35,7 @@ jobs:
           version: v1.30.0
 
       - name: Configure kubeconfig (ARC in-cluster only)
+        id: configure
         run: |
           set -euo pipefail
           if [ -z "${KUBERNETES_SERVICE_HOST:-}" ]; then
@@ -49,15 +52,16 @@ jobs:
           kubectl config set-context arc --cluster=arc --user=runner --kubeconfig="$KUBECONFIG_PATH"
           kubectl config use-context arc --kubeconfig="$KUBECONFIG_PATH"
           echo "KUBECONFIG=$KUBECONFIG_PATH" >> $GITHUB_ENV
+          echo "kubeconfig=$KUBECONFIG_PATH" >> $GITHUB_OUTPUT
 
       - name: Ensure rbac release namespace exists
         run: kubectl create namespace shopease-system --dry-run=client -o yaml | kubectl apply -f -
         env:
-          KUBECONFIG: ${{ env.KUBECONFIG }}
+          KUBECONFIG: ${{ steps.configure.outputs.kubeconfig }}
 
       - name: Create selected service namespaces
         run: |
-          export KUBECONFIG=${{ env.KUBECONFIG }}
+          export KUBECONFIG=${{ steps.configure.outputs.kubeconfig }}
           INPUT_SERVICES='${{ github.event.inputs.services }}'
           [[ -z "$INPUT_SERVICES" ]] && INPUT_SERVICES=all
           if [[ "$INPUT_SERVICES" == "all" ]]; then
@@ -81,7 +85,7 @@ jobs:
 
       - name: Install/Upgrade RBAC Helm chart (limited to selected namespaces)
         run: |
-          export KUBECONFIG=${{ env.KUBECONFIG }}
+          export KUBECONFIG=${{ steps.configure.outputs.kubeconfig }}
           set -euo pipefail
           # Build temporary values.yaml containing only the selected targets
           tmpvals=$(mktemp)
@@ -101,6 +105,8 @@ jobs:
   deploy-helm:
     runs-on: arc-runnerset-instance
     needs: prepare
+    env:
+      KUBECONFIG: ${{ needs.prepare.outputs.kubeconfig }}
     strategy:
       matrix:
         service: [user, product, order, notification, frontend]
@@ -120,23 +126,7 @@ jobs:
         with:
           version: v1.30.0
 
-      - name: Configure kubeconfig (ARC in-cluster only)
-        run: |
-          set -euo pipefail
-          if [ -z "${KUBERNETES_SERVICE_HOST:-}" ]; then
-            echo "ERROR: This workflow requires running inside the cluster on an ARC runner (KUBERNETES_SERVICE_HOST not set)."
-            exit 1
-          fi
-          echo "Configuring in-cluster kubeconfig (ARC runner)"
-          APISERVER="https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT}"
-          SA_TOKEN_FILE="/var/run/secrets/kubernetes.io/serviceaccount/token"
-          CA_CERT_FILE="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
-          KUBECONFIG_PATH="$PWD/kubeconfig"
-          kubectl config set-cluster arc --server="$APISERVER" --certificate-authority="$CA_CERT_FILE" --embed-certs=true --kubeconfig="$KUBECONFIG_PATH"
-          kubectl config set-credentials runner --token="$(cat "$SA_TOKEN_FILE")" --kubeconfig="$KUBECONFIG_PATH"
-          kubectl config set-context arc --cluster=arc --user=runner --kubeconfig="$KUBECONFIG_PATH"
-          kubectl config use-context arc --kubeconfig="$KUBECONFIG_PATH"
-          echo "KUBECONFIG=$KUBECONFIG_PATH" >> $GITHUB_ENV
+      
 
       - name: Filter services
         run: |
@@ -188,21 +178,20 @@ jobs:
             exit 1
           fi
         env:
-          IMAGE_TAG_INPUT: ${{ env.IMAGE_TAG_INPUT }}
           ALLOW_LATEST: ${{ secrets.ALLOW_LATEST }}
 
       - name: Ensure namespace exists
         if: ${{ hashFiles('skip') == '' }}
         run: kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
         env:
-          KUBECONFIG: ${{ env.KUBECONFIG }}
+          KUBECONFIG: ${{ needs.prepare.outputs.kubeconfig }}
 
       
 
       - name: Create/Update DB Secret from GitHub Secrets (user/product/order only)
         if: ${{ hashFiles('skip') == '' }}
         env:
-          KUBECONFIG: ${{ env.KUBECONFIG }}
+          KUBECONFIG: ${{ needs.prepare.outputs.kubeconfig }}
           # Product DB secrets
           PRODUCT_DB_HOST: ${{ secrets.PRODUCT_DB_HOST }}
           PRODUCT_DB_PORT: ${{ secrets.PRODUCT_DB_PORT }}
@@ -276,7 +265,7 @@ jobs:
       - name: Create/Update Notification credentials Secret from GitHub Secrets (notification only)
         if: ${{ hashFiles('skip') == '' && matrix.service == 'notification' }}
         env:
-          KUBECONFIG: ${{ env.KUBECONFIG }}
+          KUBECONFIG: ${{ needs.prepare.outputs.kubeconfig }}
           NOTIFICATION_MAIL_HOST: ${{ secrets.NOTIFICATION_MAIL_HOST }}
           NOTIFICATION_MAIL_PORT: ${{ secrets.NOTIFICATION_MAIL_PORT }}
           NOTIFICATION_MAIL_USER: ${{ secrets.NOTIFICATION_MAIL_USER }}
@@ -323,7 +312,7 @@ jobs:
         env:
           GHCR_READ_USERNAME: ${{ secrets.GHCR_READ_USERNAME }}
           GHCR_READ_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
-          KUBECONFIG: ${{ env.KUBECONFIG }}
+          KUBECONFIG: ${{ needs.prepare.outputs.kubeconfig }}
         run: |
           if [ -n "$GHCR_READ_USERNAME" ] && [ -n "$GHCR_READ_TOKEN" ]; then
             kubectl -n "$NAMESPACE" create secret docker-registry ghcr-pull-secret \
@@ -339,7 +328,7 @@ jobs:
       - name: Pre-deploy readiness checks
         if: ${{ hashFiles('skip') == '' }}
         env:
-          KUBECONFIG: ${{ env.KUBECONFIG }}
+          KUBECONFIG: ${{ needs.prepare.outputs.kubeconfig }}
         run: |
           set -euo pipefail
           echo "Running pre-deploy readiness checks in namespace $NAMESPACE"
@@ -388,7 +377,7 @@ jobs:
       - name: Deploy selected service via helm (per-service chart)
         if: ${{ hashFiles('skip') == '' }}
         env:
-          KUBECONFIG: ${{ env.KUBECONFIG }}
+          KUBECONFIG: ${{ needs.prepare.outputs.kubeconfig }}
           GHCR_READ_USERNAME: ${{ secrets.GHCR_READ_USERNAME }}
           GHCR_READ_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
         run: |
@@ -520,7 +509,7 @@ jobs:
         run: |
           kubectl -n "$NAMESPACE" rollout status deployment/$(kubectl -n "$NAMESPACE" get deploy -l app.kubernetes.io/instance=$RELEASE_NAME -o jsonpath='{.items[0].metadata.name}') --timeout=600s
         env:
-          KUBECONFIG: ${{ env.KUBECONFIG }}
+          KUBECONFIG: ${{ needs.prepare.outputs.kubeconfig }}
 
       - name: Run Playwright smoke against staging (frontend only)
         if: ${{ matrix.service == 'frontend' && hashFiles('skip') == '' }}
@@ -554,4 +543,4 @@ jobs:
           kubectl -n "$NAMESPACE" exec curl-test -- curl -fsS http://$SERVICE_NAME.$NAMESPACE.svc.cluster.local:$PORT$PATH || (echo "Service unreachable" && exit 1)
           kubectl -n "$NAMESPACE" delete pod curl-test
         env:
-          KUBECONFIG: ${{ env.KUBECONFIG }}
+          KUBECONFIG: ${{ needs.prepare.outputs.kubeconfig }}
