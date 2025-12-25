@@ -19,11 +19,48 @@ on:
       - feat/dev-tests
 
 jobs:
+  set-matrix:
+    name: Set build matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set.outputs.matrix }}
+    steps:
+      - name: Determine requested services and emit matrix
+        id: set
+        run: |
+          set -euo pipefail
+          INPUT='${{ github.event.inputs.services }}'
+          # Default to all when input empty or 'all'
+          if [ -z "$INPUT" ] || [ "$INPUT" = "all" ]; then
+            echo 'matrix=["user-service","product-service","order-service","notification-service","frontend"]' >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          IFS=',' read -r -a items <<< "$INPUT"
+          arr=()
+          for s in "${items[@]}"; do
+            s_trim=$(echo "$s" | xargs)
+            case "$s_trim" in
+              user|user-service) arr+=("\"user-service\"") ;;
+              product|product-service) arr+=("\"product-service\"") ;;
+              order|order-service) arr+=("\"order-service\"") ;;
+              notification|notification-service) arr+=("\"notification-service\"") ;;
+              frontend) arr+=("\"frontend\"") ;;
+              *) echo "Ignoring unknown service '$s_trim'" ;;
+            esac
+          done
+          if [ ${#arr[@]} -eq 0 ]; then
+            echo 'matrix=[]' >> $GITHUB_OUTPUT
+          else
+            printf 'matrix=[%s]\n' "$(IFS=,; echo "${arr[*]}")" >> $GITHUB_OUTPUT
+          fi
+        shell: bash
+
   build-and-push:
     runs-on: ubuntu-latest
+    needs: set-matrix
     strategy:
       matrix:
-        service: [user-service, product-service, order-service, notification-service, frontend]
+        service: ${{ fromJSON(needs.set-matrix.outputs.matrix) }}
       # Limit concurrent matrix jobs to reduce runner/builder/registry contention
       max-parallel: 2
     steps:
@@ -39,24 +76,6 @@ jobs:
           clean: true
           # Do not use sparse checkout; we need full tree for repo-root contexts
           sparse-checkout-cone-mode: false
-
-      - name: Filter services
-        id: filter
-        run: |
-          input="${{ github.event.inputs.services }}"
-          [[ -z "$input" ]] && input="all"
-          svc="${{ matrix.service }}"
-          if [[ "$input" != "all" ]]; then
-            IFS=',' read -r -a items <<< "$input"
-            keep=0
-            for i in "${items[@]}"; do
-              [[ "$i" == "$svc" || "$i" == "${svc%-service}" ]] && keep=1
-            done
-            if [[ $keep -eq 0 ]]; then echo "skip" > skip; fi
-          fi
-      - name: Skip if filtered
-        if: ${{ hashFiles('skip') != '' }}
-        run: echo "Skipping ${{ matrix.service }}"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -74,13 +93,14 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set image vars
-        if: ${{ hashFiles('skip') == '' }}
         id: vars
         run: |
           set -euo pipefail
           svc="${{ matrix.service }}"
           image="${svc}"
+          flyway_image=""
           dockerfile=""
+          flyway_dockerfile=""
           context=""
 
           case "$svc" in
@@ -88,10 +108,33 @@ jobs:
             # Java services need the full repository available so Maven can
             # resolve sibling-module dependencies (e.g. test-utils). Use
             # repo root as build context and keep the service Dockerfile path.
+            flyway_image="${svc}-flyway"
             context="."
             dockerfile="services/${svc}/Dockerfile"
+            flyway_dockerfile="services/${svc}/Dockerfile.flyway"
+
+            # --- Guard for missing Flyway Dockerfile ---
+            if [[ -n "$flyway_dockerfile" && ! -f "$flyway_dockerfile" ]]; then
+              echo "ERROR: Flyway Dockerfile not found: $flyway_dockerfile"
+              exit 1
+            fi
             ;;
-          product-service|notification-service)
+          product-service)
+            # Node service: keep service-local build context/dockerfile but
+            # still support building a flyway image if a Dockerfile.flyway exists
+            context="services/${svc}"
+            dockerfile="services/${svc}/Dockerfile"
+            flyway_image="${svc}-flyway"
+            flyway_dockerfile="services/${svc}/Dockerfile.flyway"
+            # Guard for missing flyway Dockerfile (product may opt-in)
+            if [[ -n "$flyway_dockerfile" && ! -f "$flyway_dockerfile" ]]; then
+              # If flyway Dockerfile is missing, don't fail the whole job; skip flyway build
+              echo "Note: Flyway Dockerfile not found for $svc; skipping flyway image build"
+              flyway_image=""
+              flyway_dockerfile=""
+            fi
+            ;;
+          notification-service)
             # Node/Python services expect their package files inside the
             # service directory; use the service folder as the build context
             # so Docker COPY instructions remain service-relative.
@@ -122,14 +165,15 @@ jobs:
           fi
 
           echo "image=$image" >> $GITHUB_OUTPUT
+          echo "flyway_image=$flyway_image" >> $GITHUB_OUTPUT
           echo "context=$context" >> $GITHUB_OUTPUT
           echo "dockerfile=${dockerfile:-}" >> $GITHUB_OUTPUT
+          echo "flyway_dockerfile=${flyway_dockerfile:-}" >> $GITHUB_OUTPUT
           # Short SHA for staging tags (first 7 chars) to match deploy workflow
           SHORT_SHA="${GITHUB_SHA:0:7}"
           echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
 
       - name: Docker meta
-        if: ${{ hashFiles('skip') == '' }}
         id: meta
         uses: docker/metadata-action@v5
         with:
@@ -139,8 +183,18 @@ jobs:
             type=raw,value=staging-${{ steps.vars.outputs.short_sha }}
             type=raw,value=latest
 
+      - name: Docker meta (Flyway)
+        if: ${{ steps.vars.outputs.flyway_image != '' }}
+        id: meta-flyway
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/${{ steps.vars.outputs.flyway_image }}
+          tags: |
+            type=raw,value=staging-${{ github.sha }}
+            type=raw,value=staging-${{ steps.vars.outputs.short_sha }}
+            type=raw,value=latest
+
       - name: Build & Push (buildx)
-        if: ${{ hashFiles('skip') == '' }}
         uses: docker/build-push-action@v5
         with:
           # Use the per-service build context. For Java services this is repo root so Dockerfile can access /.mvn
@@ -155,4 +209,17 @@ jobs:
           # NOTE: remove cache-from/cache-to (GH Actions GHA cache backend) for host docker driver
           # to avoid build-cache-backend errors when using the host driver.
           # Pull base images to reduce transient network failures during build
+          pull: true
+
+      - name: Build & Push Flyway (buildx)
+        if: ${{ steps.vars.outputs.flyway_image != '' }}
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ steps.vars.outputs.context }}
+          file: ${{ steps.vars.outputs.flyway_dockerfile }}
+          build-args: |
+            SERVICE_NAME=${{ matrix.service }}
+          push: true
+          tags: ${{ steps.meta-flyway.outputs.tags }}
+          platforms: linux/amd64
           pull: true

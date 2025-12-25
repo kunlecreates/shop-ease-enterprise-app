@@ -106,14 +106,50 @@ jobs:
           rm -f "$tmpvals"
 
   
-  deploy-helm:
+  set-matrix:
+    name: Set deployment matrix
     runs-on: arc-runnerset-instance
     needs: prepare
+    outputs:
+      matrix: ${{ steps.set.outputs.matrix }}
+    steps:
+      - name: Determine requested services and emit matrix
+        id: set
+        run: |
+          set -euo pipefail
+          INPUT='${{ github.event.inputs.services }}'
+          if [ -z "$INPUT" ] || [ "$INPUT" = "all" ]; then
+            echo 'matrix=["user","product","order","notification","frontend"]' >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          IFS=',' read -r -a items <<< "$INPUT"
+          arr=()
+          for s in "${items[@]}"; do
+            s_trim=$(echo "$s" | xargs)
+            case "$s_trim" in
+              user|product|order|notification|frontend)
+                arr+=("\"$s_trim\"")
+                ;;
+              *)
+                echo "Ignoring unknown service '$s_trim'"
+                ;;
+            esac
+          done
+          if [ ${#arr[@]} -eq 0 ]; then
+            echo 'matrix=[]' >> $GITHUB_OUTPUT
+          else
+            printf 'matrix=[%s]\n' "$(IFS=,; echo "${arr[*]}")" >> $GITHUB_OUTPUT
+          fi
+        shell: bash
+
+  deploy-helm:
+    runs-on: arc-runnerset-instance
+    needs: [prepare, set-matrix]
     env:
       KUBECONFIG: ${{ needs.prepare.outputs.kubeconfig }}
     strategy:
       matrix:
-        service: [user, product, order, notification, frontend]
+        service: ${{ fromJSON(needs.set-matrix.outputs.matrix) }}
       # Limit concurrent matrix jobs to reduce runner/builder/registry contention
       max-parallel: 2
     steps:
@@ -130,27 +166,7 @@ jobs:
         with:
           version: v1.30.0
 
-      
-
-      - name: Filter services
-        run: |
-          input="${{ inputs.services }}"
-          [[ -z "$input" ]] && input="all"
-          svc="${{ matrix.service }}"
-          if [[ "$input" != "all" ]]; then
-            IFS=',' read -r -a items <<< "$input"
-            keep=0
-            for i in "${items[@]}"; do
-              [[ "$i" == "$svc" ]] && keep=1
-            done
-            if [[ $keep -eq 0 ]]; then echo "skip" > skip; fi
-          fi
-      - name: Skip if filtered
-        if: ${{ hashFiles('skip') != '' }}
-        run: echo "Skipping ${{ matrix.service }}"
-
       - name: Compute parameters (per service)
-        if: ${{ hashFiles('skip') == '' }}
         run: |
           # Map service to release/namespace and enable flags
           SERVICE="${{ matrix.service }}"
@@ -172,7 +188,6 @@ jobs:
         shell: bash
 
       - name: Validate image tag (prevent accidental 'latest' deploys)
-        if: ${{ hashFiles('skip') == '' }}
         run: |
           set -euo pipefail
           # Allow override via repo secret or environment if explicitly intended
@@ -185,7 +200,6 @@ jobs:
           ALLOW_LATEST: ${{ github.event.inputs.allow_latest }}
 
       - name: Ensure namespace exists
-        if: ${{ hashFiles('skip') == '' }}
         run: kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
         env:
           KUBECONFIG: ${{ needs.prepare.outputs.kubeconfig }}
@@ -193,30 +207,44 @@ jobs:
       
 
       - name: Create/Update DB Secret from GitHub Secrets (user/product/order only)
-        if: ${{ hashFiles('skip') == '' }}
         env:
           KUBECONFIG: ${{ needs.prepare.outputs.kubeconfig }}
-          # Product DB secrets
-          PRODUCT_DB_HOST: ${{ secrets.PRODUCT_DB_HOST }}
-          PRODUCT_DB_PORT: ${{ secrets.PRODUCT_DB_PORT }}
-          PRODUCT_DB_NAME: ${{ secrets.PRODUCT_DB_NAME }}
-          PRODUCT_DB_USER: ${{ secrets.PRODUCT_DB_USER }}
-          PRODUCT_DB_PASSWORD: ${{ secrets.PRODUCT_DB_PASSWORD }}
-          # User DB secrets
-          USER_DB_HOST: ${{ secrets.USER_DB_HOST }}
-          USER_DB_PORT: ${{ secrets.USER_DB_PORT }}
-          USER_DB_NAME: ${{ secrets.USER_DB_NAME }}
-          USER_DB_USER: ${{ secrets.USER_DB_USER }}
-          USER_DB_PASSWORD: ${{ secrets.USER_DB_PASSWORD }}
-          # Order DB secrets
-          ORDER_DB_HOST: ${{ secrets.ORDER_DB_HOST }}
-          ORDER_DB_PORT: ${{ secrets.ORDER_DB_PORT }}
-          ORDER_DB_NAME: ${{ secrets.ORDER_DB_NAME }}
-          ORDER_DB_USER: ${{ secrets.ORDER_DB_USER }}
-          ORDER_DB_PASSWORD: ${{ secrets.ORDER_DB_PASSWORD }}
         run: |
           set -euo pipefail
           SERVICE="${{ matrix.service }}"
+          # Only populate the secrets relevant to the service being deployed.
+          # This minimizes accidental exposure of unrelated secrets in the job environment.
+          case "$SERVICE" in
+            product)
+              PRODUCT_DB_HOST="${{ secrets.PRODUCT_DB_HOST }}"
+              PRODUCT_DB_PORT="${{ secrets.PRODUCT_DB_PORT }}"
+              PRODUCT_DB_NAME="${{ secrets.PRODUCT_DB_NAME }}"
+              PRODUCT_DB_USER="${{ secrets.PRODUCT_DB_USER }}"
+              PRODUCT_DB_PASSWORD="${{ secrets.PRODUCT_DB_PASSWORD }}"
+              PRODUCT_MIG_DB_USER="${{ secrets.PRODUCT_MIG_DB_USER }}"
+              PRODUCT_MIG_DB_PASSWORD="${{ secrets.PRODUCT_MIG_DB_PASSWORD }}"
+              ;;
+            user)
+              USER_DB_HOST="${{ secrets.USER_DB_HOST }}"
+              USER_DB_PORT="${{ secrets.USER_DB_PORT }}"
+              USER_DB_NAME="${{ secrets.USER_DB_NAME }}"
+              USER_DB_USER="${{ secrets.USER_DB_USER }}"
+              USER_DB_PASSWORD="${{ secrets.USER_DB_PASSWORD }}"
+              USER_MIG_DB_USER="${{ secrets.USER_MIG_DB_USER }}"
+              USER_MIG_DB_PASSWORD="${{ secrets.USER_MIG_DB_PASSWORD }}"
+              ;;
+            order)
+              ORDER_DB_HOST="${{ secrets.ORDER_DB_HOST }}"
+              ORDER_DB_PORT="${{ secrets.ORDER_DB_PORT }}"
+              ORDER_DB_NAME="${{ secrets.ORDER_DB_NAME }}"
+              ORDER_DB_USER="${{ secrets.ORDER_DB_USER }}"
+              ORDER_DB_PASSWORD="${{ secrets.ORDER_DB_PASSWORD }}"
+              ORDER_MIG_DB_USER="${{ secrets.ORDER_MIG_DB_USER }}"
+              ORDER_MIG_DB_PASSWORD="${{ secrets.ORDER_MIG_DB_PASSWORD }}"
+              ;;
+            *)
+              ;;
+          esac
           NAMESPACE="$NAMESPACE"
           case "$SERVICE" in
             product)
@@ -264,10 +292,59 @@ jobs:
             echo "No GitHub Secrets found for $SERVICE DB; skipping secret creation."
             echo "DB_SECRET_NAME=" >> $GITHUB_ENV
           fi
+          # Create migration secret if migration-specific GitHub secrets are present
+          mig_tmp=$(mktemp)
+          MIG_SECRET_NAME="${SECRET_NAME}-migration"
+          echo "apiVersion: v1" > "$mig_tmp"
+          echo "kind: Secret" >> "$mig_tmp"
+          echo "metadata:" >> "$mig_tmp"
+          echo "  name: $MIG_SECRET_NAME" >> "$mig_tmp"
+          echo "type: Opaque" >> "$mig_tmp"
+          echo "stringData:" >> "$mig_tmp"
+          upper=$(echo "$SERVICE" | tr '[:lower:]' '[:upper:]')
+          mig_has=0
+          # Check for migration-specific GitHub Secrets and map them to secret fields
+          # Map expected input env names per service (explicit names used for clarity)
+          case "$SERVICE" in
+            product)
+              MIG_USER_ENV=PRODUCT_MIG_DB_USER; MIG_PASS_ENV=PRODUCT_MIG_DB_PASSWORD; MIG_HOST_ENV=PRODUCT_DB_HOST; MIG_PORT_ENV=PRODUCT_DB_PORT; MIG_NAME_ENV=PRODUCT_DB_NAME
+              ;;
+            user)
+              MIG_USER_ENV=USER_MIG_DB_USER; MIG_PASS_ENV=USER_MIG_DB_PASSWORD; MIG_HOST_ENV=USER_DB_HOST; MIG_PORT_ENV=USER_DB_PORT; MIG_NAME_ENV=USER_DB_NAME
+              ;;
+            order)
+              MIG_USER_ENV=ORDER_MIG_DB_USER; MIG_PASS_ENV=ORDER_MIG_DB_PASSWORD; MIG_HOST_ENV=ORDER_DB_HOST; MIG_PORT_ENV=ORDER_DB_PORT; MIG_NAME_ENV=ORDER_DB_NAME
+              ;;
+            *)
+              MIG_USER_ENV=; MIG_PASS_ENV=; MIG_HOST_ENV=; MIG_PORT_ENV=; MIG_NAME_ENV=
+              ;;
+          esac
+          mig_user_val="${!MIG_USER_ENV:-}"
+          mig_pass_val="${!MIG_PASS_ENV:-}"
+          mig_host_val="${!MIG_HOST_ENV:-}"
+          mig_port_val="${!MIG_PORT_ENV:-}"
+          mig_name_val="${!MIG_NAME_ENV:-}"
+          if [ -n "$mig_user_val" ] && [ -n "$mig_pass_val" ]; then
+            mig_has=1
+            echo "  MIG_DB_USER: \"$mig_user_val\"" >> "$mig_tmp"
+            echo "  MIG_DB_PASSWORD: \"$mig_pass_val\"" >> "$mig_tmp"
+            if [ -n "$mig_host_val" ]; then echo "  DB_HOST: \"$mig_host_val\"" >> "$mig_tmp"; fi
+            if [ -n "$mig_port_val" ]; then echo "  DB_PORT: \"$mig_port_val\"" >> "$mig_tmp"; fi
+            if [ -n "$mig_name_val" ]; then echo "  DB_NAME: \"$mig_name_val\"" >> "$mig_tmp"; fi
+          fi
+          if [ $mig_has -eq 1 ]; then
+            kubectl -n "$NAMESPACE" apply -f "$mig_tmp"
+            echo "Migration secret $MIG_SECRET_NAME applied in $NAMESPACE"
+            echo "MIGRATION_DB_SECRET_NAME=$MIG_SECRET_NAME" >> $GITHUB_ENV
+          else
+            echo "No migration GitHub Secrets found for $SERVICE; skipping migration secret creation"
+            echo "MIGRATION_DB_SECRET_NAME=" >> $GITHUB_ENV
+            rm -f "$mig_tmp" || true
+          fi
         # env moved above
 
       - name: Create/Update Notification credentials Secret from GitHub Secrets (notification only)
-        if: ${{ hashFiles('skip') == '' && matrix.service == 'notification' }}
+        if: ${{ matrix.service == 'notification' }}
         env:
           KUBECONFIG: ${{ needs.prepare.outputs.kubeconfig }}
           NOTIFICATION_MAIL_HOST: ${{ secrets.NOTIFICATION_MAIL_HOST }}
@@ -312,7 +389,6 @@ jobs:
       # Namespace creation moved earlier (immediately after Compute parameters)
 
       - name: Create/Update imagePullSecret for GHCR (optional)
-        if: ${{ hashFiles('skip') == '' }}
         env:
           GHCR_READ_USERNAME: ${{ secrets.GHCR_READ_USERNAME }}
           GHCR_READ_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
@@ -330,7 +406,6 @@ jobs:
           fi
       
       - name: Pre-deploy readiness checks
-        if: ${{ hashFiles('skip') == '' }}
         env:
           KUBECONFIG: ${{ needs.prepare.outputs.kubeconfig }}
         run: |
@@ -379,7 +454,6 @@ jobs:
           echo "Pre-deploy readiness checks passed."
 
       - name: Deploy selected service via helm (per-service chart)
-        if: ${{ hashFiles('skip') == '' }}
         env:
           KUBECONFIG: ${{ needs.prepare.outputs.kubeconfig }}
           GHCR_READ_USERNAME: ${{ secrets.GHCR_READ_USERNAME }}
@@ -427,6 +501,19 @@ jobs:
 
           # Build helm args safely into an array to avoid word-splitting and malformed invocations
           HELM_ARGS=( --namespace "$NAMESPACE" --set "image.repository=$IMAGE_REPO" --set "image.tag=$IMAGE_TAG_INPUT" )
+          # For staging, disable in-app Flyway for services that run migrations out-of-band
+          case "${{ matrix.service }}" in
+            user|order|product)
+              HELM_ARGS+=( --set flyway.enabled=false ) ;;
+          esac
+          # Ensure migration Job uses the same immutable Flyway image tag built by CI
+          # Build a migration image name from the service image repo (append -flyway)
+          repo_name="${IMAGE_REPO##*/}"
+          MIG_IMAGE="ghcr.io/${OWNER}/${repo_name}-flyway"
+          case "${{ matrix.service }}" in
+            user|order|product)
+              HELM_ARGS+=( --set "migration.image=${MIG_IMAGE}" --set "migration.tag=${IMAGE_TAG_INPUT}" ) ;;
+          esac
           # If an umbrella or custom values file was provided, pass it directly to Helm.
           if [ -n "${VALUES_FILE:-}" ] && [ -f "$VALUES_FILE" ]; then
             HELM_ARGS+=( -f "$VALUES_FILE" )
@@ -483,6 +570,41 @@ jobs:
           fi
 
           # 3) Run helm upgrade/install and surface helpful diagnostics on concurrency lock
+          # 2.5) If migrations are configured, render and run the chart's migration Job (out-of-band)
+          # We will look for a migration secret created earlier named ${DB_SECRET_NAME}-migration or provided via values.
+          # Prefer explicitly created migration secret name from earlier step
+          MIG_SECRET="${MIGRATION_DB_SECRET_NAME:-${DB_SECRET_NAME}-migration}"
+          # If a secret with migration creds exists, apply the migration Job from the chart (show-only)
+          if kubectl -n "$NAMESPACE" get secret "$MIG_SECRET" >/dev/null 2>&1; then
+            echo "Found migration secret $MIG_SECRET; rendering migration Job from chart and applying"
+            # Render only the migration Job and apply to cluster
+            helm template "${RELEASE_NAME}-migrations" "$CHART_DIR" --namespace "$NAMESPACE" \
+              --set migration.enabled=true --set migration.secretName=$MIG_SECRET ${HELM_ARGS[*]} --show-only templates/migration-job.yaml | kubectl -n "$NAMESPACE" apply -f -
+            # Wait for job completion
+            # Attempt to locate the Job by common name patterns
+            SERVICE_NAME=${RELEASE_NAME#shopease-}
+            CANDIDATES=("${SERVICE_NAME}-migration" "${SERVICE_NAME}-service-migration" "${RELEASE_NAME}-migration")
+            JOB_NAME=""
+            for cand in "${CANDIDATES[@]}"; do
+              if kubectl -n "$NAMESPACE" get job "$cand" >/dev/null 2>&1; then
+                JOB_NAME="$cand"; break
+              fi
+            done
+            if [ -n "$JOB_NAME" ]; then
+              echo "Waiting for migration job $JOB_NAME to complete"
+              if ! kubectl -n "$NAMESPACE" wait --for=condition=complete job/$JOB_NAME --timeout=600s; then
+                echo "Migration job $JOB_NAME failed or timed out; fetching logs"
+                kubectl -n "$NAMESPACE" logs job/$JOB_NAME --tail=200 || true
+                exit 1
+              fi
+              echo "Migration job $JOB_NAME completed"
+            else
+              echo "Migration job not found after applying template; continuing"
+            fi
+          else
+            echo "No migration secret ($MIG_SECRET) found; skipping migration Job"
+          fi
+
           tmphelmout=$(mktemp)
           if helm upgrade --install "$RELEASE_NAME" "$CHART_DIR" "${HELM_ARGS[@]}" --atomic --wait --timeout 10m 2>&1 | tee "$tmphelmout"; then
             echo "Helm upgrade/install succeeded"
@@ -509,14 +631,13 @@ jobs:
           # No temporary env values files are created here (per-service charts own env values).
 
       - name: Wait for rollout
-        if: ${{ hashFiles('skip') == '' }}
         run: |
           kubectl -n "$NAMESPACE" rollout status deployment/$(kubectl -n "$NAMESPACE" get deploy -l app.kubernetes.io/instance=$RELEASE_NAME -o jsonpath='{.items[0].metadata.name}') --timeout=600s
         env:
           KUBECONFIG: ${{ needs.prepare.outputs.kubeconfig }}
 
       - name: Run Playwright smoke against staging (frontend only)
-        if: ${{ matrix.service == 'frontend' && hashFiles('skip') == '' }}
+        if: ${{ matrix.service == 'frontend' }}
         env:
           BASE_URL: https://staging.shopease.local
         run: |
@@ -527,7 +648,6 @@ jobs:
           npx playwright test --project=chromium
 
       - name: Smoke test (per service)
-        if: ${{ hashFiles('skip') == '' }}
         run: |
           case "${{ matrix.service }}" in
             frontend)
