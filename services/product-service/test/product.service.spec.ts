@@ -25,14 +25,19 @@ describe('ProductService', () => {
   });
 
   it('listProducts without pagination returns all', async () => {
-    const spy = jest.spyOn(productRepo, 'find').mockResolvedValue([{ id: 1 } as any, { id: 2 } as any]);
+    const spy = jest.spyOn(productRepo, 'find').mockResolvedValue([
+      { id: '11111111-1111-1111-1111-111111111111' } as any,
+      { id: '22222222-2222-2222-2222-222222222222' } as any,
+    ]);
     const res = await service.listProducts();
     expect(spy).toHaveBeenCalledWith();
     expect(res).toHaveLength(2);
   });
 
   it('listProducts with pagination uses skip/take', async () => {
-    const spy = jest.spyOn(productRepo, 'find').mockResolvedValue([{ id: 3 } as any]);
+    const spy = jest.spyOn(productRepo, 'find').mockResolvedValue([
+      { id: '33333333-3333-3333-3333-333333333333' } as any,
+    ]);
     const res = await service.listProducts({ page: 2, limit: 10 });
     expect(spy).toHaveBeenCalledWith({ skip: 10, take: 10, order: { name: 'ASC' } });
     expect(res).toHaveLength(1);

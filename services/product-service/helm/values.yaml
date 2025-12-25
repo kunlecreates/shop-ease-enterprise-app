@@ -67,3 +67,32 @@ autoscaling:
 securityContext:
   runAsNonRoot: true
   runAsUser: 1000
+
+# Flyway control: disable in-app Flyway by setting this to false for staging
+flyway:
+  enabled: false
+
+# Migration Job configuration (optional)
+migration:
+  enabled: false
+  image: ghcr.io/kunlecreates/product-service-flyway
+  tag: latest
+  imagePullPolicy: IfNotPresent
+  # Kubernetes Secret containing migration credentials (MIG_DB_USER, MIG_DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME)
+  secretName: ""
+  # Optional: create a dev-only secret from values below (do NOT use in production).
+  # CI and production should create migration secrets from secure stores (GitHub Secrets,
+  # Vault, SealedSecrets, etc.). Setting `createSecret=true` will render a Secret from
+  # `migration.secretData` in the target namespace (convenient for local development).
+  createSecret: false
+  # Example placeholder keys for `migration.secretData`. If `createSecret=true` these
+  # values will be written into the Secret as stringData. Do NOT commit production
+  # credentials here.
+  secretData: {}
+  # secretData example (uncomment to use in dev):
+  # secretData:
+  #   MIG_DB_USER: migration
+  #   MIG_DB_PASSWORD: change-me
+  #   DB_HOST: postgresql.postgres-system.svc.cluster.local
+  #   DB_PORT: "5432"
+  #   DB_NAME: productdb

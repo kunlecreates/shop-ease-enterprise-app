@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable, OneToMany, CreateDateColumn, UpdateDateColumn, ValueTransformer } from 'typeorm';
 import { Category } from './category.entity';
 import { StockMovement } from './stock-movement.entity';
 
@@ -8,7 +8,29 @@ export class Product {
   @Column({ unique: true }) sku!: string;
   @Column() name!: string;
   @Column({ type: 'text', nullable: true }) description?: string;
-  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 }) price!: number;
+  // Store price as cents in DB (bigint). Provide a `price` virtual getter/setter for convenience.
+  private static centsTransformer: ValueTransformer = {
+    to: (entityValue: number) => (entityValue === null || entityValue === undefined) ? entityValue : Math.round(entityValue),
+    from: (dbValue: string) => (dbValue === null || dbValue === undefined) ? 0 : parseInt(dbValue, 10)
+  };
+
+  @Column({ name: 'price_cents', type: 'bigint', default: 0, transformer: Product.centsTransformer }) priceCents!: number;
+
+  // Expose a decimal price in dollars for API convenience. Setting `price` will update `priceCents`.
+  get price(): number {
+    return (this.priceCents ?? 0) / 100;
+  }
+  set price(v: number) {
+    if (v === null || v === undefined) {
+      this.priceCents = 0;
+    } else {
+      this.priceCents = Math.round(v * 100);
+    }
+  }
+  // Use simple-json for cross-db test compatibility (sqlite). Production DB uses JSONB via Flyway migration.
+  @Column({ type: 'simple-json', nullable: true }) attributes?: Record<string, any>;
+  @CreateDateColumn({ name: 'created_at' }) createdAt!: Date;
+  @UpdateDateColumn({ name: 'updated_at' }) updatedAt!: Date;
   @Column({ default: true }) active!: boolean;
   @ManyToMany(() => Category, c => c.products, { cascade: true })
   @JoinTable({

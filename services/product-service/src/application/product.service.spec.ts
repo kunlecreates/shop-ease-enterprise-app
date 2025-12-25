@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Product } from '../domain/product.entity';
 import { Category } from '../domain/category.entity';
 import { StockMovement } from '../domain/stock-movement.entity';
+import { ProductInventory } from '../domain/product-inventory.entity';
 import { ProductService } from './product.service';
 
 describe('ProductService', () => {
@@ -10,8 +11,8 @@ describe('ProductService', () => {
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
-        TypeOrmModule.forRoot({ type: 'sqlite', database: ':memory:', dropSchema: true, entities: [Product, Category, StockMovement], synchronize: true }),
-        TypeOrmModule.forFeature([Product, Category, StockMovement])
+        TypeOrmModule.forRoot({ type: 'sqlite', database: ':memory:', dropSchema: true, entities: [Product, Category, StockMovement, ProductInventory], synchronize: true }),
+        TypeOrmModule.forFeature([Product, Category, StockMovement, ProductInventory])
       ],
       providers: [ProductService]
     }).compile();

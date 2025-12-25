@@ -60,7 +60,7 @@ export class ProductService {
     const result = await this.movements
       .createQueryBuilder('m')
       .select('COALESCE(SUM(m.quantity),0)', 'stock')
-      .where('m.productId = :pid', { pid: product.id })
+      .where('m.productid = :pid', { pid: product.id })
       .getRawOne<{ stock: string }>();
     return parseInt(result?.stock || '0', 10);
   }

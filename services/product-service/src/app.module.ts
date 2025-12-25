@@ -5,6 +5,7 @@ import { Category } from './domain/category.entity';
 import { StockMovement } from './domain/stock-movement.entity';
 import { ProductService } from './application/product.service';
 import { ProductController } from './presentation/product.controller';
+import { HealthController } from './presentation/health.controller';
 
 @Module({
   imports: [
@@ -15,6 +16,8 @@ import { ProductController } from './presentation/product.controller';
           return { type: 'sqlite', database: ':memory:', dropSchema: true, entities, synchronize: true };
         }
         return {
+          // Note: schema migrations are managed by Flyway (out-of-band).
+          // TypeORM must not run or manage migrations in staging/production.
           type: 'postgres',
           host: process.env.PRODUCT_DB_HOST || process.env.POSTGRES_HOST || 'postgres',
           port: +(process.env.PRODUCT_DB_PORT || process.env.POSTGRES_PORT || 5432),
@@ -22,16 +25,17 @@ import { ProductController } from './presentation/product.controller';
           password: process.env.PRODUCT_DB_PASSWORD || process.env.POSTGRES_PASSWORD || 'CHANGE_ME',
           database: process.env.PRODUCT_DB_NAME || process.env.POSTGRES_DB || 'product_svc',
           entities,
-            synchronize: false,
-            migrationsRun: process.env.MIGRATIONS_RUN === 'true',
-          migrations: ['dist/migrations/*.js'],
+          // Ensure TypeORM does not auto-run migrations or synchronize schema
+          synchronize: false,
+          migrationsRun: false,
+          migrations: [],
           logging: false
         };
       }
     }),
     TypeOrmModule.forFeature([Product, Category, StockMovement])
   ],
-  controllers: [ProductController],
+  controllers: [ProductController, HealthController],
   providers: [ProductService],
 })
 export class AppModule {}
