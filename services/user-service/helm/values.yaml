@@ -70,3 +70,20 @@ autoscaling:
 securityContext:
   runAsNonRoot: true
   runAsUser: 1000
+
+# Flyway control: disable in-app Flyway by setting this to false for staging
+flyway:
+  enabled: false
+
+# Migration Job configuration (Helm will create a pre-deploy Job when enabled)
+migration:
+  enabled: false
+  image: ghcr.io/kunlecreates/user-service-flyway
+  tag: latest
+  imagePullPolicy: IfNotPresent
+  # Kubernetes Secret containing migration credentials (MIG_DB_USER, MIG_DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME)
+  # If empty, the Job will be skipped. You can create this secret via Helm values or externally.
+  secretName: ""
+  # Optional: create a dev-only secret from values below (do NOT use in production)
+  createSecret: false
+  secretData: {}

@@ -9,16 +9,35 @@ public class DomainEvent {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(name = "EVENT_TYPE", nullable = false)
-    private String eventType;
-    @Column(name = "PAYLOAD", length = 4000)
+
+    @Column(name = "AGGREGATE_ID", nullable = false, length = 64)
+    private String aggregateId;
+
+    @Column(name = "TYPE", nullable = false, length = 100)
+    private String type;
+
+    @Lob
+    @Column(name = "PAYLOAD")
     private String payload;
+
     @Column(name = "CREATED_AT", nullable = false)
     private Instant createdAt = Instant.now();
+
+    @Column(name = "PUBLISHED_AT")
+    private Instant publishedAt;
+
     protected DomainEvent() {}
-    public DomainEvent(String eventType, String payload) { this.eventType = eventType; this.payload = payload; }
+
+    public DomainEvent(String aggregateId, String type, String payload) {
+        this.aggregateId = aggregateId;
+        this.type = type;
+        this.payload = payload;
+    }
+
     public Long getId() { return id; }
-    public String getEventType() { return eventType; }
+    public String getAggregateId() { return aggregateId; }
+    public String getType() { return type; }
     public String getPayload() { return payload; }
     public Instant getCreatedAt() { return createdAt; }
+    public Instant getPublishedAt() { return publishedAt; }
 }

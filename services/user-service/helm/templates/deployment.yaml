@@ -65,6 +65,8 @@ spec:
               {{- end }}
             {{- end }}
           {{- end }}
+            - name: SPRING_FLYWAY_ENABLED
+              value: "{{ ternary "true" "false" .Values.flyway.enabled }}"
           ports:
             - containerPort: 8081
           resources:

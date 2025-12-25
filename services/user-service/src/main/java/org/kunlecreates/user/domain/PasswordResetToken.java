@@ -4,8 +4,8 @@ import jakarta.persistence.*;
 import java.time.Instant;
 
 @Entity
-@Table(name = "REFRESH_TOKENS")
-public class RefreshToken {
+@Table(name = "PASSWORD_RESET_TOKENS")
+public class PasswordResetToken {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -20,15 +20,15 @@ public class RefreshToken {
     @Column(name = "EXPIRES_AT", nullable = false)
     private Instant expiresAt;
 
+    @Column(name = "USED_AT")
+    private Instant usedAt;
+
     @Column(name = "CREATED_AT", nullable = false)
     private Instant createdAt = Instant.now();
 
-    @Column(name = "REVOKED_AT")
-    private Instant revokedAt;
+    protected PasswordResetToken() {}
 
-    protected RefreshToken() {}
-
-    public RefreshToken(User user, String tokenHash, Instant expiresAt) {
+    public PasswordResetToken(User user, String tokenHash, Instant expiresAt) {
         this.user = user;
         this.tokenHash = tokenHash;
         this.expiresAt = expiresAt;
@@ -38,7 +38,7 @@ public class RefreshToken {
     public User getUser() { return user; }
     public String getTokenHash() { return tokenHash; }
     public Instant getExpiresAt() { return expiresAt; }
+    public Instant getUsedAt() { return usedAt; }
     public Instant getCreatedAt() { return createdAt; }
-    public Instant getRevokedAt() { return revokedAt; }
-    public void revoke(Instant when) { this.revokedAt = when; }
+    public void markUsed(Instant when) { this.usedAt = when; }
 }
