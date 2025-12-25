@@ -1,0 +1,22 @@
+name: CI — order-service
+
+on:
+  push:
+    paths:
+      - 'services/order-service/**'
+  pull_request:
+    paths:
+      - 'services/order-service/**'
+
+jobs:
+  test:
+    name: Order Service Tests (reusable)
+    uses: ./.github/workflows/reusable-java-test.yml
+    with:
+      module_path: 'services/order-service'
+      maven_goal: 'verify'
+      jdk_version: '21'
+      # enable docker diagnostics for Testcontainers troubleshooting
+      run_docker_diagnostics: true
+      # Enable testcontainers properties so integration tests run against Postgres containers
+      maven_args: '-Dtestcontainers.enabled=true -Dapi.version=1.44'
