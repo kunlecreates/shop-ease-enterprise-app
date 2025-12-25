@@ -136,7 +136,7 @@ product-service/
 ```
 #### Stack:
 
-- NestJS 10+, TypeORM or Prisma, PostgreSQL 8+, Flyway via CI job
+- NestJS 10+, TypeORM or Prisma for entities definition, PostgreSQL 8+, Flyway via CI job for migrations
 - Test: Jest, Supertest
 
 ### Order Service sub-structure (Java Spring Boot)
