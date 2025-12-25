@@ -3,13 +3,35 @@ package org.kunlecreates.order.interfaces.dto;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
+import java.util.List;
+
 public record CreateOrderRequest(
-    @NotNull
+    /**
+     * Optional cross-service user reference (UUID string). If provided, this will be
+     * preferred over numeric `userId` for linking orders to users.
+     */
+    String userRef,
+
+    /**
+     * Backwards-compatible numeric user id. May be null during transition to UUID refs.
+     */
     Long userId,
 
     @NotNull
     String status,
 
     @Min(0)
-    double total
-) {}
+    double total,
+
+    // List of items: productRef uses String to support UUIDs
+    List<CreateOrderItem> items
+) {
+    public record CreateOrderItem(
+        @NotNull
+        String productRef,
+        @Min(1)
+        int quantity,
+        @Min(0)
+        double unitPrice
+    ) {}
+}

@@ -34,7 +34,7 @@ public class OrderController {
 
     @PostMapping
     public ResponseEntity<Void> create(@Valid @RequestBody CreateOrderRequest req, UriComponentsBuilder uriBuilder) {
-        Order created = orderService.createOrder(req.userId(), req.status(), req.total());
+        Order created = orderService.createOrder(req.userRef(), req.userId(), req.status(), req.total());
         URI location = uriBuilder.path("/api/order/{id}").buildAndExpand(created.getId()).toUri();
         return ResponseEntity.created(location).build();
     }

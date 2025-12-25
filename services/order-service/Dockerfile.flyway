@@ -1,0 +1,13 @@
+# Base image with Flyway CLI
+FROM flyway/flyway:10
+
+# Copy SQL migration scripts into /flyway/sql
+# Replace <SERVICE_NAME> with the service folder name when building
+# For example: services/order-service/src/main/resources/db/migration
+ARG SERVICE_NAME
+    
+COPY services/${SERVICE_NAME}/src/main/resources/db/migration /flyway/sql
+RUN if [ ! -d /flyway/sql ]; then echo "ERROR: Migration directory missing!"; exit 1; fi
+
+# Optional: set a default entrypoint to flyway CLI
+ENTRYPOINT ["flyway"]

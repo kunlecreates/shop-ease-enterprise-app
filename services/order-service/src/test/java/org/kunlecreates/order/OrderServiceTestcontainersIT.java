@@ -64,7 +64,7 @@ public class OrderServiceTestcontainersIT {
         jdbcTemplate.update("INSERT INTO users (email, password_hash) VALUES (?, ?)", "it-user@example.com", "test-hash");
         Long userId = jdbcTemplate.queryForObject("SELECT id FROM users WHERE email = ?", new Object[]{"it-user@example.com"}, Long.class);
 
-        Order o = orderService.createOrder(userId, "CREATED", 42.00);
+        Order o = orderService.createOrder(null, userId, "CREATED", 42.00);
         assertThat(o.getId()).isNotNull();
         assertThat(orderService.findById(o.getId())).isPresent();
     }

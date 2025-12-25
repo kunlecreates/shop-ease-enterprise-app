@@ -4,24 +4,32 @@ import jakarta.persistence.*;
 import java.time.Instant;
 
 @Entity
-@Table(name = "ORDERS")
+@Table(name = "orders", schema = "order_svc")
 public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(name = "USER_ID", nullable = false)
-    private Long userId;
-    @Column(name = "STATUS", nullable = false)
+    @Column(name = "user_ref", nullable = false, length = 64)
+    private String userRef;
+    @Column(name = "status", nullable = false, length = 32)
     private String status;
-    @Column(name = "TOTAL", nullable = false)
-    private double total;
-    @Column(name = "CREATED_AT", nullable = false)
+    @Column(name = "total_cents", nullable = false)
+    private Long totalCents;
+    @Column(name = "currency", nullable = false, length = 3)
+    private String currency = "USD";
+    @Column(name = "placed_at")
+    private Instant placedAt;
+    @Column(name = "created_at", nullable = false)
     private Instant createdAt = Instant.now();
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt = Instant.now();
     protected Order() {}
-    public Order(Long userId, String status, double total) { this.userId = userId; this.status = status; this.total = total; }
+    public Order(String userRef, String status, Long totalCents) { this.userRef = userRef; this.status = status; this.totalCents = totalCents; }
     public Long getId() { return id; }
-    public Long getUserId() { return userId; }
+    public String getUserRef() { return userRef; }
     public String getStatus() { return status; }
-    public double getTotal() { return total; }
+    // Expose total as decimal dollars for API compatibility
+    public double getTotal() { return (totalCents == null) ? 0.0 : totalCents / 100.0; }
+    public Long getTotalCents() { return totalCents; }
     public Instant getCreatedAt() { return createdAt; }
 }

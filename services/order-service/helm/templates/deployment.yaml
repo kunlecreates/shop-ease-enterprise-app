@@ -38,6 +38,7 @@ spec:
             - secretRef:
                 name: {{ .Values.db.secretName }}
           {{- end }}
+          {{- /* Render env vars from values.env and always include SPRING_FLYWAY_ENABLED */ -}}
           {{- if .Values.env }}
           {{- $root := . }}
           env:
@@ -64,6 +65,12 @@ spec:
               {{- end }}
               {{- end }}
             {{- end }}
+            - name: SPRING_FLYWAY_ENABLED
+              value: "{{ ternary "true" "false" .Values.flyway.enabled }}"
+          {{- else }}
+          env:
+            - name: SPRING_FLYWAY_ENABLED
+              value: "{{ ternary "true" "false" .Values.flyway.enabled }}"
           {{- end }}
           ports:
             - containerPort: 8083

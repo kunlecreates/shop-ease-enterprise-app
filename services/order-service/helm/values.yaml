@@ -71,3 +71,19 @@ autoscaling:
 securityContext:
   runAsNonRoot: true
   runAsUser: 1000
+
+# Flyway control: disable in-app Flyway by setting this to false for staging
+flyway:
+  enabled: false
+
+# Migration Job configuration
+migration:
+  enabled: false
+  image: ghcr.io/kunlecreates/order-service-flyway
+  tag: latest
+  imagePullPolicy: IfNotPresent
+  #  Name of a pre-created Secret containing migration DB connection envs.
+  # Kubernetes Secret containing migration credentials (MIG_DB_USER, MIG_DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME)
+  secretName: ""
+  createSecret: false
+  secretData: {}

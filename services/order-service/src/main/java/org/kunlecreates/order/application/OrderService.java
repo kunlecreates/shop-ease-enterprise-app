@@ -29,8 +29,19 @@ public class OrderService {
     }
 
     @Transactional
-    public Order createOrder(Long userId, String status, double total) {
-        Order o = new Order(userId, status, total);
+    public Order createOrder(String userRef, Long userId, String status, double total) {
+        // Prefer explicit userRef (string/UUID). Fall back to numeric userId for compatibility.
+        String ref;
+        if (userRef != null && !userRef.isBlank()) {
+            ref = userRef;
+        } else if (userId != null) {
+            ref = String.valueOf(userId);
+        } else {
+            throw new IllegalArgumentException("Either userRef or userId must be provided");
+        }
+        // convert decimal total to cents for storage
+        long cents = Math.round(total * 100);
+        Order o = new Order(ref, status, cents);
         return orderRepository.save(o);
     }
 
@@ -40,6 +51,6 @@ public class OrderService {
         if (!paid) {
             throw new RuntimeException("Payment failed");
         }
-        return createOrder(userId, "PLACED", total);
+        return createOrder(null, userId, "PLACED", total);
     }
 }
