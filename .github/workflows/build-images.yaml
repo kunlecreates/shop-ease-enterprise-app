@@ -169,6 +169,20 @@ jobs:
           echo "context=$context" >> $GITHUB_OUTPUT
           echo "dockerfile=${dockerfile:-}" >> $GITHUB_OUTPUT
           echo "flyway_dockerfile=${flyway_dockerfile:-}" >> $GITHUB_OUTPUT
+          # Determine flyway build context separately — some services provide
+          # Flyway Dockerfiles that expect repository-root paths (COPY
+          # services/${SERVICE_NAME}/...). Use repo root for those, otherwise
+          # use the per-service context to keep builds lean.
+          flyway_context="$context"
+          if [[ -n "$flyway_dockerfile" ]]; then
+            # If the flyway Dockerfile contains an absolute service-root COPY
+            # pattern (services/${SERVICE_NAME}/...), prefer repo root so the
+            # source path exists regardless of the per-service context.
+            # This avoids build errors when product-service provides a
+            # flyway Dockerfile that copies from services/${SERVICE_NAME}/...
+            flyway_context="."
+          fi
+          echo "flyway_context=$flyway_context" >> $GITHUB_OUTPUT
           # Short SHA for staging tags (first 7 chars) to match deploy workflow
           SHORT_SHA="${GITHUB_SHA:0:7}"
           echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
@@ -215,7 +229,9 @@ jobs:
         if: ${{ steps.vars.outputs.flyway_image != '' }}
         uses: docker/build-push-action@v5
         with:
-          context: ${{ steps.vars.outputs.context }}
+          # Use the flyway-specific context which may be repo root when the
+          # Flyway Dockerfile expects repo-relative paths.
+          context: ${{ steps.vars.outputs.flyway_context }}
           file: ${{ steps.vars.outputs.flyway_dockerfile }}
           build-args: |
             SERVICE_NAME=${{ matrix.service }}
