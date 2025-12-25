@@ -56,3 +56,4 @@ services/notification-service/.venv/
 # Misc
 /.env
 /.env.local
+.tmp_venv
