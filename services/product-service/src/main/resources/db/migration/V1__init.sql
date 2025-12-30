@@ -8,26 +8,27 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 -- Products table
 CREATE TABLE IF NOT EXISTS products (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  sku varchar NOT NULL UNIQUE,
-  name varchar NOT NULL,
+  sku varchar(64) NOT NULL UNIQUE,
+  name varchar(200) NOT NULL,
   description text,
   price_cents bigint NOT NULL DEFAULT 0,
-  active boolean NOT NULL DEFAULT true,
+  currency CHAR(3) NOT NULL DEFAULT 'USD',
+  is_active boolean NOT NULL DEFAULT true,
   attributes jsonb DEFAULT '{}'::jsonb,
-  created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  created_at timestamptz(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamptz(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   search_vector tsvector
 );
 
 -- Categories table
 CREATE TABLE IF NOT EXISTS categories (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  code varchar NOT NULL UNIQUE,
-  name varchar NOT NULL,
+  code varchar(64) NOT NULL UNIQUE,
+  name varchar(200) NOT NULL,
   description text,
   is_active boolean NOT NULL DEFAULT true,
-  created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+  created_at timestamptz(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamptz(6) NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Join table for many-to-many products <-> categories
@@ -52,8 +53,8 @@ CREATE TABLE IF NOT EXISTS product_inventory (
   location text,
   quantity bigint NOT NULL DEFAULT 0,
   reserved bigint NOT NULL DEFAULT 0,
-  created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  created_at timestamptz(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamptz(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_inventory_product FOREIGN KEY (productid) REFERENCES products(id) ON DELETE CASCADE
 );
 
@@ -62,8 +63,9 @@ CREATE TABLE IF NOT EXISTS stock_movements (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   productid uuid NOT NULL,
   quantity integer NOT NULL,
-  reason varchar NOT NULL,
-  occurredat timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+  reason varchar(64) NOT NULL,
+  context JSONB NULL,
+  occurredat timestamptz(6) NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 ALTER TABLE IF EXISTS stock_movements
@@ -97,6 +99,10 @@ $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trg_products_updated_at
 BEFORE INSERT OR UPDATE ON products
+FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
+
+CREATE TRIGGER trg_categories_updated_at
+BEFORE INSERT OR UPDATE ON categories
 FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
 
 CREATE TRIGGER trg_products_search_vector

@@ -8,6 +8,7 @@ export class StockMovement {
   @JoinColumn({ name: 'productid' })
   product!: Product;
   @Column() quantity!: number;
-  @Column({ type: 'varchar', length: 50 }) reason!: string;
+  @Column({ type: 'varchar', length: 64 }) reason!: string;
+  @Column({ type: 'jsonb', nullable: true }) context?: Record<string, any>;
   @CreateDateColumn({ name: 'occurredat' }) occurredAt!: Date;
 }

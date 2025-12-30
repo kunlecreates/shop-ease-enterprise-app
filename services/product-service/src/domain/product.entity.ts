@@ -5,8 +5,8 @@ import { StockMovement } from './stock-movement.entity';
 @Entity('products')
 export class Product {
   @PrimaryGeneratedColumn('uuid') id!: string;
-  @Column({ unique: true }) sku!: string;
-  @Column() name!: string;
+  @Column({ type: 'varchar', length: 64, unique: true }) sku!: string;
+  @Column({ type: 'varchar', length: 200 }) name!: string;
   @Column({ type: 'text', nullable: true }) description?: string;
   // Store price as cents in DB (bigint). Provide a `price` virtual getter/setter for convenience.
   private static centsTransformer: ValueTransformer = {
@@ -27,11 +27,12 @@ export class Product {
       this.priceCents = Math.round(v * 100);
     }
   }
-  // Use simple-json for cross-db test compatibility (sqlite). Production DB uses JSONB via Flyway migration.
-  @Column({ type: 'simple-json', nullable: true }) attributes?: Record<string, any>;
+  // Use JSONB in production per Flyway migration.
+  @Column({ type: 'jsonb', nullable: true }) attributes?: Record<string, any>;
+  @Column({ type: 'char', length: 3, default: 'USD' }) currency!: string;
   @CreateDateColumn({ name: 'created_at' }) createdAt!: Date;
   @UpdateDateColumn({ name: 'updated_at' }) updatedAt!: Date;
-  @Column({ default: true }) active!: boolean;
+  @Column({ name: 'is_active', default: true }) active!: boolean;
   @ManyToMany(() => Category, c => c.products, { cascade: true })
   @JoinTable({
     name: 'product_categories',
