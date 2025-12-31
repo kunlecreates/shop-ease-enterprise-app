@@ -16,17 +16,7 @@
         <java.version>21</java.version>
         <spring.boot.version>3.3.5</spring.boot.version>
     </properties>
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.testcontainers</groupId>
-                <artifactId>testcontainers-bom</artifactId>
-                <version>1.20.0</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
+    <!-- Removed Testcontainers BOM import to avoid CI resolving issues; using explicit versions below -->
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -94,27 +84,31 @@
             <scope>test</scope>
         </dependency>
         <!-- Testcontainers for integration tests -->
+        <!-- Postgres Testcontainers + JDBC driver for integration tests using Postgres -->
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>testcontainers</artifactId>
+            <version>1.20.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>junit-jupiter</artifactId>
+            <version>1.20.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>mssqlserver</artifactId>
+            <version>1.20.0</version>
             <scope>test</scope>
         </dependency>
-        <!-- Postgres Testcontainers + JDBC driver for integration tests using Postgres -->
-        <dependency>
-            <groupId>org.testcontainers</groupId>
-            <artifactId>postgresql</artifactId>
-            <scope>test</scope>
-        </dependency>
+                <dependency>
+                    <groupId>org.testcontainers</groupId>
+                    <artifactId>postgresql</artifactId>
+                    <version>1.20.0</version>
+                    <scope>test</scope>
+                </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
