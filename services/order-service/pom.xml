@@ -50,13 +50,8 @@
             <artifactId>flyway-core</artifactId>
             <version>11.17.1</version>
         </dependency>
-        <!-- Flyway DB support for Microsoft SQL Server during tests -->
-        <dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-database-mssql</artifactId>
-            <version>11.17.1</version>
-            <scope>test</scope>
-        </dependency>
+        <!-- NOTE: removed flyway-database-mssql which is not available in Maven Central;
+             rely on flyway-core + JDBC driver for MSSQL during tests. -->
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>
