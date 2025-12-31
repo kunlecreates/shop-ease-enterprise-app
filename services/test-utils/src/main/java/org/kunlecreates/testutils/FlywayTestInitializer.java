@@ -33,9 +33,13 @@ public final class FlywayTestInitializer implements ApplicationContextInitialize
 	}
 
 	private static void runMigrations(DataSource dataSource) {
+		// Only run shared, test-only migrations here. Service-specific migrations
+		// will be applied by the application's Flyway instance during normal
+		// Spring Boot auto-configuration. Keeping this isolated avoids duplicate
+		// version collisions when the same version numbers exist in both places.
 		Flyway.configure()
 				.dataSource(dataSource)
-				.locations("classpath:db/shared-migration", "classpath:db/migration")
+				.locations("classpath:db/shared-migration")
 				.load()
 				.migrate();
 	}
