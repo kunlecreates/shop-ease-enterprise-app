@@ -172,6 +172,9 @@
             <properties>
                 <!-- Allow tests to pick a specific Postgres image via property -->
                 <testcontainers.postgres.image>postgres:15</testcontainers.postgres.image>
+                <!-- Allow tests to pick a specific MSSQL image and SA password via property -->
+                <testcontainers.mssql.image>mcr.microsoft.com/mssql/server:2019-latest</testcontainers.mssql.image>
+                <testcontainers.mssql.sa.password>YourStrong!Passw0rd</testcontainers.mssql.sa.password>
             </properties>
             <build>
                 <plugins>
@@ -184,6 +187,8 @@
                             <systemPropertyVariables>
                                 <testcontainers.enabled>true</testcontainers.enabled>
                                 <testcontainers.postgres.image>${testcontainers.postgres.image}</testcontainers.postgres.image>
+                                <testcontainers.mssql.image>${testcontainers.mssql.image}</testcontainers.mssql.image>
+                                <testcontainers.mssql.sa.password>${testcontainers.mssql.sa.password}</testcontainers.mssql.sa.password>
                             </systemPropertyVariables>
                         </configuration>
                     </plugin>
@@ -194,6 +199,8 @@
                             <systemPropertyVariables>
                                 <testcontainers.enabled>true</testcontainers.enabled>
                                 <testcontainers.postgres.image>${testcontainers.postgres.image}</testcontainers.postgres.image>
+                                <testcontainers.mssql.image>${testcontainers.mssql.image}</testcontainers.mssql.image>
+                                <testcontainers.mssql.sa.password>${testcontainers.mssql.sa.password}</testcontainers.mssql.sa.password>
                             </systemPropertyVariables>
                         </configuration>
                     </plugin>
