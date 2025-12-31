@@ -17,6 +17,6 @@ jobs:
       maven_goal: 'verify'
       jdk_version: '21'
       # enable docker diagnostics for Testcontainers troubleshooting
-      run_docker_diagnostics: true
+      # run_docker_diagnostics: true
       # Enable testcontainers properties so integration tests run against Postgres containers
       maven_args: '-Dtestcontainers.enabled=true -Dapi.version=1.44'
