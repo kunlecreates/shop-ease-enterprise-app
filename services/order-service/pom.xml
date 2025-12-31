@@ -60,6 +60,13 @@
             <artifactId>flyway-core</artifactId>
             <version>11.17.1</version>
         </dependency>
+        <!-- Flyway DB support for Microsoft SQL Server during tests -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-mssql</artifactId>
+            <version>11.17.1</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>
