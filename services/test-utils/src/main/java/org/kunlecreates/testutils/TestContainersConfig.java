@@ -22,9 +22,25 @@ public class TestContainersConfig {
             // passed in so the application's own migrations (classpath:db/migration)
             // run normally. This prevents Flyway from scanning the same
             // migration versions from multiple locations in one resolve pass.
+            String dbProduct = "";
+            try {
+                dbProduct = dataSource.getConnection().getMetaData().getDatabaseProductName();
+            } catch (Exception e) {
+                // If we can't determine the product, fall back to the generic folder
+            }
+
+            String sharedLocation = "classpath:db/shared-migration";
+            if (dbProduct != null) {
+                if (dbProduct.toLowerCase().contains("postgres")) {
+                    sharedLocation = "classpath:db/shared-migration/postgres";
+                } else if (dbProduct.toLowerCase().contains("microsoft") || dbProduct.toLowerCase().contains("sql server") || dbProduct.toLowerCase().contains("mssql")) {
+                    sharedLocation = "classpath:db/shared-migration/sqlserver";
+                }
+            }
+
             Flyway shared = Flyway.configure()
                     .dataSource(dataSource)
-                    .locations("classpath:db/shared-migration")
+                    .locations(sharedLocation)
                     .load();
             try {
                 shared.repair();
