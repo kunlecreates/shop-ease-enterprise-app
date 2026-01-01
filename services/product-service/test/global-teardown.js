@@ -20,6 +20,14 @@ module.exports = async () => {
       } catch (e) {
         console.warn('global-teardown: docker rm failed', e.message || e);
       }
+    } else if (info && info.containerName) {
+      // If a container name was recorded, remove by name (deterministic)
+      try {
+        execSync(`docker rm -f ${info.containerName}`, { stdio: 'inherit' });
+        console.log('global-teardown: removed container by name', info.containerName);
+      } catch (e) {
+        console.warn('global-teardown: docker rm by name failed', e.message || e);
+      }
     } else if (info && info.port) {
       // Fallback: try to find a container exposing the mapped host port and remove it
       try {
