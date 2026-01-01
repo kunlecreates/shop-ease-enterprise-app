@@ -5,5 +5,8 @@ export default {
     '^.+\\.(t|j)s$': 'ts-jest'
   },
   moduleFileExtensions: ['ts', 'js', 'json'],
-  testEnvironment: 'node'
+  testEnvironment: 'node',
+  // Use global setup/teardown to start/stop a Postgres container for CI when requested
+  globalSetup: '<rootDir>/test/global-setup.js',
+  globalTeardown: '<rootDir>/test/global-teardown.js'
 };
