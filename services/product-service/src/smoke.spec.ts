@@ -3,7 +3,9 @@ import { AppModule } from './app.module';
 
 describe('AppModule', () => {
   beforeAll(() => {
-    process.env.TEST_SQLITE = '1';
+    if (!process.env.TEST_POSTGRES) {
+      process.env.TEST_SQLITE = '1';
+    }
   });
   it('compiles the module', async () => {
     const moduleRef = await Test.createTestingModule({

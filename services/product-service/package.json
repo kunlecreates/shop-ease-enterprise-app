@@ -7,7 +7,7 @@
     "build": "nest build",
     "start": "node dist/main.js",
     "migrate:run": "ts-node -r tsconfig-paths/register scripts/run-migrations.ts",
-    "test": "jest",
+    "test": "jest --testTimeout=30000",
     "migration:run": "node --loader ts-node/esm ./node_modules/typeorm/cli.js migration:run -d src/config/data-source.ts",
     "migration:generate": "node --loader ts-node/esm ./node_modules/typeorm/cli.js migration:generate src/migrations/Auto -d src/config/data-source.ts"
   },
@@ -31,6 +31,7 @@
     "ts-jest": "^29.1.0",
     "typescript": "^5.4.0",
     "sqlite3": "^5.1.7",
-    "ts-node": "^10.9.2"
+    "ts-node": "^10.9.2",
+    "testcontainers": "^9.1.0"
   }
 }

@@ -33,4 +33,6 @@ jobs:
           else
             npm install
           fi
+          # Run tests against a PostgreSQL Testcontainer in CI so migrations and types match production.
+          export TEST_POSTGRES=1
           npm test --if-present
