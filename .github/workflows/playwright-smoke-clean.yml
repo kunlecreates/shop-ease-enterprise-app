@@ -134,7 +134,6 @@ jobs:
             MIG_PATH="$PWD/migrations"
           else
             # Shared migrations previously lived in services/test-utils; that module is deprecated.
-          else
             for p in "$PWD"/services/*/migrations; do
               if [ -d "$p" ]; then
                 MIG_PATH="$p"
