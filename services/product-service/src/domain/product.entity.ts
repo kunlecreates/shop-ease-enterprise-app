@@ -2,6 +2,9 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable, OneToMan
 import { Category } from './category.entity';
 import { StockMovement } from './stock-movement.entity';
 
+// Use simple-json for sqlite-based tests
+const useSimpleJson = process.env.TEST_SQLITE === '1';
+
 @Entity('products')
 export class Product {
   @PrimaryGeneratedColumn('uuid') id!: string;
@@ -28,7 +31,8 @@ export class Product {
     }
   }
   // Use JSONB in production per Flyway migration.
-  @Column({ type: 'jsonb', nullable: true }) attributes?: Record<string, any>;
+  // When running tests against sqlite (TEST_SQLITE=1) use `simple-json` instead.
+  @Column({ type: (useSimpleJson ? 'simple-json' : 'jsonb') as any, nullable: true }) attributes?: Record<string, any>;
   @Column({ type: 'char', length: 3, default: 'USD' }) currency!: string;
   @CreateDateColumn({ name: 'created_at' }) createdAt!: Date;
   @UpdateDateColumn({ name: 'updated_at' }) updatedAt!: Date;
