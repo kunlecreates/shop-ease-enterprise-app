@@ -27,9 +27,14 @@ jobs:
       - name: Install and run tests
         working-directory: services/product-service
         run: |
-          # Prefer npm ci when a lockfile exists, otherwise fall back to npm install
+          # Prefer npm ci when a lockfile exists. If lockfile is out-of-sync, fall back to npm install.
           if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then
-            npm ci
+            if npm ci; then
+              echo "npm ci succeeded"
+            else
+              echo "npm ci failed (lockfile mismatch). Falling back to npm install"
+              npm install
+            fi
           else
             npm install
           fi
