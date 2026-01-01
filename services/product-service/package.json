@@ -34,4 +34,10 @@
     "ts-node": "^10.9.2",
     "testcontainers": "^9.1.0"
   }
+  ,
+  "jest": {
+    "globalSetup": "<rootDir>/test/global-setup.js",
+    "globalTeardown": "<rootDir>/test/global-teardown.js",
+    "testEnvironment": "node"
+  }
 }
