@@ -15,21 +15,6 @@ import { HealthController } from './presentation/health.controller';
         if (process.env.TEST_SQLITE) {
           return { type: 'sqlite', database: ':memory:', dropSchema: true, entities, synchronize: true };
         }
-        if (process.env.TEST_POSTGRES) {
-          return {
-            type: 'postgres',
-            host: process.env.PRODUCT_DB_HOST || 'localhost',
-            port: +(process.env.PRODUCT_DB_PORT || 5433),
-            username: process.env.PRODUCT_DB_USER || 'postgres',
-            password: process.env.PRODUCT_DB_PASSWORD || 'postgres',
-            database: process.env.PRODUCT_DB_NAME || 'test',
-            entities,
-            synchronize: false,
-            migrationsRun: false,
-            migrations: [],
-            logging: false
-          };
-        }
         return {
           // Note: schema migrations are managed by Flyway (out-of-band).
           // TypeORM must not run or manage migrations in staging/production.

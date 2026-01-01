@@ -1,18 +1,57 @@
-const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 
 module.exports = async () => {
-  console.log('Global teardown: stopping Postgres container (ci-product-pg)');
+  console.log('global-teardown: stopping Postgres Testcontainer');
   try {
-    try {
-      execSync('docker rm -f ci-product-pg', { stdio: 'inherit' });
-    } catch (e) {
-      console.warn('Failed to remove ci-product-pg container (it may not exist):', e.message);
+    const p = path.resolve(__dirname, '.pg_container.json');
+    if (!fs.existsSync(p)) {
+      console.log('global-teardown: no container info file found');
+      return;
     }
-    const marker = path.resolve(__dirname, '.pg_running');
-    if (fs.existsSync(marker)) fs.unlinkSync(marker);
-  } catch (err) {
-    console.error('Global teardown error:', err);
+    const info = JSON.parse(fs.readFileSync(p, 'utf8'));
+
+    // If we have a container id, remove it directly
+    if (info && info.containerId) {
+      try {
+        execSync(`docker rm -f ${info.containerId}`, { stdio: 'inherit' });
+        console.log('global-teardown: removed container', info.containerId);
+      } catch (e) {
+        console.warn('global-teardown: docker rm failed', e.message || e);
+      }
+    } else if (info && info.port) {
+      // Fallback: try to find a container exposing the mapped host port and remove it
+      try {
+        const port = info.port;
+        const ps = execSync("docker ps --format '{{.ID}} {{.Ports}}'", { encoding: 'utf8' });
+        const lines = ps.split('\n').map(l => l.trim()).filter(Boolean);
+        const matches = [];
+        for (const line of lines) {
+          const parts = line.split(' ');
+          const id = parts[0];
+          const ports = parts.slice(1).join(' ');
+          if (ports && ports.indexOf(':' + port) !== -1) {
+            matches.push(id);
+          }
+        }
+        if (matches.length > 0) {
+          try {
+            execSync(`docker rm -f ${matches.join(' ')}`, { stdio: 'inherit' });
+            console.log('global-teardown: removed containers by port', matches.join(', '));
+          } catch (e) {
+            console.warn('global-teardown: docker rm by port failed', e.message || e);
+          }
+        } else {
+          console.log('global-teardown: no running container matched port', info.port);
+        }
+      } catch (e) {
+        console.warn('global-teardown: failed to inspect docker ps', e.message || e);
+      }
+    }
+
+    try { fs.unlinkSync(p); } catch (e) { /* ignore */ }
+  } catch (e) {
+    console.warn('global-teardown error', e.message || e);
   }
 };

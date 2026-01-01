@@ -74,7 +74,8 @@ jobs:
               docker --version || true
               ;;
             product-service)
-              echo "Product service: no extra setup by default"
+              echo "Product service: enable Postgres Testcontainer for tests"
+              echo "TEST_POSTGRES=1" >> $GITHUB_ENV
               ;;
             notification-service)
               echo "Notification service: may require SMTP test container in future"
