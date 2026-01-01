@@ -1,11 +1,9 @@
 FROM maven:3.9.6-eclipse-temurin-21 AS builder
 WORKDIR /workspace
 # Copy repository modules required for build from the repo root context.
-# Install shared test-utils if present so order-service tests/dependencies
-# that reference it will resolve during the build.
-COPY services/test-utils/pom.xml services/test-utils/pom.xml
-COPY services/test-utils/src services/test-utils/src
-RUN if [ -f services/test-utils/pom.xml ]; then mvn -B -DskipTests -f services/test-utils/pom.xml install; fi
+# Note: shared `services/test-utils` is deprecated. Per-service test helpers
+# should be included inside each service's test sources so builds do not need
+# to copy or install a shared test artifact.
 
 # Copy the service sources and build the service jar (skip tests in CI build image)
 COPY services/order-service/pom.xml ./pom.xml

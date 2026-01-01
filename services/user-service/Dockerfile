@@ -2,13 +2,9 @@ FROM maven:3.9.6-eclipse-temurin-21 AS builder
 WORKDIR /workspace
 # Copy repository modules required for build from the repo root context.
 # We run Maven inside the builder image and install any local helper modules
-# (e.g. services/test-utils) into the local Maven repo so service builds
-# that depend on them can succeed without requiring a published package.
-# Copy only the files we need to keep the context small.
-# Copy test-utils (if present) and install it into local repo first.
-COPY services/test-utils/pom.xml services/test-utils/pom.xml
-COPY services/test-utils/src services/test-utils/src
-RUN if [ -f services/test-utils/pom.xml ]; then mvn -B -DskipTests -f services/test-utils/pom.xml install; fi
+# into the local Maven repo so service builds that depend on them can succeed
+# without requiring a published package. Copy only the files we need to keep
+# the context small.
 
 # Copy the service sources and build the service jar (skip tests in CI build image)
 COPY services/user-service/pom.xml ./pom.xml

@@ -23,7 +23,7 @@ class OrderServiceIntegrationTest {
     @Test
     @Transactional
     void createAndFind() {
-        Order o = orderService.createOrder(null, 1L, "CREATED", 123.45);
+        Order o = orderService.createOrder(null, 1L, "PENDING", 123.45);
         assertThat(o.getId()).isNotNull();
         assertThat(orderService.findById(o.getId())).isPresent();
     }

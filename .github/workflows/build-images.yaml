@@ -106,7 +106,9 @@ jobs:
           case "$svc" in
           user-service|order-service)
             # Java services need the full repository available so Maven can
-            # resolve sibling-module dependencies (e.g. test-utils). Use
+            # resolve sibling-module test helpers (previously provided by
+            # a central `test-utils` module which is now deprecated).
+            # Use
             # repo root as build context and keep the service Dockerfile path.
             flyway_image="${svc}-flyway"
             context="."

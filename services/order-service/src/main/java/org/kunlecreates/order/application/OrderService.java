@@ -51,6 +51,7 @@ public class OrderService {
         if (!paid) {
             throw new RuntimeException("Payment failed");
         }
-        return createOrder(null, userId, "PLACED", total);
+        // Mark order as PAID after successful payment to match DB constraint values
+        return createOrder(null, userId, "PAID", total);
     }
 }

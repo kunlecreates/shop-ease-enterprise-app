@@ -90,40 +90,34 @@
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>testcontainers</artifactId>
-            <version>1.20.0</version>
+            <version>1.21.3</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>1.20.0</version>
+            <version>1.21.3</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>mssqlserver</artifactId>
-            <version>1.20.0</version>
+            <version>1.21.3</version>
             <scope>test</scope>
         </dependency>
-                <dependency>
-                    <groupId>org.testcontainers</groupId>
-                    <artifactId>postgresql</artifactId>
-                    <version>1.20.0</version>
-                    <scope>test</scope>
-                </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>1.21.3</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>42.6.0</version>
             <scope>test</scope>
         </dependency>
-        <!-- Shared test resources (migrations) -->
-        <dependency>
-            <groupId>org.kunlecreates</groupId>
-            <artifactId>test-utils</artifactId>
-            <version>0.1.0</version>
-            <scope>test</scope>
-        </dependency>
+        <!-- Shared test resources were previously provided by test-utils; helpers are now in-service test sources -->
     </dependencies>
     <build>
         <plugins>

@@ -13,8 +13,12 @@ cd "$REPO_ROOT"
 echo "Writing maven settings to use GitHub Packages (local runner)"
 bash ./scripts/write_maven_settings.sh "${GITHUB_ACTOR:-$(whoami)}" "${GITHUB_TOKEN:-}" || true
 
-echo "Ensuring test-utils is available in local repo"
-bash ./scripts/ensure_test_utils.sh "$PWD"
+echo "Note: shared 'test-utils' module removed; ensure per-service test helpers/migrations exist under $SERVICE_DIR/src/test"
+if [ -d "$SERVICE_DIR/src/test/resources/db" ] || [ -d "$SERVICE_DIR/src/test/resources/db/migrations" ]; then
+	echo "Per-service test migrations present."
+else
+	echo "WARNING: No per-service test migrations found under $SERVICE_DIR/src/test/resources; tests may fail."
+fi
 
 echo "Running mvn verify for $SERVICE_DIR"
 mvn -B -s $HOME/.m2/settings.xml -U -f "$SERVICE_DIR" -Dtestcontainers.enabled=true $MAVEN_ARGS verify

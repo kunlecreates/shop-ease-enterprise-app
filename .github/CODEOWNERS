@@ -6,7 +6,7 @@
 /services/user-service/     @kunlecreates
 /services/product-service/  @kunlecreates
 /services/notification-service/ @kunlecreates
-/services/test-utils/       @kunlecreates
+
 
 # Default owners for infra and workflows
 /.github/workflows/         @kunlecreates

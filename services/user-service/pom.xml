@@ -103,13 +103,7 @@
             <version>42.6.0</version>
             <scope>test</scope>
         </dependency>
-        <!-- Shared test utilities (Flyway migrations, TestContainersConfig) -->
-        <dependency>
-            <groupId>org.kunlecreates</groupId>
-            <artifactId>test-utils</artifactId>
-            <version>0.1.0</version>
-            <scope>test</scope>
-        </dependency>
+        <!-- Shared test utilities have been moved into each service's test sources. -->
     </dependencies>
     <build>
         <plugins>

@@ -1,21 +1,22 @@
-# CI Notes
 
-This document explains how the integration CI works for `shop-ease-enterprise-app` and how `test-utils` is provided to runners.
+# CI Notes (updated)
+
+This document explains how the integration CI works for `shop-ease-enterprise-app`.
 
 Key points:
 
-- `services/test-utils` is published to GitHub Packages via the `publish-test-utils` workflow on pushes to `main`/`master`.
-- The `integration-tests` workflow prefers to download `test-utils` from the GitHub Packages registry. If not available, it builds and installs `test-utils` from source and uploads a subtree artifact called `test-utils-m2` for matrix jobs to download.
-- To authenticate to GitHub Packages the workflows use a `settings.xml` written by `scripts/write_maven_settings.sh` with the `GITHUB_TOKEN`.
+- The previous shared `services/test-utils` artifact is deprecated. Per-service
+	test helpers are now included directly inside each service under
+	`src/test/java/org/kunlecreates/testutils/`.
+- The `publish-test-utils` workflow has been replaced with a DEPRECATED stub.
+- Per-service integration tests should be runnable without relying on a
+	separately published `test-utils` artifact.
 
 Commands you can run locally:
 
 ```bash
-# write settings
+# write settings (used by some Maven flows)
 bash scripts/write_maven_settings.sh "$(whoami)" "${GITHUB_TOKEN:-}"
-
-# ensure test-utils is present in ~/.m2 (attempts to download or build)
-bash scripts/ensure_test_utils.sh "$(pwd)"
 
 # run one service integration tests (Testcontainers enabled)
 bash scripts/smoke_run_service.sh services/user-service

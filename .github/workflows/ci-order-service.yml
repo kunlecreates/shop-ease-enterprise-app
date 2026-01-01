@@ -10,13 +10,94 @@ on:
 
 jobs:
   test:
-    name: Order Service Tests (reusable)
-    uses: ./.github/workflows/reusable-java-test.yml
-    with:
-      module_path: 'services/order-service'
-      maven_goal: 'verify'
-      jdk_version: '21'
-      # enable docker diagnostics for Testcontainers troubleshooting
-      # run_docker_diagnostics: true
-      # Enable testcontainers properties so integration tests run against Postgres containers
-      maven_args: '-Dtestcontainers.enabled=true -Dapi.version=1.44'
+    name: Order Service Tests
+    runs-on: ubuntu-latest
+    env:
+      MODULE_PATH: services/order-service
+      MAVEN_GOAL: verify
+      JDK_VERSION: '21'
+      MAVEN_ARGS: '-Dtestcontainers.enabled=true -Dapi.version=1.44'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JDK_VERSION }}
+
+      - name: Restore Maven cache (~/.m2/repository)
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: maven-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            maven-${{ runner.os }}-
+
+      - name: Make module mvnw executable (if present)
+        run: |
+          if [ -f "${{ env.MODULE_PATH }}/mvnw" ]; then
+            chmod +x "${{ env.MODULE_PATH }}/mvnw" || true
+          fi
+
+      # Note: per-service test helpers are included inside each service's
+      # `src/test/java/org/kunlecreates/testutils/` path. The prior shared
+      # artifact workflow has been removed to simplify per-service CI.
+
+      - name: 'Pre-run diagnostics: module dependency tree'
+        run: |
+          echo "Show dependency:tree for module (test scope)"
+          mvn -B -f "${{ env.MODULE_PATH }}" dependency:tree -Dscope=test || true
+
+      - name: Docker diagnostics (optional)
+        if: ${{ false }}
+        run: |
+          echo "Docker diagnostics"
+          docker --version || true
+          docker info || true
+
+      - name: Run Maven goal for module (inline helper)
+        run: |
+          set -euo pipefail
+          MODULE_PATH="${{ env.MODULE_PATH }}"
+          GOAL="${{ env.MAVEN_GOAL }}"
+          # allow passing extra args from MAVEN_ARGS env
+          IFS=' ' read -r -a EXTRA_ARGS <<< "${{ env.MAVEN_ARGS }}"
+
+          POM_FILE="$MODULE_PATH/pom.xml"
+          if [ ! -f "$POM_FILE" ]; then
+            echo "POM not found at $POM_FILE" >&2
+            exit 3
+          fi
+
+          if [ -f ./mvnw ]; then
+            chmod +x ./mvnw || true
+            MVN_CMD=(./mvnw)
+          elif [ -f "$MODULE_PATH/mvnw" ]; then
+            chmod +x "$MODULE_PATH/mvnw" || true
+            MVN_CMD=("$MODULE_PATH/mvnw")
+          else
+            MVN_CMD=(mvn)
+          fi
+
+          MAVEN_LOCAL_REPO="$HOME/.m2/repository"
+          echo "Using Maven command: ${MVN_CMD[*]} -B -Dmaven.repo.local=$MAVEN_LOCAL_REPO -f $POM_FILE $GOAL ${EXTRA_ARGS[*]}"
+          "${MVN_CMD[@]}" -B -Dmaven.repo.local="$MAVEN_LOCAL_REPO" -f "$POM_FILE" "$GOAL" "${EXTRA_ARGS[@]}"
+
+      - name: Prepare artifact name
+        id: prepare-artifact
+        run: |
+          module_path="${{ env.MODULE_PATH }}"
+          safe_name="${module_path//\//-}-maven-artifacts"
+          echo "artifact_name=${safe_name}" >> $GITHUB_OUTPUT
+
+      - name: Upload Maven test artifacts
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.prepare-artifact.outputs.artifact_name }}
+          path: |
+            ${{ env.MODULE_PATH }}/target/failsafe-reports/**
+            ${{ env.MODULE_PATH }}/target/surefire-reports/**
+            ${{ env.MODULE_PATH }}/target/*.log

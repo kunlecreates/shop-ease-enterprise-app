@@ -11,15 +11,9 @@ import java.time.Duration;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.kunlecreates.order.application.OrderService;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.kunlecreates.order.domain.Order;
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import org.springframework.context.annotation.Import;
-import org.kunlecreates.testutils.TestContainersConfig;
-import org.kunlecreates.testutils.FlywayTestInitializer;
+import org.kunlecreates.order.test.TestContainersConfig;
+import org.kunlecreates.order.test.FlywayTestInitializer;
 import org.springframework.test.context.ContextConfiguration;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -46,23 +40,19 @@ public class OrderServiceTestcontainersIT {
         registry.add("spring.datasource.driverClassName", () -> "com.microsoft.sqlserver.jdbc.SQLServerDriver");
             // Let Flyway run automatically during Spring context startup.
             // TestContainersConfig provides a FlywayMigrationStrategy that triggers
-            // migrations and test resources include `V0__users.sql` so user table
-            // migrations are applied before order-service migrations.
+            // migrations and test resources should contain only order-related
+            // fixtures (classpath:db/test-migration) for fast Testcontainers runs.
     }
 
     @Autowired
     OrderService orderService;
 
-    @Autowired
-    JdbcTemplate jdbcTemplate;
+    
 
     @Test
-    void createAndFind_withPostgres() {
-        // Ensure a user exists for the order: insert a test user and use the generated id.
-        jdbcTemplate.update("INSERT INTO users (email, password_hash) VALUES (?, ?)", "it-user@example.com", "test-hash");
-        Long userId = jdbcTemplate.queryForObject("SELECT id FROM users WHERE email = ?", new Object[]{"it-user@example.com"}, Long.class);
-
-        Order o = orderService.createOrder(null, userId, "CREATED", 42.00);
+    void createAndFind_withMssql() {
+        // Use a userRef string so order tests don't depend on a users fixture
+        Order o = orderService.createOrder("it-user-ref-1", null, "PENDING", 42.00);
         assertThat(o.getId()).isNotNull();
         assertThat(orderService.findById(o.getId())).isPresent();
     }

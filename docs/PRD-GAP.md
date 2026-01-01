@@ -3,7 +3,7 @@
 This snapshot identifies remaining work vs. implemented scaffolds, focusing on deltas only.
 
 ## Implemented (do not duplicate)
-- CI: Publish `test-utils` to GH Packages; Playwright smoke workflow; integration tests workflow skeleton.
+-- CI: Previously published `test-utils` to GH Packages; that module is now deprecated/removed. Playwright smoke workflow and integration tests workflow skeleton remain.
 - Services: scaffolds for frontend, `user-service`, `product-service`, `order-service`, `notification-service`.
 
 ## Gaps

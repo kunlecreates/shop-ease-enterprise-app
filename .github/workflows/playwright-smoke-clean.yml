@@ -130,10 +130,10 @@ jobs:
           MIG_PATH=""
           if [ -d "$PWD/db" ]; then
             MIG_PATH="$PWD/db"
-          elif [ -d "$PWD/services/test-utils/migrations" ]; then
-            MIG_PATH="$PWD/services/test-utils/migrations"
           elif [ -d "$PWD/migrations" ]; then
             MIG_PATH="$PWD/migrations"
+          else
+            # Shared migrations previously lived in services/test-utils; that module is deprecated.
           else
             for p in "$PWD"/services/*/migrations; do
               if [ -d "$p" ]; then

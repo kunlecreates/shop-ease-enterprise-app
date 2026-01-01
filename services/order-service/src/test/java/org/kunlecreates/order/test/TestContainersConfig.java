@@ -17,12 +17,12 @@ public class TestContainersConfig {
     @Bean
     public FlywayMigrationStrategy flywayMigrationStrategy(DataSource dataSource) {
         return flyway -> {
-            // Build a Flyway instance that includes shared test migrations first,
-            // then the service-specific migrations. This ensures the centralized
-            // `db/shared-migration` is applied before `db/migration`.
+            // Apply only test-only fixtures during fast Testcontainers runs.
+            // Do NOT apply production migrations here; full migration validation
+            // against the production dialect should run in a separate CI job.
             Flyway custom = Flyway.configure()
                     .dataSource(dataSource)
-                    .locations("classpath:db/shared-migration", "classpath:db/migration")
+                .locations("classpath:db/test-migration")
                     .load();
             try {
                 custom.repair();
