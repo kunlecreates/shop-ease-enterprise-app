@@ -1,0 +1,151 @@
+name: E2E — Playwright (post-deploy)
+
+on:
+  workflow_run:
+    workflows: ["CD — Kubernetes Deploy (Helm)"]
+    types: [completed]
+
+jobs:
+  run-e2e:
+    name: Run E2E Tests After Deploy (self-hosted)
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    # Use a self-hosted runner that has network access to your Cloudflared tunnel
+    # Replace the labels below with your runner's labels if different.
+    runs-on: arc-runnerset-instance
+    env:
+      # Default staging URL; override if your deploy emits a specific host
+      E2E_BASE_URL: https://staging.shopease.local
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install e2e deps
+        working-directory: e2e
+        run: |
+          if [ -f package-lock.json ]; then npm ci --include=dev; else npm install --include=dev; fi
+
+      - name: Install Playwright browsers
+        working-directory: e2e
+        run: npx playwright install --with-deps
+
+      - name: Verify E2E host reachable (supports optional service token)
+        working-directory: e2e
+        env:
+          E2E_BASE_URL: ${{ env.E2E_BASE_URL }}
+          # Optional: repository secret containing a bearer token or other auth value.
+          # Add this in the repo: Settings → Secrets → Actions → New repository secret
+          E2E_SERVICE_TOKEN: ${{ secrets.E2E_SERVICE_TOKEN }}
+        run: |
+          set -euo pipefail
+          echo "Checking E2E host: ${E2E_BASE_URL}"
+
+          # First, try an unauthenticated request
+          unauth_status=$(curl -sS -o /dev/null -w "%{http_code}" "${E2E_BASE_URL}" || echo "000")
+          echo "Unauthenticated HTTP status: ${unauth_status}"
+          if [[ "${unauth_status}" =~ ^[23] ]]; then
+            echo "E2E host reachable (unauthenticated, status ${unauth_status})"
+            exit 0
+          fi
+
+          # If the host is protected (401/403) and a service token is provided, try an authenticated request.
+          if [ -n "${E2E_SERVICE_TOKEN:-}" ]; then
+            echo "Attempting authenticated check using repository secret 'E2E_SERVICE_TOKEN'"
+            # Common pattern: Bearer token in Authorization header
+            auth_status=$(curl -sS -o /dev/null -w "%{http_code}" -H "Authorization: Bearer ${E2E_SERVICE_TOKEN}" "${E2E_BASE_URL}" || echo "000")
+            echo "Authenticated HTTP status: ${auth_status}"
+            if [[ "${auth_status}" =~ ^[23] ]]; then
+              echo "E2E host reachable with service token (status ${auth_status})"
+              exit 0
+            else
+              echo "Authenticated request failed (status ${auth_status})."
+              echo "If you need a different auth mechanism (cookie, custom header), update this step to send the correct header/value."
+              exit 1
+            fi
+          fi
+
+          echo "E2E host unreachable and no service token configured (status ${unauth_status})."
+          echo "To provide a token, add a repository secret named 'E2E_SERVICE_TOKEN' (Settings → Secrets → Actions)."
+          echo "For Cloudflare Access you may need to pass a CF Access cookie or a Machine Token; adapt the header accordingly."
+          exit 1
+
+      - name: Authenticate to Cloudflare Access (service token)
+        id: cf-auth
+        working-directory: e2e
+        env:
+          E2E_BASE_URL: ${{ env.E2E_BASE_URL }}
+          CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+          CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
+        run: |
+          set -euo pipefail
+          # If no service token configured, emit empty output and continue.
+          if [ -z "${CF_ACCESS_CLIENT_ID:-}" ] || [ -z "${CF_ACCESS_CLIENT_SECRET:-}" ]; then
+            echo "CF service token secrets not configured; skipping Cloudflare auth"
+            echo "CF_AUTH_COOKIE=" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Request an authorization cookie using the service token headers
+          headers=$(mktemp)
+          curl -sSI \
+            -H "CF-Access-Client-Id: ${CF_ACCESS_CLIENT_ID}" \
+            -H "CF-Access-Client-Secret: ${CF_ACCESS_CLIENT_SECRET}" \
+            "${E2E_BASE_URL}" > "${headers}"
+
+          # Extract CF_Authorization cookie value
+          CF_AUTH_COOKIE=$(grep -i '^set-cookie:' "${headers}" | tr -d '\r' | sed -n 's/^[sS][eE][tT]-[cC]ookie: *//p' | awk -F';' '{for(i=1;i<=NF;i++) if ($i ~ /^CF_Authorization=/) print $i}' | sed 's/^CF_Authorization=//' | head -n1 || true)
+
+          if [ -n "${CF_AUTH_COOKIE}" ]; then
+            echo "CF_AUTH_COOKIE=${CF_AUTH_COOKIE}" >> $GITHUB_OUTPUT
+            # Also expose a raw access token for header-based auth (cf-access-token)
+            echo "CF_ACCESS_TOKEN=${CF_AUTH_COOKIE}" >> $GITHUB_OUTPUT
+            echo "Obtained CF_Authorization cookie"
+            exit 0
+          fi
+
+          # Fallback: emit the first Set-Cookie header raw if parsing failed
+          raw=$(grep -i '^set-cookie:' "${headers}" | tr -d '\r' | sed -n 's/^[sS][eE][tT]-[cC]ookie: *//p' | head -n1 || true)
+          if [ -n "${raw}" ]; then
+            echo "CF_AUTH_COOKIE=${raw}" >> $GITHUB_OUTPUT
+            echo "CF_ACCESS_TOKEN=${raw}" >> $GITHUB_OUTPUT
+            echo "Auth returned cookie header (raw)"
+            exit 0
+          fi
+
+          echo "No authorization cookie returned; check service token and Access app configuration" >&2
+          echo "CF_AUTH_COOKIE=" >> $GITHUB_OUTPUT
+          echo "CF_ACCESS_TOKEN=" >> $GITHUB_OUTPUT
+          exit 1
+
+      - name: Export CF auth to job environment
+        if: always()
+        run: |
+          echo "Exporting CF auth outputs to job env"
+          echo "CF_AUTH_COOKIE=${{ steps.cf-auth.outputs.CF_AUTH_COOKIE }}" >> $GITHUB_ENV
+          echo "CF_ACCESS_TOKEN=${{ steps.cf-auth.outputs.CF_ACCESS_TOKEN }}" >> $GITHUB_ENV
+
+      - name: Run Playwright E2E
+        working-directory: e2e
+        env:
+          CI: true
+          E2E_BASE_URL: ${{ env.E2E_BASE_URL }}
+          # Cloudflare auth cookie provided by the cf-auth step (may be empty)
+          CF_AUTH_COOKIE: ${{ steps.cf-auth.outputs.CF_AUTH_COOKIE }}
+          # Also expose a header token form for Playwright to use
+          CF_ACCESS_TOKEN: ${{ steps.cf-auth.outputs.CF_ACCESS_TOKEN }}
+        run: |
+          npx playwright test --config=playwright.config.ts --project=chromium
+
+      - name: Upload Playwright artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-playwright-report
+          path: |
+            e2e/test-results/playwright-report/**
+            e2e/playwright-report/**
+            e2e/test-results/**

@@ -3,18 +3,27 @@
 ## 🧠 Project Context
 
 This repository contains a **microservices-based web application** organized with **Domain-Driven Design (DDD)** principles and **Test-Driven Development (TDD)** practices.  
-Each service is independently deployable, owns its own database, and runs inside a **Kubernetes cluster**.  
-Continuous Integration and Deployment (CI/CD) is handled by **GitHub Actions** using Docker, Helm, and Flyway for migrations.
+
+Each service:
+- Is independently deployable
+- Owns its own database
+- Is deployed to **Kubernetes using Helm**
+- Is built and tested via **GitHub Actions**
+
+End-to-end (E2E) testing is treated as a **system-level concern**, not a service-level concern.
+
+---
 
 ### 🏗️ High-Level Architecture
 
 | Tier             | Service                | Stack / DB                          | Responsibilities                                    | Test Automation |
 |------------------|------------------------|-------------------------------------|-----------------------------------------------------|-------------------|
-| **Frontend**     | `web-frontend`         | React + TypeScript + Tailwind CSS   | Storefront, Admin UI                                | Playwright for E2E + Jest for UI components |
+| **Frontend**     | `web-frontend`         | React + TypeScript + Tailwind CSS   | Storefront, Admin UI                                | Jest for UI components |
 | **Core Backend** | `user-service`         | Spring Boot + Oracle DB             | Authentication, Authorization, Profiles             | JUnit + Mockito + Testcontainers |
 |                  | `product-service`      | NestJS + PostgreSQL                 | Products, Categories, Inventory, Pricing            | Jest + Supertest |
 |                  | `order-service`        | Spring Boot + MS SQL Server         | Orders, Carts, Payments and order lifecycle events  | JUnit + Mockito + Testcontainers |
 | **Utility**      | `notification-service` | Python + Mail API                   | Email/SMS notifications, async event listeners      | pytest + unittest |
+| **E2E Testing**  | E2E Platform Tests     | Playwright                          | Cross-service user journeys via browser             | Playwright (post-deploy) |
 | **Infra**        | Observability Stack    | OTel, Jaeger, Prometheus, Grafana, ECK | Metrics, Traces, Logs                            | Grafana + Prometheus |
 
 ---
@@ -44,6 +53,16 @@ root/
 │ ├── product-service/ # Flyway migrations (PostgreSQL)
 │ └── order-service/ # Flyway migrations (MSSQL)
 │
+├── e2e/                          # Playwright system-level E2E tests
+│   ├── playwright.config.ts
+│   ├── tests/
+│   │   ├── auth.spec.ts
+│   │   ├── product-browse.spec.ts
+│   │   ├── checkout.spec.ts
+│   │   └── admin-flow.spec.ts
+│   └── fixtures/
+│       └── test-users.ts
+|
 ├── helm-charts/                  # Helm deployment manifests
 │   ├── user-service/
 │   ├── product-service/
@@ -92,7 +111,7 @@ user-service/
 │   │            ├── V2__add_user_roles.sql
 │   │            └── flyway.conf
 │   └── test/
-│       └── java/com/acegrocer/user/   # Unit + Integration tests + e2e tests
+│       └── java/com/acegrocer/user/   # Unit + Integration tests
 ├── pom.xml
 ├── Dockerfile
 ├── helm/                              # Default to aggregating all service Helm charts via a parent chart or use this
@@ -102,7 +121,7 @@ user-service/
 #### Stack:
 
 - Spring Boot 3.3+, Java 21, Flyway, Oracle DB
-- Tests: JUnit 5, Mockito, Testcontainers
+- Tests: JUnit 5, Mockito, Testcontainers with gvenzl/oracle-free or gvenzl/oracle-xe images
 - Build: Maven
 
 ### Product Service sub-structure (TypeScript NestJS)
@@ -127,7 +146,7 @@ product-service/
 │           └── flyway.conf
 ├── test/
 │   ├── unit/
-│   └── e2e/
+│   └── integration/
 ├── package.json
 ├── nest-cli.json
 ├── tsconfig.json
@@ -156,7 +175,7 @@ order-service/
 │   │               ├── V1__init.sql
 │   │               └── flyway.conf
 │   └── test/
-│       └── java/org/kunlecreates/order/  # Unit + Integration tests + e2e tests
+│       └── java/org/kunlecreates/order/  # Unit + Integration tests
 ├── pom.xml
 ├── Dockerfile
 └── README.md
@@ -273,7 +292,7 @@ Each pipeline uses:
   - `domain/` → core domain models, aggregates, entities, value objects
   - `application/` → use cases and service logic
   - `infrastructure/` → repositories, adapters, persistence, HTTP clients
-  - `interface/` → REST controllers, DTOs, input/output ports
+  - `interfaces/` → REST controllers, DTOs, input/output ports
 - Implement **TDD**: write tests before writing business logic.
 - Ensure all code is covered by **unit and integration tests**.
 - Use **JWT** for stateless authentication.
@@ -304,7 +323,9 @@ Each pipeline uses:
 - Maintain clear module boundaries (`ProductModule`, `InventoryModule`, etc.).
 - Use `class-validator` and `class-transformer` for input validation.
 - Use **Flyway migrations** or **TypeORM migrations** for schema management.
-- Use **Jest** for unit tests and **Supertest** for e2e tests.
+- TypeScript → use Jest
+- NestJS → use Jest + Supertest for service-level API integration tests
+- Playwright → reserved exclusively for system-level E2E in `/e2e`
 
 - Return DTOs, not entities, from controllers.
 - Keep business logic in the `application/` layer.
@@ -323,6 +344,118 @@ Each pipeline uses:
 
 ---
 
+## 🧪 Testing Strategy (Authoritative)
+
+### Test Ownership Model
+
+| Test Type | Scope | Location |
+|----|----|----|
+| Unit Tests | Single class/module | Inside each service |
+| Integration Tests | DB, messaging, REST | Inside each service |
+| Contract Tests | API compatibility | Inside each service |
+| **End-to-End (E2E)** | **Full system** | **`/e2e` (root-level)** |
+
+### 🚫 Prohibited Patterns
+
+- ❌ Playwright tests inside service repositories
+- ❌ Playwright tests inside the frontend project
+- ❌ Mocking backend services in E2E tests
+- ❌ Running Playwright before deployment
+
+---
+
+## 🌐 End-to-End (E2E) Testing with Playwright
+
+### Definition
+
+Playwright E2E tests validate **real user journeys** across the **entire deployed system**, including:
+
+- Browser
+- Frontend
+- Ingress / Gateway
+- Multiple backend services
+- Real databases
+
+These tests treat the system as a **black box**.
+
+### Location
+
+```
+/e2e
+```
+
+### Execution Rules
+
+- Playwright runs **only after Helm deployment**
+- Targets **real environments** (dev / staging / preview)
+- Uses real ingress URLs (`E2E_BASE_URL`)
+- No service mocking is allowed
+
+### Example Playwright Config
+
+```ts
+import { defineConfig } from '@playwright/test';
+
+export default defineConfig({
+  use: {
+    baseURL: process.env.E2E_BASE_URL,
+    trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
+  },
+});
+```
+
+---
+
+## 🚀 CI/CD Expectations (E2E Correctness)
+
+### Pipeline Order
+
+1. Unit + integration tests (per service)
+2. Docker build
+3. Helm deployment to Kubernetes
+4. **Playwright E2E tests**
+5. Promotion or rollback decision
+
+### Example CI Placement
+
+```yaml
+e2e:
+  needs: deploy
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+    - run: npm ci
+      working-directory: e2e
+    - run: npx playwright install --with-deps
+    - run: npx playwright test
+      working-directory: e2e
+      env:
+        E2E_BASE_URL: https://staging.acegrocer.io
+```
+
+## 🧩 Service Testing Rules
+
+### Backend Services
+
+Each backend service:
+- Owns **unit tests**
+- Owns **integration tests**
+- Uses **Testcontainers** for real DB validation
+- Does **not** own E2E tests
+
+Example (Java services):
+
+```
+src/test/java/
+├── unit/
+├── integration/
+```
+
+---
+
 ## 🚀 CI/CD Expectations
 
 - All services must build and pass tests before deploy.
@@ -336,18 +469,29 @@ Each pipeline uses:
 
 ## 🧰 Copilot Guidance
 
-When generating or suggesting code:
-1. **Respect service boundaries** — do not mix domain logic between services.
-2. **Favor clean architecture** — business logic should not depend on frameworks.
-3. **Generate meaningful tests first** if user context suggests TDD.
-4. **Follow database ownership rules** — each service manages its own schema.
-5. **Output consistent commit messages**, e.g., `feat(product): add stock decrement use case`.
-6. **Use interfaces and dependency injection** for extensibility and testability.
-7. **Never hardcode secrets or connection URLs.**
-8. **Avoid business logic in controllers.**
-9. **Include test coverage for all order and payment scenarios.**
-10. **Exceptions and validations** Always include proper validation and error handling for nulls, exceptions, and validation.
-11. **Write concise, modular service methods.**
+When generating or suggesting code, Copilot **must**:
+
+1. **Never generate Playwright tests inside a service or frontend**
+2. **Always place Playwright tests under `/e2e`**
+3. Assume Playwright tests run against a **live deployed system**
+4. Treat E2E tests as **environment-aware**
+5. Respect service boundaries and database ownership
+6. Prefer TDD for unit and integration tests
+7. Never mock services in E2E tests
+8. Never hardcode secrets or URLs
+9. Generate production-grade, observable code
+10. Follow DDD and Clean Architecture principles
+11. **Respect service boundaries** — do not mix domain logic between services.
+12. **Favor clean architecture** — business logic should not depend on frameworks.
+13. **Generate meaningful tests first** if user context suggests TDD.
+14. **Follow database ownership rules** — each service manages its own schema.
+15. **Output consistent commit messages**, e.g., `feat(product): add stock decrement use case`.
+16. **Use interfaces and dependency injection** for extensibility and testability.
+17. **Never hardcode secrets or connection URLs.**
+18. **Avoid business logic in controllers.**
+19. **Include test coverage for all order and payment scenarios.**
+20. **Exceptions and validations** Always include proper validation and error handling for nulls, exceptions, and validation.
+21. **Write concise, modular service methods.**
 
 ---
 

@@ -636,16 +636,9 @@ jobs:
         env:
           KUBECONFIG: ${{ needs.prepare.outputs.kubeconfig }}
 
-      - name: Run Playwright smoke against staging (frontend only)
-        if: ${{ matrix.service == 'frontend' }}
-        env:
-          BASE_URL: https://staging.shopease.local
-        run: |
-          cd frontend
-          npm ci
-          npm i -D @playwright/test
-          npx playwright install --with-deps
-          npx playwright test --project=chromium
+      # Playwright E2E moved to a dedicated `/e2e` workflow that runs after
+      # successful staging deploys. See .github/workflows/e2e.yml for the
+      # post-deploy verification job.
 
       - name: Smoke test (per service)
         run: |

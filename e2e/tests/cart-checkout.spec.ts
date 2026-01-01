@@ -3,9 +3,9 @@ import { test, expect } from '@playwright/test';
 test.describe('Cart -> Checkout (Phase 2 smoke)', () => {
   test('can place a mock order', async ({ page }) => {
     // Allow the API backend URL to be injected via env for CI
-    const apiBase = process.env.API_BASE_URL || 'http://localhost:4000';
+    const apiBase = process.env.API_BASE_URL || process.env.E2E_BASE_URL || '';
 
-    // Proxy any frontend-origin API calls to the real backend (useful when frontend runs on :3000)
+    // Proxy any frontend-origin API calls to the real backend (useful when frontend runs on 3000)
     await page.route('**/api/**', async route => {
       const req = route.request();
       // build target URL by replacing origin with API base
@@ -31,8 +31,8 @@ test.describe('Cart -> Checkout (Phase 2 smoke)', () => {
       });
     });
 
-    // Navigate to the cart page served by the frontend (Next.js dev server on 3000 in CI)
-    await page.goto('http://localhost:3000/cart');
+    // Navigate to the cart page; rely on Playwright baseURL in config.
+    await page.goto('/cart');
     await page.getByRole('button', { name: 'Checkout (mock)' }).click();
     await expect(page.locator('text=Order placed')).toBeVisible({ timeout: 5000 });
   });
