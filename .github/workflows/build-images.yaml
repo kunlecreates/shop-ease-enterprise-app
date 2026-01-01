@@ -195,7 +195,6 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository_owner }}/${{ steps.vars.outputs.image }}
           tags: |
-            type=raw,value=staging-${{ github.sha }}
             type=raw,value=staging-${{ steps.vars.outputs.short_sha }}
             type=raw,value=latest
 
@@ -206,7 +205,6 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository_owner }}/${{ steps.vars.outputs.flyway_image }}
           tags: |
-            type=raw,value=staging-${{ github.sha }}
             type=raw,value=staging-${{ steps.vars.outputs.short_sha }}
             type=raw,value=latest
 
