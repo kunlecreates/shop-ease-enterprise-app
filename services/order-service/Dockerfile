@@ -27,3 +27,4 @@ EXPOSE 8083
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 CMD wget -qO- --no-check-certificate http://localhost:8083/actuator/health || exit 1
 
 ENTRYPOINT ["java","-jar","/app/app.jar"]
+# ci-trigger: rebuild-images on feat/dev-tests at 2026-01-01
