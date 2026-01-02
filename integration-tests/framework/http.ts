@@ -22,3 +22,25 @@ export function authHeaders(token?: string) {
   if (token) headers['Authorization'] = `Bearer ${token}`;
   return headers;
 }
+
+/**
+ * Resilient request helper that tries the given path and common API prefixes.
+ * Returns the axios response object or throws the last error.
+ */
+export async function request(method: 'get' | 'post' | 'put' | 'delete', path: string, data?: any, opts: { headers?: Record<string,string> } = {}) {
+  const normalized = path.startsWith('/') ? path : `/${path}`;
+  const candidates = [normalized, `/api${normalized}`];
+
+  let lastErr: any = null;
+  for (const p of candidates) {
+    try {
+      const resp = await http.request({ method, url: p, data, headers: opts.headers });
+      return resp;
+    } catch (err: any) {
+      lastErr = err;
+      // continue to next candidate
+    }
+  }
+  throw lastErr;
+}
+
