@@ -8,7 +8,7 @@ maybe('User-Service -> Product-Service contract: product listing', async () => {
   const ajv = new Ajv();
   let resp;
   try {
-    resp = await request('get', '/products');
+    resp = await request('get', '/api/products');
   } catch (e) {
     // try fallback to /api/products handled by helper; if both fail, skip
     return expect(true).toBe(true);

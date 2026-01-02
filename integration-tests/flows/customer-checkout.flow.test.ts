@@ -8,7 +8,7 @@ maybe('Customer checkout flow: create cart, add item, place order, verify order 
 
   let cartResp;
   try {
-    cartResp = await request('post', '/carts', { user_ref: user.id });
+    cartResp = await request('post', '/api/carts', { user_ref: user.id });
   } catch (e) {
     return expect(true).toBe(true);
   }
@@ -19,16 +19,16 @@ maybe('Customer checkout flow: create cart, add item, place order, verify order 
   // register cleanup to delete the cart after test
   try {
     const { registerDelete } = await import('../framework/cleanup');
-    registerDelete((id: any) => `/carts/${id}`, cartId);
+    registerDelete((id: any) => `/api/carts/${id}`, cartId);
   } catch (e) {}
 
-  const itemResp = await request('post', `/carts/${cartId}/items`, { product_ref: products[0].id, quantity: 1 }).catch(() => ({ status: 500 }));
+  const itemResp = await request('post', `/api/carts/${cartId}/items`, { product_ref: products[0].id, quantity: 1 }).catch(() => ({ status: 500 }));
   expect([200,201,500]).toContain(itemResp.status);
 
-  const checkout = await request('post', `/carts/${cartId}/checkout`).catch(() => ({ status: 500 }));
+  const checkout = await request('post', `/api/carts/${cartId}/checkout`).catch(() => ({ status: 500 }));
   expect([200,201,202,500]).toContain(checkout.status);
 
   // Verify order appears in orders list (best-effort)
-  const orders = await request('get', '/orders').catch(() => ({ status: 404, data: [] }));
+  const orders = await request('get', '/api/order').catch(() => ({ status: 404, data: [] }));
   expect([200,404]).toContain(orders.status);
 });

@@ -7,7 +7,7 @@ maybe('Order -> Notification contract: outbox event appears after placing order'
   // Create a cart and place an order, then poll for an outbox event
   let respCreate;
   try {
-    respCreate = await request('post', '/carts', { user_ref: 'int-test-user' });
+    respCreate = await request('post', '/api/carts', { user_ref: 'int-test-user' });
   } catch (e) {
     return expect(true).toBe(true);
   }
@@ -17,15 +17,15 @@ maybe('Order -> Notification contract: outbox event appears after placing order'
   // register delete for cart
   try {
     const { registerDelete } = await import('../framework/cleanup');
-    registerDelete((id: any) => `/carts/${id}`, cartId);
+    registerDelete((id: any) => `/api/carts/${id}`, cartId);
   } catch (e) {}
 
-  await request('post', `/carts/${cartId}/items`, { product_ref: 'prod-1', quantity: 1 }).catch(() => null);
-  await request('post', `/carts/${cartId}/checkout`).catch(() => null);
+  await request('post', `/api/carts/${cartId}/items`, { product_ref: 'prod-1', quantity: 1 }).catch(() => null);
+  await request('post', `/api/carts/${cartId}/checkout`).catch(() => null);
 
   const ok = await waitFor(async () => {
     try {
-      const resp = await request('get', '/order-events');
+      const resp = await request('get', '/api/order-events');
       if (resp.status === 200 && Array.isArray(resp.data)) {
         return resp.data.some((e: any) => e && (e.cart_id === cartId || e.order_id));
       }
