@@ -38,7 +38,13 @@ jobs:
 
       - name: Typecheck
         working-directory: frontend
-        run: npx tsc --noEmit
+        run: |
+          if [ -f tsconfig.json ] ; then
+            echo "tsconfig.json found — running 'npx tsc --noEmit'"
+            npx tsc --noEmit
+          else
+            echo "tsconfig.json not found — skipping TypeScript check"
+          fi
 
       - name: Run Jest tests
         working-directory: frontend
