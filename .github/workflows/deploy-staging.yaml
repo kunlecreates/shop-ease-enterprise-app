@@ -204,8 +204,6 @@ jobs:
         env:
           KUBECONFIG: ${{ needs.prepare.outputs.kubeconfig }}
 
-      
-
       - name: Create/Update DB Secret from GitHub Secrets (user/product/order only)
         env:
           KUBECONFIG: ${{ needs.prepare.outputs.kubeconfig }}
