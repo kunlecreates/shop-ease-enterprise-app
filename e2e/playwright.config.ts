@@ -3,7 +3,6 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   // Global setup injects a CF_Authorization cookie into a storage state
   // when `CF_AUTH_COOKIE` is provided by CI (workflow exposes it).
-  globalSetup: './global-setup',
   testDir: './tests',
   timeout: 30 * 1000,
   expect: { timeout: 5000 },
@@ -13,17 +12,26 @@ export default defineConfig({
   workers: process.env.CI ? 2 : undefined,
   reporter: [
     ['list'],
-    ['html', { outputFolder: 'test-results/playwright-report', open: 'never' }],
+    ['html', { outputFolder: 'playwright-report', open: 'never' }],
   ],
   use: {
     headless: true,
     actionTimeout: 0,
     // E2E tests must run against the deployed environment; set E2E_BASE_URL in CI
     baseURL: process.env.E2E_BASE_URL || 'http://localhost:3000',
-    // If global-setup wrote an auth storage file, Playwright will reuse it.
-    storageState: process.env.CF_AUTH_COOKIE ? './.auth.json' : undefined,
-    // If CF_ACCESS_TOKEN is provided by the workflow, add it as an extra header
-    extraHTTPHeaders: process.env.CF_ACCESS_TOKEN ? { 'cf-access-token': process.env.CF_ACCESS_TOKEN } : undefined,
+    /**
+     * Cloudflare Access service token headers
+     * Automatically applied to:
+     * - page.goto()
+     * - asset requests
+     * - XHR / fetch
+     */
+    extraHTTPHeaders: (() => {
+      const headers: Record<string, string> = {};
+      if (process.env.CF_ACCESS_CLIENT_ID) headers['CF-Access-Client-Id'] = process.env.CF_ACCESS_CLIENT_ID;
+      if (process.env.CF_ACCESS_CLIENT_SECRET) headers['CF-Access-Client-Secret'] = process.env.CF_ACCESS_CLIENT_SECRET;
+      return Object.keys(headers).length ? headers : undefined;
+    })(),
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },

@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "scripts": {
     "dev": "next dev",
+    "mock-backend": "node mock-backend/server.js",
     "test": "jest",
     "build": "next build",
     "start": "next start"

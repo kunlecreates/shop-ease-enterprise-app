@@ -25,37 +25,68 @@ jobs:
     outputs:
       matrix: ${{ steps.set.outputs.matrix }}
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed services (paths filter)
+        id: changes
+        uses: dorny/paths-filter@v2
+        with:
+          filters: |
+            user-service:
+              - 'services/user-service/**'
+            product-service:
+              - 'services/product-service/**'
+            order-service:
+              - 'services/order-service/**'
+            notification-service:
+              - 'services/notification-service/**'
+            frontend:
+              - 'frontend/**'
+
       - name: Determine requested services and emit matrix
         id: set
+        shell: bash
         run: |
           set -euo pipefail
           INPUT='${{ github.event.inputs.services }}'
-          # Default to all when input empty or 'all'
-          if [ -z "$INPUT" ] || [ "$INPUT" = "all" ]; then
-            echo 'matrix=["user-service","product-service","order-service","notification-service","frontend"]' >> $GITHUB_OUTPUT
-            exit 0
-          fi
-          IFS=',' read -r -a items <<< "$INPUT"
-          arr=()
-          for s in "${items[@]}"; do
-            s_trim=$(echo "$s" | xargs)
-            case "$s_trim" in
-              user|user-service) arr+=("\"user-service\"") ;;
-              product|product-service) arr+=("\"product-service\"") ;;
-              order|order-service) arr+=("\"order-service\"") ;;
-              notification|notification-service) arr+=("\"notification-service\"") ;;
-              frontend) arr+=("\"frontend\"") ;;
-              *) echo "Ignoring unknown service '$s_trim'" ;;
-            esac
-          done
-          if [ ${#arr[@]} -eq 0 ]; then
-            echo 'matrix=[]' >> $GITHUB_OUTPUT
+
+          # If the workflow was manually triggered with a non-empty services input
+          if [ -n "$INPUT" ] && [ "$INPUT" != "all" ]; then
+            IFS=',' read -r -a items <<< "$INPUT"
+            arr=()
+            for s in "${items[@]}"; do
+              s_trim=$(echo "$s" | xargs)
+              case "$s_trim" in
+                user|user-service) arr+=("\"user-service\"") ;;
+                product|product-service) arr+=("\"product-service\"") ;;
+                order|order-service) arr+=("\"order-service\"") ;;
+                notification|notification-service) arr+=("\"notification-service\"") ;;
+                frontend) arr+=("\"frontend\"") ;;
+                *) echo "Ignoring unknown service '$s_trim'" ;;
+              esac
+            done
           else
-            printf 'matrix=[%s]\n' "$(IFS=,; echo "${arr[*]}")" >> $GITHUB_OUTPUT
+            # Build from detected changed paths
+            arr=()
+            if [ "${{ steps.changes.outputs.user-service }}" = 'true' ]; then arr+=("\"user-service\""); fi
+            if [ "${{ steps.changes.outputs.product-service }}" = 'true' ]; then arr+=("\"product-service\""); fi
+            if [ "${{ steps.changes.outputs.order-service }}" = 'true' ]; then arr+=("\"order-service\""); fi
+            if [ "${{ steps.changes.outputs.notification-service }}" = 'true' ]; then arr+=("\"notification-service\""); fi
+            if [ "${{ steps.changes.outputs.frontend }}" = 'true' ]; then arr+=("\"frontend\""); fi
           fi
-        shell: bash
+
+          if [ ${#arr[@]} -eq 0 ]; then
+            # No changes detected; emit empty matrix so downstream job can skip
+            echo "matrix=[]" >> "$GITHUB_OUTPUT"
+          else
+            printf 'matrix=[%s]\n' "$(IFS=,; echo "${arr[*]}")" >> "$GITHUB_OUTPUT"
+          fi
 
   build-and-push:
+    if: ${{ needs.set-matrix.outputs.matrix != '[]' }}
     runs-on: ubuntu-latest
     needs: set-matrix
     strategy:
@@ -239,3 +270,14 @@ jobs:
           tags: ${{ steps.meta-flyway.outputs.tags }}
           platforms: linux/amd64
           pull: true
+
+  no-changes:
+    name: No changes detected
+    runs-on: ubuntu-latest
+    needs: set-matrix
+    if: ${{ needs.set-matrix.outputs.matrix == '[]' }}
+    steps:
+      - name: Log no changes
+        run: |
+          echo "No service changes detected — skipping build-and-push."
+          echo "Emitted matrix: '${{ needs.set-matrix.outputs.matrix }}'"
