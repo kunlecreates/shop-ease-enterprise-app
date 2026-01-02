@@ -52,24 +52,25 @@ jobs:
             exit 0
           fi
 
-          # If the host is protected (401/403) and a service token is provided, try an authenticated request.
+          # If unauthenticated access fails, ensure CF secrets are set before attempting authenticated request
+          if [ -z "${CF_ACCESS_CLIENT_ID:-}" ] || [ -z "${CF_ACCESS_CLIENT_SECRET:-}" ]; then
+            echo "CF_ACCESS_CLIENT_ID or CF_ACCESS_CLIENT_SECRET is not set; cannot perform authenticated check."
+            echo "Please set the repository secrets or make the E2E_BASE_URL accessible without Cloudflare Access."
+            exit 1
+          fi
+
+          # Try authenticated request using Cloudflare Access service token headers
           status=$(curl -sS -o /dev/null -w "%{http_code}" \
             -H "CF-Access-Client-Id: ${CF_ACCESS_CLIENT_ID}" \
             -H "CF-Access-Client-Secret: ${CF_ACCESS_CLIENT_SECRET}" \
-            "${E2E_BASE_URL}")
+            "${E2E_BASE_URL}" || echo "000")
 
-          echo "HTTP status: ${status}"
+          echo "Authenticated HTTP status: ${status}"
 
           if [[ ! "${status}" =~ ^[23] ]]; then
-            echo "E2E endpoint unreachable via Cloudflare Access"
+            echo "E2E endpoint unreachable via Cloudflare Access (status ${status})"
             exit 1
           fi
-      
-      # Cloudflare Access: do not exchange service token for a cookie.
-      # Cloudflare Access expects the `CF-Access-Client-Id` and
-      # `CF-Access-Client-Secret` headers to be sent with requests.
-      # Playwright will be configured to add those headers when the
-      # corresponding secrets are available in the environment.
 
       - name: Run Playwright E2E
         working-directory: e2e
