@@ -1,4 +1,4 @@
-name: CI — Frontend Tests
+name: CI — Frontend Component Tests
 
 on:
   push:

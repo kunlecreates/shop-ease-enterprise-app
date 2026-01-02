@@ -1,4 +1,4 @@
-name: CI — notification-service
+name: CI — Notification-service Component Tests
 
 on:
   push:

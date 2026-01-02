@@ -1,4 +1,4 @@
-name: E2E — Playwright (post-deploy)
+name: E2E — Playwright tests (post-deploy)
 
 on:
   workflow_run:

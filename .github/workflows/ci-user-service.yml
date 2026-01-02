@@ -1,4 +1,4 @@
-name: CI — user-service
+name: CI — User-service Component Tests
 
 on:
   push:

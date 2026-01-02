@@ -1,4 +1,4 @@
-name: CI — order-service
+name: CI — Order-service Component Tests
 
 on:
   push:
