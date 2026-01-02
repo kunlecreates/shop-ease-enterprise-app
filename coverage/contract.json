@@ -1,0 +1,6 @@
+{
+  "metric": "line",
+  "minCoverage": 80,
+  "scope": "unit-and-service-integration",
+  "branch": "main"
+}
