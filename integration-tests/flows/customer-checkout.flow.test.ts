@@ -16,6 +16,12 @@ maybe('Customer checkout flow: create cart, add item, place order, verify order 
   const cartId = cartResp.data && (cartResp.data.id || cartResp.data.cart_id);
   if (!cartId) return expect(true).toBe(true);
 
+  // register cleanup to delete the cart after test
+  try {
+    const { registerDelete } = await import('../framework/cleanup');
+    registerDelete((id: any) => `/carts/${id}`, cartId);
+  } catch (e) {}
+
   const itemResp = await request('post', `/carts/${cartId}/items`, { product_ref: products[0].id, quantity: 1 }).catch(() => ({ status: 500 }));
   expect([200,201,500]).toContain(itemResp.status);
 

@@ -14,6 +14,12 @@ maybe('Order -> Notification contract: outbox event appears after placing order'
   const cartId = respCreate.data && (respCreate.data.id || respCreate.data.cart_id);
   if (!cartId) return expect(true).toBe(true);
 
+  // register delete for cart
+  try {
+    const { registerDelete } = await import('../framework/cleanup');
+    registerDelete((id: any) => `/carts/${id}`, cartId);
+  } catch (e) {}
+
   await request('post', `/carts/${cartId}/items`, { product_ref: 'prod-1', quantity: 1 }).catch(() => null);
   await request('post', `/carts/${cartId}/checkout`).catch(() => null);
 
