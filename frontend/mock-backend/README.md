@@ -14,7 +14,8 @@ Endpoints:
 - `GET /health` — health check
 - `GET /api/products` — list of products
 - `GET /api/cart` — empty cart
-- `POST /api/orders` — create an order (returns 201)
+- `POST /api/order` — create an order (returns 201)
+- `POST /api/orders` — alias for backward compatibility
 - `POST /api/payments` — simulate a successful payment
 
 Use this service when running Playwright locally or when executing the Jest mock-backend tests.

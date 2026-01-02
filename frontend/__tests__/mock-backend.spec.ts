@@ -20,7 +20,7 @@ describe('mock-backend (in-process)', () => {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         return res.end(JSON.stringify({ items: [], total: 0 }));
       }
-      if (req.url === '/api/orders' && req.method === 'POST') {
+      if (req.url === '/api/order' && req.method === 'POST') {
         let body = '';
         req.on('data', (c) => (body += c));
         req.on('end', () => {
@@ -55,9 +55,9 @@ describe('mock-backend (in-process)', () => {
     }).on('error', (err) => done(err));
   });
 
-  test('POST /api/orders creates an order', (done) => {
+  test('POST /api/order creates an order', (done) => {
     const data = JSON.stringify({ customer: 'test', items: [] });
-    const req = http.request({ hostname: '127.0.0.1', port: PORT, path: '/api/orders', method: 'POST', headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(data) } }, (res) => {
+    const req = http.request({ hostname: '127.0.0.1', port: PORT, path: '/api/order', method: 'POST', headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(data) } }, (res) => {
       expect(res.statusCode).toBe(201);
       let body = '';
       res.on('data', (c) => (body += c));

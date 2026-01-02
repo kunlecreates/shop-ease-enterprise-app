@@ -9,7 +9,7 @@ export default function CartPage() {
     setStatus("Processing...");
     // Call the order-service checkout endpoint (expects JSON { userId, total })
     try {
-      const res = await fetch('/api/orders', {
+      const res = await fetch('/api/order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: 1, total: 10.0 })

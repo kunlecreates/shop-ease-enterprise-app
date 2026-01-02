@@ -3,7 +3,7 @@ info:
   title: Order Service API (Phase 2)
   version: 0.1.0
 paths:
-  /api/orders:
+  /api/order:
     post:
       summary: Place an order (checkout)
       requestBody:

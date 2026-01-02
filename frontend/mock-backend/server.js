@@ -27,12 +27,17 @@ app.get('/api/cart', (req, res) => {
   res.json({ items: [], total: 0 });
 });
 
-app.post('/api/orders', (req, res) => {
+function createOrderHandler(req, res) {
   const id = orders.length + 1;
   const order = Object.assign({ id, status: 'created' }, req.body || {});
   orders.push(order);
   res.status(201).json(order);
-});
+}
+
+// Preferred singular endpoint
+app.post('/api/order', createOrderHandler);
+// Backwards-compatible plural alias
+app.post('/api/orders', createOrderHandler);
 
 app.post('/api/payments', (req, res) => {
   // Simulate a successful payment
