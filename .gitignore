@@ -57,10 +57,8 @@ services/product-service/dist/
 services/notification-service/.venv/
 
 # Misc
-integration-tests/env/
+**/env/
 /.env
 /.env.local
 .tmp_venv
 
-# Ignore integration test environment files
-/integration-tests/env/
