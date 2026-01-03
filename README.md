@@ -1,5 +1,11 @@
 # ShopEase eCommerce Web Application
 
+![CI Tests](https://github.com/kunlecreates/shop-ease-enterprise-app/actions/workflows/e2e.yml/badge.svg)
+![CI Builds](https://github.com/kunlecreates/shop-ease-enterprise-app/actions/workflows/build-images.yml/badge.svg)
+![Coverage](https://codecov.io/gh/kunlecreates/shop-ease-enterprise-app/branch/main/graph/badge.svg)
+![Stars](https://img.shields.io/github/stars/kunlecreates/shop-ease-enterprise-app?style=flat)
+![Visitors](https://hits.sh/github.com/kunlecreates/shop-ease-enterprise-app.svg?label=Visitors&style=flat&color=0e75b6)
+
 A Microservices superstore application designed with CI/CD, Integration Testing & Deployment in a cloud-native environment.
 
 ## Overview
@@ -51,7 +57,7 @@ root/
 │ ├── product-service/ # Flyway migrations (PostgreSQL)
 │ └── order-service/ # Flyway migrations (MSSQL)
 │
-├── integration-tests/
+├── integration-tests/            # Node + Jest framework
 |
 ├── e2e/                          # Playwright system-level E2E tests
 │   ├── playwright.config.ts
@@ -256,3 +262,15 @@ This repository is actively evolving to reflect:
 - Real-world CI/CD patterns
 - Platform-level testing maturity
 - Production-grade Kubernetes deployments
+
+---
+
+## 👤 Maintainer
+
+**Kunle Ogunlana**  
+Infrastructure & DevOps | GitHub ARC Integrations  
+🔗 [kunlecreates.org](https://kunlecreates.org)
+
+---
+
+© 2026 Kunle Ogunlana. All rights reserved.

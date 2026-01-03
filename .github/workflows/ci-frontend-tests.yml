@@ -20,10 +20,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          # Do not use setup-node's npm cache here because the frontend
-          # package-lock.json lives under `frontend/` rather than repository
-          # root. Using the cache option causes the action to look for a lock
-          # file at the repo root and fail if it is not present.
 
       - name: Install dependencies
         working-directory: frontend
@@ -46,6 +42,14 @@ jobs:
             echo "tsconfig.json not found — skipping TypeScript check"
           fi
 
-      - name: Run Jest tests
+      - name: Run Jest tests with coverage
         working-directory: frontend
-        run: npm test -- --runInBand
+        run: |
+          npm test -- --coverage --coverageDirectory=coverage --coverageReporters=json-summary \
+            --coverageReporters=lcov --coverageReporters=text
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: raw-coverage-frontend
+          path: frontend/coverage/coverage-summary.json

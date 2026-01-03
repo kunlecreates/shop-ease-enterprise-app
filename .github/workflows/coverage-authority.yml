@@ -1,0 +1,81 @@
+name: Coverage Authority (PR)
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  aggregate:
+    name: Aggregate and enforce coverage policy
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all raw coverage artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: coverage
+
+      # ---- Normalize each service ----
+
+      - name: Normalize all services
+        run: |
+          set -e
+          declare -A services=( \
+            ["frontend"]="jest:coverage/raw-coverage-frontend/coverage-summary.json" \
+            ["notification-service"]="pytest:coverage/raw-coverage-notification-service/coverage.json" \
+            ["order-service"]="jacoco:coverage/raw-coverage-order-service/target/site/jacoco/jacoco.xml" \
+            ["product-service"]="jest:coverage/raw-coverage-product-service/coverage-summary.json" \
+            ["user-service"]="jacoco:coverage/raw-coverage-user-service/target/site/jacoco/jacoco.xml" \
+          )
+          for svc in "${!services[@]}"; do
+            IFS=':' read -r fmt path <<< "${services[$svc]}"
+            mkdir -p coverage/$svc
+            bash scripts/normalize.sh $fmt $svc $path coverage/$svc
+          done
+
+      - name: Aggregate coverage
+        run: |
+          jq -s '
+            {
+              services: .,
+              overall: (
+                (map(.lines.coverage_pct) | add ) / (map(.lines.coverage_pct) | length)
+              )
+            }
+          ' coverage/*/coverage.json > coverage/aggregate.json
+
+      
+      - name: Enforce policy
+        run: |
+          MIN=$(jq '.minCoverage' coverage/contract.json)
+          ACTUAL=$(jq '.overall | floor' coverage/aggregate.json)
+
+          echo "Coverage: $ACTUAL%, Minimum: $MIN%"
+
+          if [ "$ACTUAL" -lt "$MIN" ]; then
+            exit 1
+          fi
+
+      - name: Generate badge
+        run: |
+          jq '
+            {
+              schemaVersion: 1,
+              label: "coverage",
+              message: ((.overall | floor | tostring) + "%"),
+              color:
+                if .overall >= 80 then "brightgreen"
+                elif .overall >= 65 then "yellow"
+                else "red"
+                end
+            }
+          ' coverage/aggregate.json > coverage/badge.json
+
+      - name: Publish badge
+        if: github.event_name == 'pull_request' && github.event.pull_request.merged == true
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          publish_branch: coverage-badge
+          publish_dir: coverage

@@ -4,6 +4,7 @@ module.exports = {
   transform: {
     '^.+\\.ts$': 'ts-jest'
   },
+  coverageReporters: ["json-summary", "text"],
   moduleFileExtensions: ['ts', 'js', 'json'],
   testEnvironment: 'node',
   globalSetup: '<rootDir>/test/global-setup.js',

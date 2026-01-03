@@ -24,7 +24,7 @@ jobs:
           # point to the service's lockfile so setup-node can locate it for caching
           cache-dependency-path: services/product-service/package-lock.json
 
-      - name: Install and run tests
+      - name: Install and run tests (with coverage)
         working-directory: services/product-service
         run: |
           # Prefer npm ci when a lockfile exists. If lockfile is out-of-sync, fall back to npm install.
@@ -40,4 +40,13 @@ jobs:
           fi
           # Run tests against a PostgreSQL Testcontainer in CI so migrations and types match production.
           export TEST_POSTGRES=1
-          npm test --if-present
+          # Run tests with coverage (generate json-summary + lcov)
+          npm test --if-present -- --coverage \
+            --coverageDirectory=coverage --coverageReporters=json-summary \
+            --coverageReporters=lcov --coverageReporters=text
+
+      - name: Upload raw coverage (product-service)
+        uses: actions/upload-artifact@v4
+        with:
+          name: raw-coverage-product-service
+          path: services/product-service/coverage/coverage-summary.json
