@@ -5,6 +5,8 @@
 ![Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/kunlecreates/shop-ease-enterprise-app/coverage-badge/badge.json)
 ![Stars](https://img.shields.io/github/stars/kunlecreates/shop-ease-enterprise-app?style=flat)
 ![Visitors](https://hits.sh/github.com/kunlecreates/shop-ease-enterprise-app.svg?label=Visitors&style=flat&color=0e75b6)
+![License](https://img.shields.io/github/license/kunlecreates/shop-ease-enterprise-app)
+
 
 A Microservices superstore application designed with CI/CD, Integration Testing & Deployment in a cloud-native environment.
 
