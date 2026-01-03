@@ -1,4 +1,4 @@
-name: CI — Build/Push Images
+name: CI — Images Build
 
 permissions:
   contents: read
