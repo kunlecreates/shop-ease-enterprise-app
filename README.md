@@ -27,6 +27,14 @@ This separation mirrors how mature teams operate at scale.
 
 ## Architecture
 
+## Tech Stack
+
+![Java](https://img.shields.io/badge/Java-17-blue)
+![Spring](https://img.shields.io/badge/Spring-Boot-green)
+![Docker](https://img.shields.io/badge/Docker-blue)
+![Kubernetes](https://img.shields.io/badge/Kubernetes-blue)
+![Helm](https://img.shields.io/badge/Helm-blue)
+
 ### Services
 
 | Service | Tech Stack | Database |
@@ -39,7 +47,7 @@ This separation mirrors how mature teams operate at scale.
 Each service:
 - Owns its database
 - Is independently testable
-- Is independently deployable
+- Is independently deployable in a Kubernetes cluster
 
 ---
 
@@ -275,4 +283,4 @@ Infrastructure & DevOps | GitHub ARC Integrations
 
 ---
 
-© 2026 Kunle Ogunlana. All rights reserved.
+© 2026 Kunle Ogunlana.
