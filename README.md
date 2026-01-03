@@ -1,8 +1,8 @@
 # ShopEase eCommerce Web Application
 
 ![CI Tests](https://github.com/kunlecreates/shop-ease-enterprise-app/actions/workflows/e2e.yml/badge.svg)
-![CI Builds](https://github.com/kunlecreates/shop-ease-enterprise-app/actions/workflows/build-images.yml/badge.svg)
-![Coverage](https://codecov.io/gh/kunlecreates/shop-ease-enterprise-app/branch/main/graph/badge.svg)
+![CI Builds](https://github.com/kunlecreates/shop-ease-enterprise-app/actions/workflows/build-images.yaml/badge.svg)
+![Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/kunlecreates/shop-ease-enterprise-app/coverage-badge/badge.json)
 ![Stars](https://img.shields.io/github/stars/kunlecreates/shop-ease-enterprise-app?style=flat)
 ![Visitors](https://hits.sh/github.com/kunlecreates/shop-ease-enterprise-app.svg?label=Visitors&style=flat&color=0e75b6)
 
