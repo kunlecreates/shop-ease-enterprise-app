@@ -13,10 +13,11 @@ service_name = sys.argv[2]
 tree = ET.parse(jacoco_xml)
 root = tree.getroot()
 
-line_counter = next(
-    c for c in root.findall("counter")
-    if c.attrib.get("type") == "LINE"
-)
+line_counter = root.find("./counter[@type='LINE']")
+
+if line_counter is None:
+    print("No LINE counter found in JaCoCo report", file=sys.stderr)
+    sys.exit(3)
 
 covered = int(line_counter.attrib["covered"])
 missed = int(line_counter.attrib["missed"])

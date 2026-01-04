@@ -46,9 +46,15 @@ e2e/playwright-report/
 e2e/.auth.json
 
 # Ignore all generated coverage outputs
-coverage/*/
+coverage/*
 
+# Ignore raw coverage directories inside services
+**/coverage/
+services/**/tsconfig.tsbuildinfo
 services/**/coverage/
+
+**/.coverage
+**/coverage.json
 
 # Ignore aggregated coverage output
 coverage/aggregate.json
@@ -59,14 +65,13 @@ coverage/aggregate.json
 
 # Keep coverage contract
 !coverage/contract.json
+!coverage/README.md
 
 # Keep badge outputs for README
 !coverage/badge.json
 !coverage/badge.svg
 
 # Keep coverage inside scripts folders (normalization scripts)
-!scripts/coverage/*
-
 !scripts/coverage/**
 
 # Python

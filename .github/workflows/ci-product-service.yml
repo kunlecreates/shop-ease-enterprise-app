@@ -41,9 +41,7 @@ jobs:
           # Run tests against a PostgreSQL Testcontainer in CI so migrations and types match production.
           export TEST_POSTGRES=1
           # Run tests with coverage (generate json-summary + lcov)
-          npm test --if-present -- --coverage \
-            --coverageDirectory=coverage --coverageReporters=json-summary \
-            --coverageReporters=lcov --coverageReporters=text
+          npm test --if-present -- --coverage --coverageDirectory=coverage --coverageReporters=json-summary
 
       - name: Upload raw coverage (product-service)
         uses: actions/upload-artifact@v4

@@ -14,8 +14,9 @@ with open(pytest_json_path) as f:
 
 totals = data.get("totals", {})
 covered = totals.get("covered_lines", 0)
-total = totals.get("num_lines", 0)
-missed = total - covered
+missed = totals.get("missing_lines", 0)
+total = covered + missed
+
 coverage_pct = round((covered / total) * 100, 2) if total else 0.0
 
 output = {

@@ -35,7 +35,7 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt || true; fi
           # Ensure the service package is importable by pytest
           export PYTHONPATH="$PWD":$PYTHONPATH
-          pytest --cov=services.notification_service --cov-report=json:coverage.json --cov-report=term
+          pytest --cov=app --cov-report=json:coverage.json --cov-report=term
 
       - name: Upload coverage artifact (notification-service)
         uses: actions/upload-artifact@v4

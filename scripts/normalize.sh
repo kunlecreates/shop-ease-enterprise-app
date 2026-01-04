@@ -12,26 +12,44 @@ if [[ -z "${FORMAT}" || -z "${SERVICE}" || -z "${INPUT}" || -z "${OUT_DIR}" ]]; 
 fi
 
 if [[ ! -f "${INPUT}" ]]; then
-  echo "Input file not found at ${INPUT}"
+  echo "ERROR: Input file not found at ${INPUT}" >&2
   exit 1
 fi
 
 mkdir -p "$OUT_DIR"
 
+OUT_FILE="$OUT_DIR/coverage.json"
+
 case "$FORMAT" in
   jacoco)
-    python scripts/coverage/jacoco_to_json.py "$INPUT" "$SERVICE" > "$OUT_DIR/coverage.json"
+    python scripts/coverage/jacoco_to_json.py "$INPUT" "$SERVICE" > "$OUT_FILE"
     ;;
   pytest)
-    python scripts/coverage/pytest_to_json.py "$INPUT" "$SERVICE" > "$OUT_DIR/coverage.json"
+    python scripts/coverage/pytest_to_json.py "$INPUT" "$SERVICE" > "$OUT_FILE"
     ;;
   jest)
-    python scripts/coverage/jest_to_json.py "$INPUT" "$SERVICE" > "$OUT_DIR/coverage.json"
+    python scripts/coverage/jest_to_json.py "$INPUT" "$SERVICE" > "$OUT_FILE"
     ;;
   *)
-    echo "Unknown coverage format: $FORMAT"
+    echo "ERROR: Unknown coverage format: $FORMAT" >&2
     exit 2
     ;;
 esac
 
-echo "✓ Normalized $FORMAT coverage for $SERVICE"
+# Validate JSON exists and is non-empty
+if [[ ! -s "$OUT_FILE" ]]; then
+  echo "ERROR: Coverage output is empty for $SERVICE" >&2
+  exit 3
+fi
+
+# Validate JSON structure
+jq -e '
+  .service and
+  .language and
+  .lines.total >= 0 and
+  .lines.covered >= 0 and
+  .lines.missed >= 0 and
+  (.lines.covered + .lines.missed == .lines.total)
+' "$OUT_FILE" > /dev/null
+
+echo "✓ Normalized and validated $FORMAT coverage for $SERVICE"

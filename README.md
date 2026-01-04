@@ -29,7 +29,7 @@ This separation mirrors how mature teams operate at scale.
 
 ## Tech Stack
 
-![Java](https://img.shields.io/badge/Java-17-blue)
+![Java](https://img.shields.io/badge/Java-21-blue)
 ![Spring](https://img.shields.io/badge/Spring-Boot-green)
 ![Docker](https://img.shields.io/badge/Docker-blue)
 ![Kubernetes](https://img.shields.io/badge/Kubernetes-blue)

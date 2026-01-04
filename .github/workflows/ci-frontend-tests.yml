@@ -45,8 +45,7 @@ jobs:
       - name: Run Jest tests with coverage
         working-directory: frontend
         run: |
-          npm test -- --coverage --coverageDirectory=coverage --coverageReporters=json-summary \
-            --coverageReporters=lcov --coverageReporters=text
+          npm test -- --coverage --coverageDirectory=coverage --coverageReporters=json-summary
 
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
