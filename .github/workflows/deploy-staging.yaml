@@ -630,7 +630,23 @@ jobs:
 
       - name: Wait for rollout
         run: |
-          kubectl -n "$NAMESPACE" rollout status deployment/$(kubectl -n "$NAMESPACE" get deploy -l app.kubernetes.io/instance=$RELEASE_NAME -o jsonpath='{.items[0].metadata.name}') --timeout=600s
+          set -euo pipefail
+          # Safely resolve the deployment name for the Helm release. Avoid jsonpath array access which
+          # errors when no deployments are found; instead use -o name and handle empty output.
+          DEPLOY_NAME=$(kubectl -n "$NAMESPACE" get deploy -l app.kubernetes.io/instance="$RELEASE_NAME" -o name | head -n1 | cut -d'/' -f2 || true)
+          if [ -z "$DEPLOY_NAME" ]; then
+            echo "ERROR: No Deployment found for release $RELEASE_NAME in namespace $NAMESPACE"
+            echo "Listing deployments with the release label for debugging:"
+            kubectl -n "$NAMESPACE" get deploy -l app.kubernetes.io/instance="$RELEASE_NAME" -o wide || true
+            echo "Listing pods for the release (if any):"
+            kubectl -n "$NAMESPACE" get pods -l app.kubernetes.io/instance="$RELEASE_NAME" -o wide || true
+            # Surface Helm status/history to aid debugging
+            helm -n "$NAMESPACE" status "$RELEASE_NAME" || true
+            helm -n "$NAMESPACE" history "$RELEASE_NAME" || true
+            exit 1
+          fi
+          echo "Waiting for rollout of deployment/$DEPLOY_NAME in namespace $NAMESPACE"
+          kubectl -n "$NAMESPACE" rollout status deployment/$DEPLOY_NAME --timeout=600s
         env:
           KUBECONFIG: ${{ needs.prepare.outputs.kubeconfig }}
 
