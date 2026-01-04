@@ -10,5 +10,5 @@ spec:
     app.kubernetes.io/name: user-service
   ports:
     - port: {{ .Values.service.port }}
-      targetPort: 8081
+      targetPort: {{ .Values.service.targetPort | default 8081 }}
       protocol: TCP

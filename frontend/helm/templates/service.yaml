@@ -10,5 +10,5 @@ spec:
     app.kubernetes.io/name: frontend
   ports:
     - port: {{ .Values.service.port }}
-      targetPort: 3000
+      targetPort: {{ .Values.service.targetPort | default 3000 }}
       protocol: TCP

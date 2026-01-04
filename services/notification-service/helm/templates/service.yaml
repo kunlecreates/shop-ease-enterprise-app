@@ -10,5 +10,5 @@ spec:
     app.kubernetes.io/name: notification-service
   ports:
     - port: {{ .Values.service.port }}
-      targetPort: 8084
+      targetPort: {{ .Values.service.targetPort | default 8084 }}
       protocol: TCP

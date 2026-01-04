@@ -74,8 +74,10 @@ spec:
             periodSeconds: {{ default 10 .Values.probes.liveness.periodSeconds }}
             failureThreshold: {{ default 6 .Values.probes.liveness.failureThreshold }}
           readinessProbe:
-            tcpSocket:
-              port: {{ default 3000 .Values.probes.readiness.port }}
+            httpGet:
+              path: {{ default "/api/health" .Values.probes.readiness.path | quote }}
+              port: {{ .Values.service.targetPort | default 3000 }}
+              scheme: HTTP
             initialDelaySeconds: {{ default 20 .Values.probes.readiness.initialDelaySeconds }}
             timeoutSeconds: {{ default 3 .Values.probes.readiness.timeoutSeconds }}
             periodSeconds: {{ default 5 .Values.probes.readiness.periodSeconds }}

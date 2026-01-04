@@ -10,5 +10,5 @@ spec:
     app.kubernetes.io/name: order-service
   ports:
     - port: {{ .Values.service.port }}
-      targetPort: 8083
+      targetPort: {{ .Values.service.targetPort | default 8083 }}
       protocol: TCP

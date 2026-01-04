@@ -20,6 +20,9 @@ env:
 
 service:
   port: 80
+  # Port on the container the frontend process listens on; used as Service targetPort
+  # and by probes. Defaults to 3000.
+  targetPort: 3000
 
 resources:
   requests:
@@ -37,11 +40,31 @@ probes:
     periodSeconds: 10
     failureThreshold: 6
   readiness:
+    # HTTP path used by readiness probe. Default is /health which we add as an app route.
+    path: /api/health
+    # Port used by probes; by default probes should match service.targetPort (container port)
     port: 3000
     initialDelaySeconds: 20
     timeoutSeconds: 3
     periodSeconds: 5
     failureThreshold: 5
+
+# NetworkPolicy configuration for frontend egress rules. Configure backend namespaces
+# and allowed backend ports from values to avoid hardcoding in templates.
+networkPolicy:
+  # List of backend namespaces the frontend will talk to. If empty, templates may
+  # fall back to sensible defaults.
+  backendNamespaces:
+    - shopease-product
+    - shopease-user
+    - shopease-order
+    - shopease-notification
+  # Ports on backend services the frontend needs to access (service target ports).
+  backendPorts:
+    - 80
+  # OTEL exporter namespace and port (optional)
+  otelNamespace: operators
+  otelPort: 4317
 
 ingress:
   enabled: true

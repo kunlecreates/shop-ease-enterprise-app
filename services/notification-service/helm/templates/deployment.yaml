@@ -73,7 +73,7 @@ spec:
             {{- toYaml .Values.resources | nindent 12 }}
           livenessProbe:
             httpGet:
-              path: {{ default "/" .Values.probes.liveness.path }}
+              path: {{ default "/health" .Values.probes.liveness.path }}
               port: 8084
             initialDelaySeconds: {{ default 60 .Values.probes.liveness.initialDelaySeconds }}
             timeoutSeconds: {{ default 5 .Values.probes.liveness.timeoutSeconds }}
@@ -81,7 +81,7 @@ spec:
             failureThreshold: {{ default 6 .Values.probes.liveness.failureThreshold }}
           readinessProbe:
             httpGet:
-              path: {{ default "/" .Values.probes.readiness.path }}
+              path: {{ default "/health" .Values.probes.readiness.path }}
               port: 8084
             initialDelaySeconds: {{ default 20 .Values.probes.readiness.initialDelaySeconds }}
             timeoutSeconds: {{ default 3 .Values.probes.readiness.timeoutSeconds }}

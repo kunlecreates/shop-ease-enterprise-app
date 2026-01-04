@@ -35,6 +35,9 @@ credentials:
 
 service:
   port: 80
+  # Port on the container the application listens on; used as Service targetPort and
+  # by NetworkPolicy to allow correct ingress to the pod.
+  targetPort: 8084
 
 resources:
   requests:
@@ -46,13 +49,13 @@ resources:
 
 probes:
   liveness:
-    path: /
+    path: /health
     initialDelaySeconds: 60
     timeoutSeconds: 5
     periodSeconds: 10
     failureThreshold: 6
   readiness:
-    path: /
+    path: /health
     initialDelaySeconds: 20
     timeoutSeconds: 3
     periodSeconds: 5

@@ -658,20 +658,22 @@ jobs:
         run: |
           case "${{ matrix.service }}" in
             frontend)
-              SERVICE_NAME="frontend"; PORT=80; PATH="/" ;;
+              SERVICE_NAME="frontend"; PORT=80; PATH="/api/health" ;;
             product)
-              SERVICE_NAME="product-service"; PORT=80; PATH="/api/product" ;;
+              SERVICE_NAME="product-service"; PORT=80; PATH="/api/health" ;;
             user)
-              SERVICE_NAME="user-service"; PORT=80; PATH="/api/user" ;;
+              SERVICE_NAME="user-service"; PORT=80; PATH="/actuator/health/readiness" ;;
             order)
-              SERVICE_NAME="order-service"; PORT=80; PATH="/api/order" ;;
+              SERVICE_NAME="order-service"; PORT=80; PATH="/actuator/health/readiness" ;;
             notification)
-              SERVICE_NAME="notification-service"; PORT=80; PATH="/api/notification/health" ;;
+              SERVICE_NAME="notification-service"; PORT=80; PATH="/health" ;;
           esac
           echo "Detected Service: $SERVICE_NAME"
-          kubectl -n "$NAMESPACE" run curl-test --restart=Never --image=curlimages/curl:8.8.0 -- sleep 60
-          kubectl -n "$NAMESPACE" wait --for=condition=Ready pod/curl-test --timeout=30s
-          kubectl -n "$NAMESPACE" exec curl-test -- curl -fsS http://$SERVICE_NAME.$NAMESPACE.svc.cluster.local:$PORT$PATH || (echo "Service unreachable" && exit 1)
-          kubectl -n "$NAMESPACE" delete pod curl-test
+          
+          kubectl -n "$NAMESPACE" run curl-test --restart=Never --rm -i \
+            --image=curlimages/curl:8.8.0 --labels=run=curl-test --command -- \
+            curl -fsS --connect-timeout 5 --max-time 10 http://$SERVICE_NAME.$NAMESPACE.svc.cluster.local:$PORT$PATH
+
+          echo "Smoke test succeeded for $SERVICE_NAME"
         env:
           KUBECONFIG: ${{ needs.prepare.outputs.kubeconfig }}

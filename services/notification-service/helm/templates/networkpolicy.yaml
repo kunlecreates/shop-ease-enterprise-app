@@ -38,4 +38,4 @@ spec:
             run: curl-test
       ports:
         - protocol: TCP
-          port: 80
+          port: {{ .Values.service.targetPort | default 8084 }}

@@ -35,6 +35,9 @@ db:
 
 service:
   port: 80
+  # Port on the container the application listens on; used as Service targetPort and
+  # by NetworkPolicy to allow correct ingress to the pod.
+  targetPort: 8081
 
 resources:
   requests:
