@@ -87,3 +87,5 @@ migration:
   # Optional: create a dev-only secret from values below (do NOT use in production)
   createSecret: false
   secretData: {}
+  # Time in seconds after which completed Jobs are garbage-collected by the TTL controller
+  ttlSecondsAfterFinished: 300

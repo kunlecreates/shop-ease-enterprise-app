@@ -96,3 +96,5 @@ migration:
   #   DB_HOST: postgresql.postgres-system.svc.cluster.local
   #   DB_PORT: "5432"
   #   DB_NAME: productdb
+  # Time in seconds after which completed Jobs are garbage-collected by the TTL controller
+  ttlSecondsAfterFinished: 300
