@@ -14,7 +14,7 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     # Use a self-hosted runner that has network access to your Cloudflared tunnel
     # Replace the labels below with your runner's labels if different.
-    runs-on: arc-runnerset-instance
+    runs-on: self-hosted
     env:
       # Default staging URL; override if your deploy emits a specific host
       E2E_BASE_URL: https://shop.kunlecreates.org

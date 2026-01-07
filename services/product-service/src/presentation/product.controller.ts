@@ -2,7 +2,9 @@ import { Controller, Get, Post, Body, Patch, Param, Query } from '@nestjs/common
 import { ProductService } from '../application/product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 
-@Controller('api/product')
+// Controller paths should not include the global 'api' prefix (app.setGlobalPrefix('api')).
+// This ensures routes are mounted as /api/<subpath> instead of /api/api/<subpath>.
+@Controller('product')
 export class ProductController {
   constructor(private readonly service: ProductService) {}
 

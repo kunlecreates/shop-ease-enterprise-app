@@ -35,38 +35,56 @@ spec:
         - name: notification-service
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          {{- if .Values.credentials.secretName }}
-          envFrom:
-            - secretRef:
-                name: {{ .Values.credentials.secretName }}
-          {{- end }}
-          {{- if .Values.env }}
-          {{- $root := . }}
+          
           env:
+            {{- if .Values.env }}
+            {{- $root := . }}
             {{- range $key, $val := .Values.env }}
             - name: {{ $key }}
               {{- if eq $key "OTEL_EXPORTER_OTLP_ENDPOINT" }}
               {{- $raw := printf "%v" $val }}
-              {{- with $root.Values.global }}
-                {{- with .otel }}
-              value: {{ replace $raw "${global.otel.collectorEndpoint}" .collectorEndpoint | quote }}
+              {{- if and (hasKey $root.Values "global") (hasKey $root.Values.global "otel") }}
+              value: {{ replace $raw "${global.otel.collectorEndpoint}" $root.Values.global.otel.collectorEndpoint | quote }}
                 {{- else }}
               value: {{ $raw | quote }}
-                {{- end }}
-              {{- else }}
-              value: {{ $raw | quote }}
               {{- end }}
-              {{- else }}
-              {{- if kindIs "map" $val }}
-              value: {{ toJson $val | quote }}
-              {{- else if kindIs "slice" $val }}
+              {{- else if or (kindIs "map" $val) (kindIs "slice" $val) }}
               value: {{ toJson $val | quote }}
               {{- else }}
               value: {{ $val | quote }}
               {{- end }}
-              {{- end }}
             {{- end }}
-          {{- end }}
+            {{- end }}
+
+            {{- if .Values.credentials.secretName }}
+            # Notification credentials
+            - name: MAIL_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.credentials.secretName }}
+                  key: NOTIFICATION_MAIL_HOST
+            - name: MAIL_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.credentials.secretName }}
+                  key: NOTIFICATION_MAIL_PORT
+            - name: MAIL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.credentials.secretName }}
+                  key: NOTIFICATION_MAIL_USER
+            - name: MAIL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.credentials.secretName }}
+                  key: NOTIFICATION_MAIL_PASSWORD
+            - name: MAIL_FROM
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.credentials.secretName }}
+                  key: NOTIFICATION_MAIL_FROM
+            {{- end }}
+
           ports:
             - containerPort: 8084
           resources:

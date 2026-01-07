@@ -6,6 +6,10 @@ metadata:
   labels:
     app.kubernetes.io/name: product-service
     app.kubernetes.io/component: migration
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-10"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
 spec:
   backoffLimit: 1
   ttlSecondsAfterFinished: {{ .Values.migration.ttlSecondsAfterFinished | default 300 }}
@@ -20,32 +24,33 @@ spec:
         - name: flyway-migrate
           image: "{{ .Values.migration.image }}:{{ .Values.migration.tag }}"
           imagePullPolicy: {{ .Values.migration.imagePullPolicy | default "IfNotPresent" }}
+          
           env:
             - name: MIG_DB_USER
               valueFrom:
                 secretKeyRef:
-                  name: {{ default (printf "%s-migration" .Chart.Name) .Values.migration.secretName | quote }}
-                  key: MIG_DB_USER
+                  name: {{ required "migration.secretName must be set (infra-owned)" .Values.migration.secretName | quote }}
+                  key: PRODUCT_MIG_DB_USER
             - name: MIG_DB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ default (printf "%s-migration" .Chart.Name) .Values.migration.secretName | quote }}
-                  key: MIG_DB_PASSWORD
+                  name: {{ required "migration.secretName must be set (infra-owned)" .Values.migration.secretName | quote }}
+                  key: PRODUCT_MIG_DB_PASSWORD
             - name: DB_HOST
               valueFrom:
                 secretKeyRef:
-                  name: {{ default (printf "%s-migration" .Chart.Name) .Values.migration.secretName | quote }}
-                  key: DB_HOST
+                  name: {{ required "migration.secretName must be set (infra-owned)" .Values.migration.secretName | quote }}
+                  key: PRODUCT_MIG_DB_HOST
             - name: DB_PORT
               valueFrom:
                 secretKeyRef:
-                  name: {{ default (printf "%s-migration" .Chart.Name) .Values.migration.secretName | quote }}
-                  key: DB_PORT
+                  name: {{ required "migration.secretName must be set (infra-owned)" .Values.migration.secretName | quote }}
+                  key: PRODUCT_MIG_DB_PORT
             - name: DB_NAME
               valueFrom:
                 secretKeyRef:
-                  name: {{ default (printf "%s-migration" .Chart.Name) .Values.migration.secretName | quote }}
-                  key: DB_NAME
+                  name: {{ required "migration.secretName must be set (infra-owned)" .Values.migration.secretName | quote }}
+                  key: PRODUCT_MIG_DB_NAME
           args:
             - >
               -url=jdbc:postgresql://$(DB_HOST):$(DB_PORT)/$(DB_NAME)

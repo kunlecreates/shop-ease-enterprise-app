@@ -19,7 +19,7 @@ const products = [
 
 let orders = [];
 
-app.get('/api/products', (req, res) => {
+app.get('/api/product', (req, res) => {
   res.json(products);
 });
 

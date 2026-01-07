@@ -35,12 +35,37 @@ spec:
         - name: product-service
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          {{- if .Values.db.secretName }}
-          envFrom:
-            - secretRef:
-                name: {{ .Values.db.secretName }}
-          {{- end }}
+
           env:
+            {{- if .Values.db.secretName }}
+            # Product App DB credentials
+            - name: PRODUCT_DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.db.secretName }}
+                  key: PRODUCT_DB_HOST
+            - name: PRODUCT_DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.db.secretName }}
+                  key: PRODUCT_DB_PORT
+            - name: PRODUCT_DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.db.secretName }}
+                  key: PRODUCT_DB_NAME
+            - name: PRODUCT_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.db.secretName }}
+                  key: PRODUCT_DB_USER
+            - name: PRODUCT_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.db.secretName }}
+                  key: PRODUCT_DB_PASSWORD
+            {{- end }}
+
             {{- if .Values.env }}
             {{- $root := . }}
             {{- range $key, $val := .Values.env }}
@@ -48,36 +73,29 @@ spec:
               {{- if eq $key "OTEL_EXPORTER_OTLP_ENDPOINT" }}
               {{- /* Resolve ${global.otel.collectorEndpoint} placeholder if present; fall back to raw value */ -}}
               {{- $raw := printf "%v" $val }}
-              {{- with $root.Values.global }}
-                {{- with .otel }}
-              value: {{ replace $raw "${global.otel.collectorEndpoint}" .collectorEndpoint | quote }}
+              {{- if and (hasKey $root.Values "global") (hasKey $root.Values.global "otel") }}
+              value: {{ replace $raw "${global.otel.collectorEndpoint}" $root.Values.global.otel.collectorEndpoint | quote }}
                 {{- else }}
               value: {{ $raw | quote }}
-                {{- end }}
-              {{- else }}
-              value: {{ $raw | quote }}
               {{- end }}
-              {{- else }}
-              {{- if kindIs "map" $val }}
-              value: {{ toJson $val | quote }}
-              {{- else if kindIs "slice" $val }}
+              {{- else if or (kindIs "map" $val) (kindIs "slice" $val) }}
               value: {{ toJson $val | quote }}
               {{- else }}
               value: {{ $val | quote }}
-              {{- end }}
               {{- end }}
             {{- end }}
             {{- end }}
             - name: MIGRATIONS_RUN
               value: "false"
           ports:
-            - containerPort: 3000
+            - containerPort: {{ .Values.service.targetPort | default 3000 }}
+              name: http
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           livenessProbe:
             httpGet:
               path: {{ default "/api/health" .Values.probes.liveness.path }}
-              port: 3000
+              port: {{ .Values.service.targetPort | default 3000 }}
             initialDelaySeconds: {{ default 60 .Values.probes.liveness.initialDelaySeconds }}
             timeoutSeconds: {{ default 5 .Values.probes.liveness.timeoutSeconds }}
             periodSeconds: {{ default 10 .Values.probes.liveness.periodSeconds }}
@@ -85,7 +103,7 @@ spec:
           readinessProbe:
             httpGet:
               path: {{ default "/api/health" .Values.probes.readiness.path }}
-              port: 3000
+              port: {{ .Values.service.targetPort | default 3000 }}
             initialDelaySeconds: {{ default 20 .Values.probes.readiness.initialDelaySeconds }}
             timeoutSeconds: {{ default 3 .Values.probes.readiness.timeoutSeconds }}
             periodSeconds: {{ default 5 .Values.probes.readiness.periodSeconds }}

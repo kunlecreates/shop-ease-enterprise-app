@@ -12,7 +12,7 @@ PORT=4001 npm run mock-backend
 
 Endpoints:
 - `GET /health` — health check
-- `GET /api/products` — list of products
+- `GET /api/product` — list of products
 - `GET /api/cart` — empty cart
 - `POST /api/order` — create an order (returns 201)
 - `POST /api/orders` — alias for backward compatibility

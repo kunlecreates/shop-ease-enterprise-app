@@ -87,6 +87,7 @@ migration:
   imagePullPolicy: IfNotPresent
   #  Name of a pre-created Secret containing migration DB connection envs.
   # Kubernetes Secret containing migration credentials (MIG_DB_USER, MIG_DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME)
+   # Leave empty to disable.
   secretName: ""
   createSecret: false
   secretData: {}

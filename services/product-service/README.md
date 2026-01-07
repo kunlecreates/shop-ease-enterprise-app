@@ -13,9 +13,9 @@ Manages products, categories, inventory, pricing.
 ## API
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/api/products` | List products |
-| POST | `/api/products` | Create product |
-| PATCH | `/api/products/:sku/stock` | Adjust stock |
+| GET | `/api/product` | List products |
+| POST | `/api/product` | Create product |
+| PATCH | `/api/product/:sku/stock` | Adjust stock |
 
 ## Run (Postgres)
 ```bash

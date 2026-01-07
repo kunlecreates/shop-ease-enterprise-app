@@ -35,45 +35,60 @@ spec:
         - name: order-service
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          {{- if .Values.db.secretName }}
-          envFrom:
-            - secretRef:
-                name: {{ .Values.db.secretName }}
-          {{- end }}
-          {{- /* Render env vars from values.env and always include SPRING_FLYWAY_ENABLED */ -}}
-          {{- if .Values.env }}
-          {{- $root := . }}
+
+          {{/* Render env vars from values.env and always include SPRING_FLYWAY_ENABLED */}}          
           env:
+            {{- if .Values.db.secretName }}
+            # Order App DB credentials
+            - name: ORDER_DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.db.secretName }}
+                  key: ORDER_DB_HOST
+            - name: ORDER_DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.db.secretName }}
+                  key: ORDER_DB_PORT
+            - name: ORDER_DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.db.secretName }}
+                  key: ORDER_DB_NAME
+            - name: ORDER_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.db.secretName }}
+                  key: ORDER_DB_USER
+            - name: ORDER_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.db.secretName }}
+                  key: ORDER_DB_PASSWORD
+            {{- end }}
+
+            {{- if .Values.env }}
+            {{- $root := . }}
             {{- range $key, $val := .Values.env }}
             - name: {{ $key }}
               {{- if eq $key "OTEL_EXPORTER_OTLP_ENDPOINT" }}
               {{- $raw := printf "%v" $val }}
-              {{- with $root.Values.global }}
-                {{- with .otel }}
-              value: {{ replace $raw "${global.otel.collectorEndpoint}" .collectorEndpoint | quote }}
+              {{- if and (hasKey $root.Values "global") (hasKey $root.Values.global "otel") }}
+              value: {{ replace $raw "${global.otel.collectorEndpoint}" $root.Values.global.otel.collectorEndpoint | quote }}
                 {{- else }}
               value: {{ $raw | quote }}
                 {{- end }}
-              {{- else }}
-              value: {{ $raw | quote }}
-              {{- end }}
-              {{- else }}
-              {{- if kindIs "map" $val }}
-              value: {{ toJson $val | quote }}
-              {{- else if kindIs "slice" $val }}
+              {{- else if or (kindIs "map" $val) (kindIs "slice" $val) }}
               value: {{ toJson $val | quote }}
               {{- else }}
               value: {{ $val | quote }}
               {{- end }}
-              {{- end }}
             {{- end }}
+            {{- end }}
+
             - name: SPRING_FLYWAY_ENABLED
-              value: "{{ ternary "true" "false" .Values.flyway.enabled }}"
-          {{- else }}
-          env:
-            - name: SPRING_FLYWAY_ENABLED
-              value: "{{ ternary "true" "false" .Values.flyway.enabled }}"
-          {{- end }}
+              value: {{ ternary "true" "false" .Values.flyway.enabled | quote }}
+              
           ports:
             - containerPort: 8083
           resources:

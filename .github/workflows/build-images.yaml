@@ -32,7 +32,7 @@ jobs:
 
       - name: Detect changed services (paths filter)
         id: changes
-        uses: dorny/paths-filter@v2
+        uses: dorny/paths-filter@v3
         with:
           filters: |
             user-service:
@@ -239,6 +239,22 @@ jobs:
             type=raw,value=staging-${{ steps.vars.outputs.short_sha }}
             type=raw,value=latest
 
+      - name: Compute build args
+        id: buildargs
+        if: ${{ matrix.service == 'user-service' }}
+        run: |
+          set -euo pipefail
+          svc="${{ matrix.service }}"
+          build_args=""
+          # For user-service, activate the Oracle Maven profile so the ojdbc driver is included
+          if [[ "$svc" == "user-service" ]]; then
+            build_args+=$'\n'MAVEN_PROFILES=oracle
+          fi
+          # Emit multi-line output for the action
+          echo "build_args<<EOF" >> $GITHUB_OUTPUT
+          echo "$build_args" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Build & Push (buildx)
         uses: docker/build-push-action@v5
         with:
@@ -255,6 +271,7 @@ jobs:
           # to avoid build-cache-backend errors when using the host driver.
           # Pull base images to reduce transient network failures during build
           pull: true
+          build-args: ${{ steps.buildargs.outputs.build_args }}
 
       - name: Build & Push Flyway (buildx)
         if: ${{ steps.vars.outputs.flyway_image != '' }}

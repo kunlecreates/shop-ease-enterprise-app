@@ -35,32 +35,25 @@ spec:
         - name: frontend
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          {{- if .Values.env }}
-          {{- $root := . }}
+          
           env:
+            {{- if .Values.env }}
+            {{- $root := . }}
             {{- range $key, $val := .Values.env }}
             - name: {{ $key }}
               {{- if eq $key "OTEL_EXPORTER_OTLP_ENDPOINT" }}
               {{- $raw := printf "%v" $val }}
-              {{- with $root.Values.global }}
-                {{- with .otel }}
+              {{- with $root.Values.global.otel }}
               value: {{ replace $raw "${global.otel.collectorEndpoint}" .collectorEndpoint | quote }}
                 {{- else }}
               value: {{ $raw | quote }}
                 {{- end }}
-              {{- else }}
-              value: {{ $raw | quote }}
-              {{- end }}
-              {{- else }}
-              {{- if kindIs "map" $val }}
-              value: {{ toJson $val | quote }}
-              {{- else if kindIs "slice" $val }}
+              {{- else if or (kindIs "map" $val) (kindIs "slice" $val) }}
               value: {{ toJson $val | quote }}
               {{- else }}
               value: {{ $val | quote }}
               {{- end }}
-              {{- end }}
-            {{- end }}
+          {{- end }}
           {{- end }}
           ports:
             - containerPort: 3000

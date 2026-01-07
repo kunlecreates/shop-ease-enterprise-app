@@ -6,12 +6,11 @@ spring:
   datasource:
     # Use USER_DB_* env vars (canonical names). No legacy fallback.
     url: jdbc:oracle:thin:@${USER_DB_HOST:oracle}:${USER_DB_PORT:1521}/${USER_DB_NAME:FREEPDB1}
-    username: ${USER_DB_USER:USER_SVC_APP}
-    password: ${USER_DB_PASSWORD:CHANGE_ME}
+    username: ${USER_DB_USER}
+    password: ${USER_DB_PASSWORD}
     driver-class-name: oracle.jdbc.OracleDriver
   flyway:
-    enabled: true
-    locations: classpath:db/migration/sql
+    enabled: ${FLYWAY_ENABLED:false}
 management:
   endpoints:
     web:

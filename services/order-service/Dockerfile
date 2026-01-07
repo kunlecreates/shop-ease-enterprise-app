@@ -1,4 +1,5 @@
 FROM maven:3.9.6-eclipse-temurin-21 AS builder
+ARG MAVEN_PROFILES=""
 WORKDIR /workspace
 # Copy repository modules required for build from the repo root context.
 # Note: shared `services/test-utils` is deprecated. Per-service test helpers
@@ -8,7 +9,11 @@ WORKDIR /workspace
 # Copy the service sources and build the service jar (skip tests in CI build image)
 COPY services/order-service/pom.xml ./pom.xml
 COPY services/order-service/src ./src
-RUN mvn -B -DskipTests -f pom.xml package
+RUN if [ -n "$MAVEN_PROFILES" ]; then \
+			mvn -B -DskipTests -P"$MAVEN_PROFILES" -f pom.xml package; \
+		else \
+			mvn -B -DskipTests -f pom.xml package; \
+		fi
 
 FROM eclipse-temurin:21-jre-alpine AS runtime
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup

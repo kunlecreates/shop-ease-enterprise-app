@@ -1,4 +1,5 @@
 FROM maven:3.9.6-eclipse-temurin-21 AS builder
+ARG MAVEN_PROFILES=""
 WORKDIR /workspace
 # Copy repository modules required for build from the repo root context.
 # We run Maven inside the builder image and install any local helper modules
@@ -9,7 +10,11 @@ WORKDIR /workspace
 # Copy the service sources and build the service jar (skip tests in CI build image)
 COPY services/user-service/pom.xml ./pom.xml
 COPY services/user-service/src ./src
-RUN mvn -B -DskipTests -f pom.xml package
+RUN if [ -n "$MAVEN_PROFILES" ]; then \
+			mvn -B -DskipTests -P"$MAVEN_PROFILES" -f pom.xml package; \
+		else \
+			mvn -B -DskipTests -f pom.xml package; \
+		fi
 
 FROM eclipse-temurin:21-jre-alpine AS runtime
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup

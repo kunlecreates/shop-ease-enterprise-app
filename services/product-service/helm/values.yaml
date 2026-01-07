@@ -82,6 +82,7 @@ migration:
   tag: latest
   imagePullPolicy: IfNotPresent
   # Kubernetes Secret containing migration credentials (MIG_DB_USER, MIG_DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME)
+   # Leave empty to disable.
   secretName: ""
   # Optional: create a dev-only secret from values below (do NOT use in production).
   # CI and production should create migration secrets from secure stores (GitHub Secrets,

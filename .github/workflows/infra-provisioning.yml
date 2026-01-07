@@ -1,0 +1,333 @@
+name: Infra — Provision Secrets & Run Migrations
+
+on:
+  workflow_dispatch:
+    inputs:
+      services:
+        description: "Comma-separated services to provision (user,product,order,notification or 'all')"
+        required: true
+        default: "all"
+      image_tag:
+        description: "Optional image tag to use for migration image (e.g. staging-<sha>). If empty, migration.image/tag will not be set."
+        required: false
+      run_migrations:
+        description: "Whether to render and run Helm migration Jobs for services that support them"
+        required: false
+        default: "true"
+  workflow_call:
+    inputs:
+      services:
+        required: true
+        type: string
+      image_tag:
+        required: false
+        type: string
+      run_migrations:
+        required: false
+        type: boolean
+    secrets:
+      GHCR_READ_USERNAME:
+        required: false
+      GHCR_READ_TOKEN:
+        required: false
+      PRODUCT_DB_HOST:
+        required: false
+      PRODUCT_DB_PORT:
+        required: false
+      PRODUCT_DB_NAME:
+        required: false
+      PRODUCT_DB_USER:
+        required: false
+      PRODUCT_DB_PASSWORD:
+        required: false
+      PRODUCT_MIG_DB_USER:
+        required: false
+      PRODUCT_MIG_DB_PASSWORD:
+        required: false
+      USER_DB_HOST:
+        required: false
+      USER_DB_PORT:
+        required: false
+      USER_DB_NAME:
+        required: false
+      USER_DB_USER:
+        required: false
+      USER_DB_PASSWORD:
+        required: false
+      USER_MIG_DB_USER:
+        required: false
+      USER_MIG_DB_PASSWORD:
+        required: false
+      ORDER_DB_HOST:
+        required: false
+      ORDER_DB_PORT:
+        required: false
+      ORDER_DB_NAME:
+        required: false
+      ORDER_DB_USER:
+        required: false
+      ORDER_DB_PASSWORD:
+        required: false
+      ORDER_MIG_DB_USER:
+        required: false
+      ORDER_MIG_DB_PASSWORD:
+        required: false
+      NOTIFICATION_MAIL_HOST:
+        required: false
+      NOTIFICATION_MAIL_PORT:
+        required: false
+      NOTIFICATION_MAIL_USER:
+        required: false
+      NOTIFICATION_MAIL_PASSWORD:
+        required: false
+      NOTIFICATION_MAIL_FROM:
+        required: false
+
+jobs:
+  provision:
+    runs-on: self-hosted
+    env:
+      OWNER: ${{ github.repository_owner }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.15.3
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: v1.30.0
+
+      - name: Configure kubeconfig (ARC in-cluster)
+        id: configure
+        run: |
+          set -euo pipefail
+          if [ -z "${KUBERNETES_SERVICE_HOST:-}" ]; then
+            echo "ERROR: This job requires running inside the cluster on an ARC runner (KUBERNETES_SERVICE_HOST not set)."
+            exit 1
+          fi
+          APISERVER="https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT}"
+          SA_TOKEN_FILE="/var/run/secrets/kubernetes.io/serviceaccount/token"
+          CA_CERT_FILE="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+          KUBECONFIG_PATH="$PWD/kubeconfig"
+          kubectl config set-cluster arc --server="$APISERVER" --certificate-authority="$CA_CERT_FILE" --embed-certs=true --kubeconfig="$KUBECONFIG_PATH"
+          kubectl config set-credentials runner --token="$(cat "$SA_TOKEN_FILE")" --kubeconfig="$KUBECONFIG_PATH"
+          kubectl config set-context arc --cluster=arc --user=runner --kubeconfig="$KUBECONFIG_PATH"
+          kubectl config use-context arc --kubeconfig="$KUBECONFIG_PATH"
+          echo "KUBECONFIG=$KUBECONFIG_PATH" >> $GITHUB_ENV
+          echo "kubeconfig=$KUBECONFIG_PATH" >> $GITHUB_OUTPUT
+
+      - name: Provision secrets 
+        env:
+          KUBECONFIG: ${{ steps.configure.outputs.kubeconfig }}
+          IMAGE_TAG_INPUT: ${{ github.event.inputs.image_tag }}
+          RUN_MIGRATIONS: ${{ github.event.inputs.run_migrations }}
+          INPUT_SERVICES: ${{ github.event.inputs.services }}
+          GHCR_READ_USERNAME: ${{ secrets.GHCR_READ_USERNAME }}
+          GHCR_READ_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
+          PRODUCT_DB_HOST: ${{ secrets.PRODUCT_DB_HOST }}
+          PRODUCT_DB_PORT: ${{ secrets.PRODUCT_DB_PORT }}
+          PRODUCT_DB_NAME: ${{ secrets.PRODUCT_DB_NAME }}
+          PRODUCT_DB_USER: ${{ secrets.PRODUCT_DB_USER }}
+          PRODUCT_DB_PASSWORD: ${{ secrets.PRODUCT_DB_PASSWORD }}
+          PRODUCT_MIG_DB_USER: ${{ secrets.PRODUCT_MIG_DB_USER }}
+          PRODUCT_MIG_DB_PASSWORD: ${{ secrets.PRODUCT_MIG_DB_PASSWORD }}
+          USER_DB_HOST: ${{ secrets.USER_DB_HOST }}
+          USER_DB_PORT: ${{ secrets.USER_DB_PORT }}
+          USER_DB_NAME: ${{ secrets.USER_DB_NAME }}
+          USER_DB_USER: ${{ secrets.USER_DB_USER }}
+          USER_DB_PASSWORD: ${{ secrets.USER_DB_PASSWORD }}
+          USER_MIG_DB_USER: ${{ secrets.USER_MIG_DB_USER }}
+          USER_MIG_DB_PASSWORD: ${{ secrets.USER_MIG_DB_PASSWORD }}
+          ORDER_DB_HOST: ${{ secrets.ORDER_DB_HOST }}
+          ORDER_DB_PORT: ${{ secrets.ORDER_DB_PORT }}
+          ORDER_DB_NAME: ${{ secrets.ORDER_DB_NAME }}
+          ORDER_DB_USER: ${{ secrets.ORDER_DB_USER }}
+          ORDER_DB_PASSWORD: ${{ secrets.ORDER_DB_PASSWORD }}
+          ORDER_MIG_DB_USER: ${{ secrets.ORDER_MIG_DB_USER }}
+          ORDER_MIG_DB_PASSWORD: ${{ secrets.ORDER_MIG_DB_PASSWORD }}
+          NOTIFICATION_MAIL_HOST: ${{ secrets.NOTIFICATION_MAIL_HOST }}
+          NOTIFICATION_MAIL_PORT: ${{ secrets.NOTIFICATION_MAIL_PORT }}
+          NOTIFICATION_MAIL_USER: ${{ secrets.NOTIFICATION_MAIL_USER }}
+          NOTIFICATION_MAIL_PASSWORD: ${{ secrets.NOTIFICATION_MAIL_PASSWORD }}
+          NOTIFICATION_MAIL_FROM: ${{ secrets.NOTIFICATION_MAIL_FROM }}
+        run: |
+          set -euo pipefail
+          # Ensure RBAC namespace and RBAC chart are installed for selected namespaces
+          echo "Ensuring shopease-system namespace exists"
+          kubectl create namespace shopease-system --dry-run=client -o yaml | kubectl apply -f -
+
+          
+          # ======Map SERVICES to namespace names========#
+
+          NAMESPACES=()
+          if [ -z "$INPUT_SERVICES" ] || [ "$INPUT_SERVICES" = "all" ]; then
+            SERVICES=(product user order notification frontend)
+          else
+            IFS=',' read -r -a items <<< "$INPUT_SERVICES"
+            SERVICES=()
+            for s in "${items[@]}"; do
+              s_trim=$(echo "$s" | xargs)
+              case "$s_trim" in
+                product|user|order|notification|frontend)
+                  SERVICES+=("\"$s_trim\"") ;;
+                *) echo "Ignoring unknown service '$s_trim'" ;;
+              esac
+            done
+          fi
+
+          for svc in "${SERVICES[@]}"; do
+            # accumulate namespaces list for RBAC values
+            case "$svc" in
+              product) NAMESPACES+=(shopease-product) ;;
+              user) NAMESPACES+=(shopease-user) ;;
+              order) NAMESPACES+=(shopease-order) ;;
+              notification) NAMESPACES+=(shopease-notification) ;;
+              frontend) NAMESPACES+=(shopease-frontend) ;;
+            esac
+
+            # ======Assigns as needed, the namespace, secret name, uppercase prefix, and chart directory for each service in the 'for' loop=====#
+
+            case "$svc" in
+              frontend)
+                NS=shopease-frontend ;;
+              product)
+                NS=shopease-product
+                SECRET_NAME=shopease-product-db
+                db-keys=(PRODUCT_DB_HOST PRODUCT_DB_PORT PRODUCT_DB_NAME PRODUCT_DB_USER PRODUCT_DB_PASSWORD)
+                mig-keys=(PRODUCT_MIG_DB_USER PRODUCT_MIG_DB_PASSWORD PRODUCT_MIG_DB_HOST PRODUCT_MIG_DB_PORT PRODUCT_MIG_DB_NAME)
+                PREFIX=PRODUCT
+                ;;
+              user)
+                NS=shopease-user
+                SECRET_NAME=shopease-user-db
+                db-keys=(USER_DB_HOST USER_DB_PORT USER_DB_NAME USER_DB_USER USER_DB_PASSWORD)
+                mig-keys=(USER_MIG_DB_USER USER_MIG_DB_PASSWORD USER_MIG_DB_HOST USER_MIG_DB_PORT USER_MIG_DB_NAME)
+                PREFIX=USER
+                ;;
+              order)
+                NS=shopease-order
+                SECRET_NAME=shopease-order-db
+                db-keys=(ORDER_DB_HOST ORDER_DB_PORT ORDER_DB_NAME ORDER_DB_USER ORDER_DB_PASSWORD)
+                mig-keys=(ORDER_MIG_DB_USER ORDER_MIG_DB_PASSWORD ORDER_MIG_DB_HOST ORDER_MIG_DB_PORT ORDER_MIG_DB_NAME)
+                PREFIX=ORDER
+                ;;
+              notification)
+                NS=shopease-notification
+                SECRET_NAME=shopease-notification-credentials 
+                mail-keys=(NOTIFICATION_MAIL_HOST NOTIFICATION_MAIL_PORT NOTIFICATION_MAIL_USER NOTIFICATION_MAIL_PASSWORD NOTIFICATION_MAIL_FROM)
+                ;;
+            esac
+
+            echo "Ensuring namespace $NS exists"
+            kubectl create namespace "$NS" --dry-run=client -o yaml | kubectl apply -f -
+
+            # ========Ensure imagePullSecret for GHCR is created in the namespace=========#
+
+            echo "Ensuring ghcr-pull-secret exists in namespace $NS"
+            if [ -n "${GHCR_READ_USERNAME:-}" ] && [ -n "${GHCR_READ_TOKEN:-}" ]; then
+              kubectl -n "$NS" create secret docker-registry ghcr-pull-secret \
+                --docker-server=ghcr.io \
+                --docker-username="$GHCR_READ_USERNAME" \
+                --docker-password="$GHCR_READ_TOKEN" \
+                --docker-email="noreply@github.com" \
+                --dry-run=client -o yaml | kubectl apply -f -
+              echo "Created/updated ghcr-pull-secret in $NS"
+            else
+              echo "GHCR credentials not provided; skipping ghcr-pull-secret creation in $NS"
+            fi
+
+            if [ "$svc" = "notification" ]; then
+              echo "Provisioning notification secret $SECRET_NAME in namespace $NS for service $svc"
+              # Notification service secrets
+              ARGS=()
+              for key in "${mail-keys[@]}"; do
+                # Read from environment variable exported at the step level
+                val="${!key:-}"
+                if [ -n "$val" ]; then
+                  ARGS+=( --from-literal="${key}=$val" )
+                fi
+              done
+              if [ ${#ARGS[@]} -gt 0 ]; then
+                kubectl -n "$NS" create secret generic "$SECRET_NAME" "${ARGS[@]}" --dry-run=client -o yaml | kubectl apply -f -
+                echo "Created/updated $SECRET_NAME in $NS"
+              else
+                echo "No notification secrets found for $svc; skipping"
+              fi
+            fi
+
+            # ======Install DB secrets for product, user, order services========#
+
+            if [ "$svc" = "frontend" ] || [ "$svc" = "notification" ]; then
+              echo "Frontend and notification services have no DB secrets to provision; skipping"
+            else
+              echo "Provisioning DB secret $SECRET_NAME in namespace $NS for service $svc"           
+              ARGS=()
+              for key in "${db-keys[@]}"; do
+                # Write keys using the <SERVICE>_DB_* naming convention (e.g. PRODUCT_DB_HOST)
+                # GitHub secrets are referenced via environment substitution - use indirect expansion
+                val="${!key:-}"
+                if [ -n "$val" ]; then
+                  ARGS+=( --from-literal="${key}=$val" )
+                fi
+              done
+              if [ ${#ARGS[@]} -gt 0 ]; then
+                kubectl -n "$NS" create secret generic "$SECRET_NAME" "${ARGS[@]}" --dry-run=client -o yaml | kubectl apply -f -
+                echo "Created/updated $SECRET_NAME in $NS"
+              else
+                echo "No DB secrets present for $svc; skipping $SECRET_NAME"
+              fi
+            fi
+
+            # ======Migration secret (optional)========#
+            MIG_USER_KEY="${PREFIX}_MIG_DB_USER"
+            MIG_PASS_KEY="${PREFIX}_MIG_DB_PASSWORD"
+
+            MIG_USER_VAL="${!MIG_USER_KEY:-}"
+            MIG_PASS_VAL="${!MIG_PASS_KEY:-}"
+            # Skip services that do not need migration secrets
+            if [ "$svc" = "frontend" ] || [ "$svc" = "notification" ]; then
+              echo "Frontend and notification services have no migration secrets to provision; skipping"              
+            elif [ -n "$MIG_USER_VAL" ] && [ -n "$MIG_PASS_VAL" ]; then
+              echo "Provisioning migration DB secret for service $svc"             
+              ARGS=()
+              for key in "${mig-keys[@]}"; do
+                # Read from environment variable exported at the step level
+                val="${!key:-}"
+                if [ -n "$val" ]; then
+                  ARGS+=( --from-literal="${key}=$val" )
+                fi
+              done
+              if [ ${#ARGS[@]} -gt 0 ]; then
+                MIG_SECRET_NAME="${SECRET_NAME}-migration"
+                kubectl -n "$NS" create secret generic "$MIG_SECRET_NAME" "${ARGS[@]}" --dry-run=client -o yaml | kubectl apply -f -
+                echo "Created/updated migration secret $MIG_SECRET_NAME in $NS"
+              else
+                echo "No migration DB secrets present for $svc; skipping migration secret"
+              fi
+            fi            
+          done
+
+          #======= After provisioning loop, write RBAC targets and install RBAC chart========#
+          # Build temporary values.yaml containing only the selected targets
+          tmpvals=$(mktemp)
+          echo "targets:" > "$tmpvals"
+          for ns in "${NAMESPACES[@]}"; do
+            echo "- namespace: ${ns}" >> "$tmpvals"
+            echo "  serviceAccount: arc-runner-sa" >> "$tmpvals"
+            echo "  subjectNamespace: arc-runners" >> "$tmpvals"
+            echo "  roleName: deployer" >> "$tmpvals"
+            echo "  bindingName: deployer-binding" >> "$tmpvals"
+          done
+          echo "Using temporary RBAC values file: $tmpvals"
+          helm lint helm-charts/rbac || true
+          helm upgrade --install shopease-rbac helm-charts/rbac \
+            --namespace shopease-system --create-namespace --atomic --wait --timeout 5m \
+            -f "$tmpvals"
+          rm -f "$tmpvals" || true
+
+          echo "Provisioning completed"

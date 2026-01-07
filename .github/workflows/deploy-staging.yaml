@@ -10,6 +10,10 @@ on:
       image_tag:
         description: "Container image tag (immutable, e.g. staging-<commit-sha> or full digest). Required for manual deploys."
         required: true
+      ensure_infra:
+        description: "If true, call the infra provisioning workflow before deploying"
+        required: false
+        default: "false"
       values_file:
         description: "Path to Helm values file (defaults to helm-charts/values-staging.yaml)"
         required: false
@@ -21,7 +25,7 @@ on:
 
 jobs:
   prepare:
-    runs-on: arc-runnerset-instance
+    runs-on: self-hosted
     outputs:
       kubeconfig: ${{ steps.configure.outputs.kubeconfig }}
     steps:
@@ -58,57 +62,47 @@ jobs:
           echo "KUBECONFIG=$KUBECONFIG_PATH" >> $GITHUB_ENV
           echo "kubeconfig=$KUBECONFIG_PATH" >> $GITHUB_OUTPUT
 
-      - name: Ensure rbac release namespace exists
-        run: kubectl create namespace shopease-system --dry-run=client -o yaml | kubectl apply -f -
-        env:
-          KUBECONFIG: ${{ steps.configure.outputs.kubeconfig }}
-
-      - name: Create selected service namespaces
-        run: |
-          export KUBECONFIG=${{ steps.configure.outputs.kubeconfig }}
-          INPUT_SERVICES='${{ github.event.inputs.services }}'
-          [[ -z "$INPUT_SERVICES" ]] && INPUT_SERVICES=all
-          if [[ "$INPUT_SERVICES" == "all" ]]; then
-            NAMESPACES=(shopease-user shopease-product shopease-order shopease-notification shopease-frontend)
-          else
-            IFS=',' read -r -a items <<< "$INPUT_SERVICES"
-            NAMESPACES=()
-            for s in "${items[@]}"; do
-              case "$s" in
-                user) NAMESPACES+=(shopease-user) ;;
-                product) NAMESPACES+=(shopease-product) ;;
-                order) NAMESPACES+=(shopease-order) ;;
-                notification) NAMESPACES+=(shopease-notification) ;;
-                frontend) NAMESPACES+=(shopease-frontend) ;;
-              esac
-            done
-          fi
-          for ns in "${NAMESPACES[@]}"; do
-            kubectl create namespace "$ns" --dry-run=client -o yaml | kubectl apply -f -
-          done
-
-      - name: Install/Upgrade RBAC Helm chart (limited to selected namespaces)
-        run: |
-          export KUBECONFIG=${{ steps.configure.outputs.kubeconfig }}
-          set -euo pipefail
-          # Build temporary values.yaml containing only the selected targets
-          tmpvals=$(mktemp)
-          echo "targets:" > "$tmpvals"
-          for ns in "${NAMESPACES[@]}"; do
-            printf '%s\n' "- namespace: ${ns}" "  serviceAccount: arc-runner-sa" "  subjectNamespace: arc-runners" "  roleName: deployer" "  bindingName: deployer-binding" >> "$tmpvals"
-          done
-          echo "Using temporary RBAC values file:" "$tmpvals"
-          helm lint helm-charts/rbac || true
-          # templates validated with `helm lint` above
-          helm upgrade --install shopease-rbac helm-charts/rbac \
-            --namespace shopease-system --create-namespace --atomic --wait --timeout 5m \
-            -f "$tmpvals"
-          rm -f "$tmpvals"
-
+  ensure-infra:
+    needs: prepare
+    if: ${{ github.event.inputs.ensure_infra == 'true' }}
+    uses: ./.github/workflows/infra-provisioning.yml
+    with:
+      services: "all"
+      image_tag: ${{ github.event.inputs.image_tag }}
+      run_migrations: false
+    secrets:
+      GHCR_READ_USERNAME: ${{ secrets.GHCR_READ_USERNAME }}
+      GHCR_READ_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
+      PRODUCT_DB_HOST: ${{ secrets.PRODUCT_DB_HOST }}
+      PRODUCT_DB_PORT: ${{ secrets.PRODUCT_DB_PORT }}
+      PRODUCT_DB_NAME: ${{ secrets.PRODUCT_DB_NAME }}
+      PRODUCT_DB_USER: ${{ secrets.PRODUCT_DB_USER }}
+      PRODUCT_DB_PASSWORD: ${{ secrets.PRODUCT_DB_PASSWORD }}
+      PRODUCT_MIG_DB_USER: ${{ secrets.PRODUCT_MIG_DB_USER }}
+      PRODUCT_MIG_DB_PASSWORD: ${{ secrets.PRODUCT_MIG_DB_PASSWORD }}
+      USER_DB_HOST: ${{ secrets.USER_DB_HOST }}
+      USER_DB_PORT: ${{ secrets.USER_DB_PORT }}
+      USER_DB_NAME: ${{ secrets.USER_DB_NAME }}
+      USER_DB_USER: ${{ secrets.USER_DB_USER }}
+      USER_DB_PASSWORD: ${{ secrets.USER_DB_PASSWORD }}
+      USER_MIG_DB_USER: ${{ secrets.USER_MIG_DB_USER }}
+      USER_MIG_DB_PASSWORD: ${{ secrets.USER_MIG_DB_PASSWORD }}
+      ORDER_DB_HOST: ${{ secrets.ORDER_DB_HOST }}
+      ORDER_DB_PORT: ${{ secrets.ORDER_DB_PORT }}
+      ORDER_DB_NAME: ${{ secrets.ORDER_DB_NAME }}
+      ORDER_DB_USER: ${{ secrets.ORDER_DB_USER }}
+      ORDER_DB_PASSWORD: ${{ secrets.ORDER_DB_PASSWORD }}
+      ORDER_MIG_DB_USER: ${{ secrets.ORDER_MIG_DB_USER }}
+      ORDER_MIG_DB_PASSWORD: ${{ secrets.ORDER_MIG_DB_PASSWORD }}
+      NOTIFICATION_MAIL_HOST: ${{ secrets.NOTIFICATION_MAIL_HOST }}
+      NOTIFICATION_MAIL_PORT: ${{ secrets.NOTIFICATION_MAIL_PORT }}
+      NOTIFICATION_MAIL_USER: ${{ secrets.NOTIFICATION_MAIL_USER }}
+      NOTIFICATION_MAIL_PASSWORD: ${{ secrets.NOTIFICATION_MAIL_PASSWORD }}
+      NOTIFICATION_MAIL_FROM: ${{ secrets.NOTIFICATION_MAIL_FROM }}
   
   set-matrix:
     name: Set deployment matrix
-    runs-on: arc-runnerset-instance
+    runs-on: self-hosted
     needs: prepare
     outputs:
       matrix: ${{ steps.set.outputs.matrix }}
@@ -143,7 +137,7 @@ jobs:
         shell: bash
 
   deploy-helm:
-    runs-on: arc-runnerset-instance
+    runs-on: self-hosted
     needs: [prepare, set-matrix]
     env:
       KUBECONFIG: ${{ needs.prepare.outputs.kubeconfig }}
@@ -199,209 +193,25 @@ jobs:
         env:
           ALLOW_LATEST: ${{ github.event.inputs.allow_latest }}
 
-      - name: Ensure namespace exists
-        run: kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
-        env:
-          KUBECONFIG: ${{ needs.prepare.outputs.kubeconfig }}
-
-      - name: Create/Update DB Secret from GitHub Secrets (user/product/order only)
-        env:
-          KUBECONFIG: ${{ needs.prepare.outputs.kubeconfig }}
+      - name: Verify namespace exists
         run: |
-          set -euo pipefail
-          SERVICE="${{ matrix.service }}"
-          # Only populate the secrets relevant to the service being deployed.
-          # This minimizes accidental exposure of unrelated secrets in the job environment.
-          case "$SERVICE" in
-            product)
-              PRODUCT_DB_HOST="${{ secrets.PRODUCT_DB_HOST }}"
-              PRODUCT_DB_PORT="${{ secrets.PRODUCT_DB_PORT }}"
-              PRODUCT_DB_NAME="${{ secrets.PRODUCT_DB_NAME }}"
-              PRODUCT_DB_USER="${{ secrets.PRODUCT_DB_USER }}"
-              PRODUCT_DB_PASSWORD="${{ secrets.PRODUCT_DB_PASSWORD }}"
-              PRODUCT_MIG_DB_USER="${{ secrets.PRODUCT_MIG_DB_USER }}"
-              PRODUCT_MIG_DB_PASSWORD="${{ secrets.PRODUCT_MIG_DB_PASSWORD }}"
-              ;;
-            user)
-              USER_DB_HOST="${{ secrets.USER_DB_HOST }}"
-              USER_DB_PORT="${{ secrets.USER_DB_PORT }}"
-              USER_DB_NAME="${{ secrets.USER_DB_NAME }}"
-              USER_DB_USER="${{ secrets.USER_DB_USER }}"
-              USER_DB_PASSWORD="${{ secrets.USER_DB_PASSWORD }}"
-              USER_MIG_DB_USER="${{ secrets.USER_MIG_DB_USER }}"
-              USER_MIG_DB_PASSWORD="${{ secrets.USER_MIG_DB_PASSWORD }}"
-              ;;
-            order)
-              ORDER_DB_HOST="${{ secrets.ORDER_DB_HOST }}"
-              ORDER_DB_PORT="${{ secrets.ORDER_DB_PORT }}"
-              ORDER_DB_NAME="${{ secrets.ORDER_DB_NAME }}"
-              ORDER_DB_USER="${{ secrets.ORDER_DB_USER }}"
-              ORDER_DB_PASSWORD="${{ secrets.ORDER_DB_PASSWORD }}"
-              ORDER_MIG_DB_USER="${{ secrets.ORDER_MIG_DB_USER }}"
-              ORDER_MIG_DB_PASSWORD="${{ secrets.ORDER_MIG_DB_PASSWORD }}"
-              ;;
-            *)
-              ;;
-          esac
-          NAMESPACE="$NAMESPACE"
-          case "$SERVICE" in
-            product)
-              SECRET_NAME="shopease-product-db"
-              ;;
-            user)
-              SECRET_NAME="shopease-user-db"
-              ;;
-            order)
-              SECRET_NAME="shopease-order-db"
-              ;;
-            *)
-              echo "No DB secret required for $SERVICE"; exit 0;
-              ;;
-          esac
-          # Build secret manifest only if any matching GitHub secrets are present
-          # Expected envs (set as GitHub Secrets at repo/org):
-          #   <SERVICE>_DB_HOST, <SERVICE>_DB_PORT, <SERVICE>_DB_NAME, <SERVICE>_DB_USER, <SERVICE>_DB_PASSWORD
-          # Example: PRODUCT_DB_HOST, PRODUCT_DB_USER, PRODUCT_DB_PASSWORD, etc.
-          upper=$(echo "$SERVICE" | tr '[:lower:]' '[:upper:]')
-          keys=(DB_HOST DB_PORT DB_NAME DB_USER DB_PASSWORD)
-          has_any=0
-          tmpfile=$(mktemp)
-          echo "apiVersion: v1" > "$tmpfile"
-          echo "kind: Secret" >> "$tmpfile"
-          echo "metadata:" >> "$tmpfile"
-          echo "  name: $SECRET_NAME" >> "$tmpfile"
-          echo "type: Opaque" >> "$tmpfile"
-          echo "stringData:" >> "$tmpfile"
-          for k in "${keys[@]}"; do
-            varname="${upper}_${k}"
-            val="${!varname:-}"
-            if [ -n "$val" ]; then
-              has_any=1
-              # Write keys using the <SERVICE>_DB_* naming convention (e.g. PRODUCT_DB_HOST)
-              echo "  ${varname}: \"$val\"" >> "$tmpfile"
-            fi
-          done
-          if [ $has_any -eq 1 ]; then
-            kubectl -n "$NAMESPACE" apply -f "$tmpfile"
-            rm -f "$tmpfile"
-            echo "DB secret $SECRET_NAME applied in $NAMESPACE"
-            echo "DB_SECRET_NAME=$SECRET_NAME" >> $GITHUB_ENV
-          else
-            echo "No GitHub Secrets found for $SERVICE DB; skipping secret creation."
-            echo "DB_SECRET_NAME=" >> $GITHUB_ENV
-          fi
-          # Create migration secret if migration-specific GitHub secrets are present
-          mig_tmp=$(mktemp)
-          MIG_SECRET_NAME="${SECRET_NAME}-migration"
-          echo "apiVersion: v1" > "$mig_tmp"
-          echo "kind: Secret" >> "$mig_tmp"
-          echo "metadata:" >> "$mig_tmp"
-          echo "  name: $MIG_SECRET_NAME" >> "$mig_tmp"
-          echo "type: Opaque" >> "$mig_tmp"
-          echo "stringData:" >> "$mig_tmp"
-          upper=$(echo "$SERVICE" | tr '[:lower:]' '[:upper:]')
-          mig_has=0
-          # Check for migration-specific GitHub Secrets and map them to secret fields
-          # Map expected input env names per service (explicit names used for clarity)
-          case "$SERVICE" in
-            product)
-              MIG_USER_ENV=PRODUCT_MIG_DB_USER; MIG_PASS_ENV=PRODUCT_MIG_DB_PASSWORD; MIG_HOST_ENV=PRODUCT_DB_HOST; MIG_PORT_ENV=PRODUCT_DB_PORT; MIG_NAME_ENV=PRODUCT_DB_NAME
-              ;;
-            user)
-              MIG_USER_ENV=USER_MIG_DB_USER; MIG_PASS_ENV=USER_MIG_DB_PASSWORD; MIG_HOST_ENV=USER_DB_HOST; MIG_PORT_ENV=USER_DB_PORT; MIG_NAME_ENV=USER_DB_NAME
-              ;;
-            order)
-              MIG_USER_ENV=ORDER_MIG_DB_USER; MIG_PASS_ENV=ORDER_MIG_DB_PASSWORD; MIG_HOST_ENV=ORDER_DB_HOST; MIG_PORT_ENV=ORDER_DB_PORT; MIG_NAME_ENV=ORDER_DB_NAME
-              ;;
-            *)
-              MIG_USER_ENV=; MIG_PASS_ENV=; MIG_HOST_ENV=; MIG_PORT_ENV=; MIG_NAME_ENV=
-              ;;
-          esac
-          mig_user_val="${!MIG_USER_ENV:-}"
-          mig_pass_val="${!MIG_PASS_ENV:-}"
-          mig_host_val="${!MIG_HOST_ENV:-}"
-          mig_port_val="${!MIG_PORT_ENV:-}"
-          mig_name_val="${!MIG_NAME_ENV:-}"
-          if [ -n "$mig_user_val" ] && [ -n "$mig_pass_val" ]; then
-            mig_has=1
-            echo "  MIG_DB_USER: \"$mig_user_val\"" >> "$mig_tmp"
-            echo "  MIG_DB_PASSWORD: \"$mig_pass_val\"" >> "$mig_tmp"
-            if [ -n "$mig_host_val" ]; then echo "  DB_HOST: \"$mig_host_val\"" >> "$mig_tmp"; fi
-            if [ -n "$mig_port_val" ]; then echo "  DB_PORT: \"$mig_port_val\"" >> "$mig_tmp"; fi
-            if [ -n "$mig_name_val" ]; then echo "  DB_NAME: \"$mig_name_val\"" >> "$mig_tmp"; fi
-          fi
-          if [ $mig_has -eq 1 ]; then
-            kubectl -n "$NAMESPACE" apply -f "$mig_tmp"
-            echo "Migration secret $MIG_SECRET_NAME applied in $NAMESPACE"
-            echo "MIGRATION_DB_SECRET_NAME=$MIG_SECRET_NAME" >> $GITHUB_ENV
-          else
-            echo "No migration GitHub Secrets found for $SERVICE; skipping migration secret creation"
-            echo "MIGRATION_DB_SECRET_NAME=" >> $GITHUB_ENV
-            rm -f "$mig_tmp" || true
-          fi
-        # env moved above
+          if ! kubectl get namespace "$NAMESPACE" >/dev/null 2>&1; then
+            echo "❌ Namespace '$NAMESPACE' does not exist. Infra workflow must provision it first."
+            exit 1
+          fi          
+        env:
+          KUBECONFIG: ${{ needs.prepare.outputs.kubeconfig }}
 
-      - name: Create/Update Notification credentials Secret from GitHub Secrets (notification only)
+      - name: Secrets are managed externally (skipping in-workflow secret creation)
+        run: |
+          echo "Skipping DB and migration secret creation; ensure secrets are provisioned externally."
+
+      - name: Notification credentials are managed externally
         if: ${{ matrix.service == 'notification' }}
-        env:
-          KUBECONFIG: ${{ needs.prepare.outputs.kubeconfig }}
-          NOTIFICATION_MAIL_HOST: ${{ secrets.NOTIFICATION_MAIL_HOST }}
-          NOTIFICATION_MAIL_PORT: ${{ secrets.NOTIFICATION_MAIL_PORT }}
-          NOTIFICATION_MAIL_USER: ${{ secrets.NOTIFICATION_MAIL_USER }}
-          NOTIFICATION_MAIL_PASSWORD: ${{ secrets.NOTIFICATION_MAIL_PASSWORD }}
-          NOTIFICATION_MAIL_FROM: ${{ secrets.NOTIFICATION_MAIL_FROM }}
         run: |
-          set -euo pipefail
-          NAMESPACE="$NAMESPACE"
-          SECRET_NAME="shopease-notification-credentials"
-          # Expected GitHub Secrets (mapped to shorter stringData keys):
-          #   MAIL_HOST, MAIL_PORT, MAIL_USER, MAIL_PASSWORD, MAIL_FROM
-          tmpfile=$(mktemp)
-          echo "apiVersion: v1" > "$tmpfile"
-          echo "kind: Secret" >> "$tmpfile"
-          echo "metadata:" >> "$tmpfile"
-          echo "  name: $SECRET_NAME" >> "$tmpfile"
-          echo "type: Opaque" >> "$tmpfile"
-          echo "stringData:" >> "$tmpfile"
-          has_any=0
-          # Use loop like DB secret creation to map NOTIFICATION_<KEY> envs to shorter keys in stringData
-          keys=(MAIL_HOST MAIL_PORT MAIL_USER MAIL_PASSWORD MAIL_FROM)
-          for k in "${keys[@]}"; do
-            varname="NOTIFICATION_${k}"
-            val="${!varname:-}"
-            if [ -n "$val" ]; then
-              has_any=1
-              echo "  $k: \"$val\"" >> "$tmpfile"
-            fi
-          done
-          if [ $has_any -eq 1 ]; then
-            kubectl -n "$NAMESPACE" apply -f "$tmpfile"
-            rm -f "$tmpfile"
-            echo "Credentials secret $SECRET_NAME applied in $NAMESPACE"
-            echo "CREDENTIALS_SECRET_NAME=$SECRET_NAME" >> $GITHUB_ENV
-          else
-            echo "No GitHub Secrets found for notification credentials; skipping creation."
-            echo "CREDENTIALS_SECRET_NAME=" >> $GITHUB_ENV
-          fi
+          echo "Skipping notification credential secret creation; ensure credentials are provisioned externally."
 
-      # Namespace creation moved earlier (immediately after Compute parameters)
-
-      - name: Create/Update imagePullSecret for GHCR (optional)
-        env:
-          GHCR_READ_USERNAME: ${{ secrets.GHCR_READ_USERNAME }}
-          GHCR_READ_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
-          KUBECONFIG: ${{ needs.prepare.outputs.kubeconfig }}
-        run: |
-          if [ -n "$GHCR_READ_USERNAME" ] && [ -n "$GHCR_READ_TOKEN" ]; then
-            kubectl -n "$NAMESPACE" create secret docker-registry ghcr-pull-secret \
-              --docker-server=ghcr.io \
-              --docker-username="$GHCR_READ_USERNAME" \
-              --docker-password="$GHCR_READ_TOKEN" \
-              --docker-email="noreply@github.com" \
-              --dry-run=client -o yaml | kubectl apply -f -
-          else
-            echo "GHCR_READ_USERNAME/GHCR_READ_TOKEN not provided; skipping imagePullSecret creation"
-          fi
+      # imagePullSecret creation moved to infra provisioning (ensure_infra)
       
       - name: Pre-deploy readiness checks
         env:
@@ -410,39 +220,8 @@ jobs:
           set -euo pipefail
           echo "Running pre-deploy readiness checks in namespace $NAMESPACE"
 
-          # Wait for DB secret if provided
-          if [ -n "${DB_SECRET_NAME:-}" ]; then
-            echo "Checking DB secret: $DB_SECRET_NAME"
-            for i in $(seq 1 12); do
-              if kubectl -n "$NAMESPACE" get secret "$DB_SECRET_NAME" >/dev/null 2>&1; then
-                echo "Found secret $DB_SECRET_NAME"; break
-              fi
-              echo "Waiting for secret $DB_SECRET_NAME... ($i/12)"; sleep 5
-            done
-            if ! kubectl -n "$NAMESPACE" get secret "$DB_SECRET_NAME" >/dev/null 2>&1; then
-              echo "ERROR: required DB secret $DB_SECRET_NAME not found in $NAMESPACE"; exit 1
-            fi
-          else
-            echo "No DB secret required for this service"
-          fi
-
-          # Wait for notification credentials secret if provided
-          if [ -n "${CREDENTIALS_SECRET_NAME:-}" ]; then
-            echo "Checking credentials secret: $CREDENTIALS_SECRET_NAME"
-            for i in $(seq 1 12); do
-              if kubectl -n "$NAMESPACE" get secret "$CREDENTIALS_SECRET_NAME" >/dev/null 2>&1; then
-                echo "Found secret $CREDENTIALS_SECRET_NAME"; break
-              fi
-              echo "Waiting for secret $CREDENTIALS_SECRET_NAME... ($i/12)"; sleep 5
-            done
-            if ! kubectl -n "$NAMESPACE" get secret "$CREDENTIALS_SECRET_NAME" >/dev/null 2>&1; then
-              echo "ERROR: required credentials secret $CREDENTIALS_SECRET_NAME not found in $NAMESPACE"; exit 1
-            fi
-          else
-            echo "No credentials secret required for this service"
-          fi
-
-          # Check imagePullSecret if exists (optional)
+          # For aggressive delegation we do not provision secrets here.
+          # Ensure optional imagePullSecret presence and warn if missing.
           if kubectl -n "$NAMESPACE" get secret ghcr-pull-secret >/dev/null 2>&1; then
             echo "imagePullSecret ghcr-pull-secret present in $NAMESPACE"
           else
@@ -459,32 +238,33 @@ jobs:
         run: |
           set -euo pipefail
           OWNER="${{ github.repository_owner }}"
-          # Optional: read env values from umbrella values-staging.yaml using yq
-          # Per-service environment values are now owned by each service's Helm chart
-          # (services/<svc>/helm/values.yaml). We don't need to extract `env` from the
-          # umbrella values file anymore. If a custom values file was supplied via
-          # the `values_file` input, it will be passed directly to Helm below.
 
           case "${{ matrix.service }}" in
             user)
               CHART_DIR="services/user-service/helm";
               IMAGE_REPO="ghcr.io/${OWNER}/user-service";
-              HELM_SET_DB_VAL="db.secretName=${DB_SECRET_NAME}"
+              SET_SECRET_NAME="db.secretName=shopease-user-db"
+              MIGRATION_ENABLED="true"
+              MIGRATION_DB_SEC="${SET_SECRET_NAME}-migration"
               ;;
             product)
               CHART_DIR="services/product-service/helm";
               IMAGE_REPO="ghcr.io/${OWNER}/product-service";
-              HELM_SET_DB_VAL="db.secretName=${DB_SECRET_NAME}"
+              SET_SECRET_NAME="db.secretName=shopease-product-db"
+              MIGRATION_ENABLED="true"
+              MIGRATION_DB_SEC="${SET_SECRET_NAME}-migration"
               ;;
             order)
               CHART_DIR="services/order-service/helm";
               IMAGE_REPO="ghcr.io/${OWNER}/order-service";
-              HELM_SET_DB_VAL="db.secretName=${DB_SECRET_NAME}"
+              SET_SECRET_NAME="db.secretName=shopease-order-db"
+              MIGRATION_ENABLED="true"
+              MIGRATION_DB_SEC="${SET_SECRET_NAME}-migration"
               ;;
             notification)
               CHART_DIR="services/notification-service/helm";
               IMAGE_REPO="ghcr.io/${OWNER}/notification-service";
-              HELM_SET_DB_VAL="credentials.secretName=${CREDENTIALS_SECRET_NAME}"
+              SET_SECRET_NAME="credentials.secretName=shopease-notification-credentials"
               ;;
             frontend)
               CHART_DIR="frontend/helm";
@@ -492,6 +272,7 @@ jobs:
               HELM_SET_DB=""
               ;;
           esac
+          
           # Optional: imagePullSecrets from umbrella values (use ghcr-pull-secret if present)
           HELM_SET_PULLSECRET_VAL="imagePullSecrets[0].name=ghcr-pull-secret"
           helm lint "$CHART_DIR"
@@ -504,20 +285,20 @@ jobs:
             user|order|product)
               HELM_ARGS+=( --set flyway.enabled=false ) ;;
           esac
-          # Ensure migration Job uses the same immutable Flyway image tag built by CI
-          # Build a migration image name from the service image repo (append -flyway)
-          repo_name="${IMAGE_REPO##*/}"
-          MIG_IMAGE="ghcr.io/${OWNER}/${repo_name}-flyway"
-          case "${{ matrix.service }}" in
-            user|order|product)
-              HELM_ARGS+=( --set "migration.image=${MIG_IMAGE}" --set "migration.tag=${IMAGE_TAG_INPUT}" ) ;;
-          esac
+
+          # --- Handle optional values/migration/imagePullSecret args ---
+          if [ -n "${MIGRATION_ENABLED:-}" ]; then
+            HELM_ARGS+=( --set "migration.enabled=$MIGRATION_ENABLED" )
+          fi
+          if [ -n "${MIGRATION_DB_SEC:-}" ]; then
+            HELM_ARGS+=( --set "migration.secretName=$MIGRATION_DB_SEC" )
+          fi
           # If an umbrella or custom values file was provided, pass it directly to Helm.
           if [ -n "${VALUES_FILE:-}" ] && [ -f "$VALUES_FILE" ]; then
             HELM_ARGS+=( -f "$VALUES_FILE" )
           fi
-          if [ -n "${HELM_SET_DB_VAL:-}" ]; then
-            HELM_ARGS+=( --set "$HELM_SET_DB_VAL" )
+          if [ -n "${SET_SECRET_NAME:-}" ]; then
+            HELM_ARGS+=( --set "$SET_SECRET_NAME" )
           fi
           if [ -n "${HELM_SET_PULLSECRET_VAL:-}" ]; then
             HELM_ARGS+=( --set "$HELM_SET_PULLSECRET_VAL" )
@@ -554,62 +335,20 @@ jobs:
             fi
           fi
 
-          # 2) If an existing release is present, fail fast when pods show ImagePullBackOff/ErrImagePull
-          if helm -n "$NAMESPACE" status "$RELEASE_NAME" >/dev/null 2>&1; then
-            echo "Existing release $RELEASE_NAME detected; checking pods for ImagePullBackOff/ErrImagePull"
-            bad=$(kubectl -n "$NAMESPACE" get pods -l app.kubernetes.io/instance="$RELEASE_NAME" -o jsonpath='{range .items[*]}{.metadata.name}{":"}{range .status.containerStatuses[*]}{.state.waiting.reason}{";"}{end}{"\n"}{end}' 2>/dev/null || true)
-            if printf '%s' "$bad" | egrep -q 'ImagePullBackOff|ErrImagePull'; then
-              echo "ERROR: existing release $RELEASE_NAME has pods in ImagePullBackOff/ErrImagePull. Describe pods:"
-              kubectl -n "$NAMESPACE" describe pods -l app.kubernetes.io/instance="$RELEASE_NAME" --show-events || true
-              helm -n "$NAMESPACE" status "$RELEASE_NAME" || true
-              helm -n "$NAMESPACE" history "$RELEASE_NAME" || true
-              exit 1
-            fi
-          fi
-
-          # 3) Run helm upgrade/install and surface helpful diagnostics on concurrency lock
-          # 2.5) If migrations are configured, render and run the chart's migration Job (out-of-band)
-          # We will look for a migration secret created earlier named ${DB_SECRET_NAME}-migration or provided via values.
-          # Prefer explicitly created migration secret name from earlier step
-          MIG_SECRET="${MIGRATION_DB_SECRET_NAME:-${DB_SECRET_NAME}-migration}"
-          # If a secret with migration creds exists, apply the migration Job from the chart (show-only)
-          if kubectl -n "$NAMESPACE" get secret "$MIG_SECRET" >/dev/null 2>&1; then
-            echo "Found migration secret $MIG_SECRET; rendering migration Job from chart and applying"
-            # Render only the migration Job and apply to cluster
-            helm template "${RELEASE_NAME}-migrations" "$CHART_DIR" --namespace "$NAMESPACE" \
-              --set migration.enabled=true --set migration.secretName=$MIG_SECRET ${HELM_ARGS[*]} --show-only templates/migration-job.yaml | kubectl -n "$NAMESPACE" apply -f -
-            # Wait for job completion
-            # Attempt to locate the Job by common name patterns
-            SERVICE_NAME=${RELEASE_NAME#shopease-}
-            CANDIDATES=("${SERVICE_NAME}-migration" "${SERVICE_NAME}-service-migration" "${RELEASE_NAME}-migration")
-            JOB_NAME=""
-            for cand in "${CANDIDATES[@]}"; do
-              if kubectl -n "$NAMESPACE" get job "$cand" >/dev/null 2>&1; then
-                JOB_NAME="$cand"; break
-              fi
-            done
-            if [ -n "$JOB_NAME" ]; then
-              echo "Waiting for migration job $JOB_NAME to complete"
-              if ! kubectl -n "$NAMESPACE" wait --for=condition=complete job/$JOB_NAME --timeout=600s; then
-                echo "Migration job $JOB_NAME failed or timed out; fetching logs"
-                kubectl -n "$NAMESPACE" logs job/$JOB_NAME --tail=200 || true
-                exit 1
-              fi
-              echo "Migration job $JOB_NAME completed"
-            else
-              echo "Migration job not found after applying template; continuing"
-            fi
-          else
-            echo "No migration secret ($MIG_SECRET) found; skipping migration Job"
-          fi
+          # 2) Run helm upgrade/install and surface helpful diagnostics on concurrency lock
+          # Migrations are delegated out-of-band; this deploy workflow will not render/apply migration Jobs.
 
           tmphelmout=$(mktemp)
-          if helm upgrade --install "$RELEASE_NAME" "$CHART_DIR" "${HELM_ARGS[@]}" --atomic --wait --timeout 10m 2>&1 | tee "$tmphelmout"; then
+          if helm upgrade --install "$RELEASE_NAME" "$CHART_DIR" \
+              "${HELM_ARGS[@]}" \
+              --atomic --wait --timeout 10m 2>&1 | tee "$tmphelmout"; then
             echo "Helm upgrade/install succeeded"
           else
             helm_out=$(cat "$tmphelmout" || true)
             if printf '%s' "$helm_out" | grep -q "another operation (install/upgrade/rollback) is in progress"; then
               echo "ERROR: Helm reported a concurrent operation lock for release $RELEASE_NAME"
+              echo "---Pod Descriptions---"
+              kubectl -n "$NAMESPACE" describe pods -l app.kubernetes.io/instance="$RELEASE_NAME" --show-events || true
               echo "--- Helm status ---"
               helm -n "$NAMESPACE" status "$RELEASE_NAME" || true
               echo "--- Helm history ---"
@@ -634,17 +373,7 @@ jobs:
           # Safely resolve the deployment name for the Helm release. Avoid jsonpath array access which
           # errors when no deployments are found; instead use -o name and handle empty output.
           DEPLOY_NAME=$(kubectl -n "$NAMESPACE" get deploy -l app.kubernetes.io/instance="$RELEASE_NAME" -o name | head -n1 | cut -d'/' -f2 || true)
-          if [ -z "$DEPLOY_NAME" ]; then
-            echo "ERROR: No Deployment found for release $RELEASE_NAME in namespace $NAMESPACE"
-            echo "Listing deployments with the release label for debugging:"
-            kubectl -n "$NAMESPACE" get deploy -l app.kubernetes.io/instance="$RELEASE_NAME" -o wide || true
-            echo "Listing pods for the release (if any):"
-            kubectl -n "$NAMESPACE" get pods -l app.kubernetes.io/instance="$RELEASE_NAME" -o wide || true
-            # Surface Helm status/history to aid debugging
-            helm -n "$NAMESPACE" status "$RELEASE_NAME" || true
-            helm -n "$NAMESPACE" history "$RELEASE_NAME" || true
-            exit 1
-          fi
+          
           echo "Waiting for rollout of deployment/$DEPLOY_NAME in namespace $NAMESPACE"
           kubectl -n "$NAMESPACE" rollout status deployment/$DEPLOY_NAME --timeout=600s
         env:
@@ -671,7 +400,8 @@ jobs:
           echo "Detected Service: $SERVICE_NAME"
           
           kubectl -n "$NAMESPACE" run curl-test --restart=Never --rm -i \
-            --image=curlimages/curl:8.8.0 --labels=run=curl-test --command -- \
+            --image=curlimages/curl:8.8.0 --labels=run=curl-test \
+            --overrides='{"spec":{"automountServiceAccountToken":false}}' --command -- \
             curl -fsS --connect-timeout 5 --max-time 10 http://$SERVICE_NAME.$NAMESPACE.svc.cluster.local:$PORT$PATH
 
           echo "Smoke test succeeded for $SERVICE_NAME"

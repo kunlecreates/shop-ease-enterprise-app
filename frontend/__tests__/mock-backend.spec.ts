@@ -12,7 +12,7 @@ describe('mock-backend (in-process)', () => {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         return res.end(JSON.stringify({ status: 'ok' }));
       }
-      if (req.url === '/api/products' && req.method === 'GET') {
+      if (req.url === '/api/product' && req.method === 'GET') {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         return res.end(JSON.stringify([{ id: 1, name: 'Apple', price: 100 }]));
       }
@@ -41,8 +41,8 @@ describe('mock-backend (in-process)', () => {
 
   afterAll((done) => { server.close(() => done()); });
 
-  test('GET /api/products returns products array', (done) => {
-    http.get(`http://127.0.0.1:${PORT}/api/products`, (res) => {
+  test('GET /api/product returns products array', (done) => {
+    http.get(`http://127.0.0.1:${PORT}/api/product`, (res) => {
       expect(res.statusCode).toBe(200);
       let body = '';
       res.on('data', (c) => (body += c));

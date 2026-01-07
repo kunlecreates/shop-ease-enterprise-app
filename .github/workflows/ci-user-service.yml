@@ -48,7 +48,6 @@ jobs:
           mvn -B -f "${{ env.MODULE_PATH }}" dependency:tree -Dscope=test || true
 
       - name: Docker diagnostics (optional)
-        if: ${{ false }}
         run: |
           echo "Docker diagnostics"
           docker --version || true
