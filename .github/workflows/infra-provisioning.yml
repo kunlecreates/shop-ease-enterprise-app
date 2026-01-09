@@ -108,211 +108,122 @@ jobs:
           echo "KUBECONFIG=$KUBECONFIG_PATH" >> $GITHUB_ENV
           echo "kubeconfig=$KUBECONFIG_PATH" >> $GITHUB_OUTPUT
 
-      - name: Provision secrets 
-        env:
-          KUBECONFIG: ${{ steps.configure.outputs.kubeconfig }}
-          INPUT_SERVICES: ${{ github.event.inputs.services }}
-          GHCR_READ_USERNAME: ${{ secrets.GHCR_READ_USERNAME }}
-          GHCR_READ_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
-          PRODUCT_DB_HOST: ${{ secrets.PRODUCT_DB_HOST }}
-          PRODUCT_DB_PORT: ${{ secrets.PRODUCT_DB_PORT }}
-          PRODUCT_DB_NAME: ${{ secrets.PRODUCT_DB_NAME }}
-          PRODUCT_DB_USER: ${{ secrets.PRODUCT_DB_USER }}
-          PRODUCT_DB_PASSWORD: ${{ secrets.PRODUCT_DB_PASSWORD }}
-          PRODUCT_MIG_DB_USER: ${{ secrets.PRODUCT_MIG_DB_USER }}
-          PRODUCT_MIG_DB_PASSWORD: ${{ secrets.PRODUCT_MIG_DB_PASSWORD }}
-          USER_DB_HOST: ${{ secrets.USER_DB_HOST }}
-          USER_DB_PORT: ${{ secrets.USER_DB_PORT }}
-          USER_DB_NAME: ${{ secrets.USER_DB_NAME }}
-          USER_DB_USER: ${{ secrets.USER_DB_USER }}
-          USER_DB_PASSWORD: ${{ secrets.USER_DB_PASSWORD }}
-          USER_MIG_DB_USER: ${{ secrets.USER_MIG_DB_USER }}
-          USER_MIG_DB_PASSWORD: ${{ secrets.USER_MIG_DB_PASSWORD }}
-          ORDER_DB_HOST: ${{ secrets.ORDER_DB_HOST }}
-          ORDER_DB_PORT: ${{ secrets.ORDER_DB_PORT }}
-          ORDER_DB_NAME: ${{ secrets.ORDER_DB_NAME }}
-          ORDER_DB_USER: ${{ secrets.ORDER_DB_USER }}
-          ORDER_DB_PASSWORD: ${{ secrets.ORDER_DB_PASSWORD }}
-          ORDER_MIG_DB_USER: ${{ secrets.ORDER_MIG_DB_USER }}
-          ORDER_MIG_DB_PASSWORD: ${{ secrets.ORDER_MIG_DB_PASSWORD }}
-          NOTIFICATION_MAIL_HOST: ${{ secrets.NOTIFICATION_MAIL_HOST }}
-          NOTIFICATION_MAIL_PORT: ${{ secrets.NOTIFICATION_MAIL_PORT }}
-          NOTIFICATION_MAIL_USER: ${{ secrets.NOTIFICATION_MAIL_USER }}
-          NOTIFICATION_MAIL_PASSWORD: ${{ secrets.NOTIFICATION_MAIL_PASSWORD }}
-          NOTIFICATION_MAIL_FROM: ${{ secrets.NOTIFICATION_MAIL_FROM }}
-        run: |
-          set -euo pipefail
-          # Ensure RBAC namespace and RBAC chart are installed for selected namespaces
-          echo "Ensuring shopease-system namespace exists"
-          kubectl create namespace shopease-system --dry-run=client -o yaml | kubectl apply -f -
+      - name: Provision secrets (node)
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { execSync } = require('child_process');
+            const env = process.env;
 
-          
-          # ======Map SERVICES to namespace names========#
+            function run(cmd, opts = {}) {
+              console.log(`$ ${cmd}`);
+              execSync(cmd, { stdio: 'inherit', env: process.env, shell: '/bin/bash', ...opts });
+            }
 
-          NAMESPACES=()
-          if [ -z "$INPUT_SERVICES" ] || [ "$INPUT_SERVICES" = "all" ]; then
-            SERVICES=(product user order notification frontend)
-          else
-            IFS=',' read -r -a items <<< "$INPUT_SERVICES"
-            SERVICES=()
-              for s in "${items[@]}"; do
-                s_trim=$(echo "$s" | xargs)
-                case "$s_trim" in
-                  product|user|order|notification|frontend)
-                    SERVICES+=("$s_trim") ;;
-                  *) echo "Ignoring unknown service '$s_trim'" ;;
-                esac
-              done
-          fi
+            // Ensure RBAC namespace exists
+            console.log('Ensuring shopease-system namespace exists');
+            run('kubectl create namespace shopease-system --dry-run=client -o yaml | kubectl apply -f -');
 
-          for svc in "${SERVICES[@]}"; do
-            # accumulate namespaces list for RBAC values
-            case "$svc" in
-              product) NAMESPACES+=("shopease-product") ;;
-              user) NAMESPACES+=("shopease-user") ;;
-              order) NAMESPACES+=("shopease-order") ;;
-              notification) NAMESPACES+=("shopease-notification") ;;
-              frontend) NAMESPACES+=("shopease-frontend") ;;
-            esac
+            // Determine services list
+            const input = env.INPUT_SERVICES || 'all';
+            const all = ['product', 'user', 'order', 'notification', 'frontend'];
+            let services = [];
+            if (!input || input === 'all') {
+              services = all;
+            } else {
+              services = input.split(',').map(s => s.trim()).filter(Boolean).map(s => {
+                if (all.includes(s)) return s; console.log(`Ignoring unknown service '${s}'`); return null;
+              }).filter(Boolean);
+            }
 
-            # ======Assigns as needed, the namespace, secret name, uppercase prefix, and migration credentials for each service in the 'for' loop=====#
+            const namespaces = [];
+            for (const svc of services) {
+              switch (svc) {
+                case 'product': namespaces.push('shopease-product'); break;
+                case 'user': namespaces.push('shopease-user'); break;
+                case 'order': namespaces.push('shopease-order'); break;
+                case 'notification': namespaces.push('shopease-notification'); break;
+                case 'frontend': namespaces.push('shopease-frontend'); break;
+              }
 
-            case "$svc" in
-              frontend)
-                NS=shopease-frontend ;;
-              product)
-                NS=shopease-product
-                SECRET_NAME=shopease-product-db
-                db-keys=(PRODUCT_DB_HOST PRODUCT_DB_PORT PRODUCT_DB_NAME PRODUCT_DB_USER PRODUCT_DB_PASSWORD)
-                mig-keys=(PRODUCT_MIG_DB_USER PRODUCT_MIG_DB_PASSWORD PRODUCT_MIG_DB_HOST PRODUCT_MIG_DB_PORT PRODUCT_MIG_DB_NAME)
-                PREFIX=PRODUCT
-                ;;
-              user)
-                NS=shopease-user
-                SECRET_NAME=shopease-user-db
-                db-keys=(USER_DB_HOST USER_DB_PORT USER_DB_NAME USER_DB_USER USER_DB_PASSWORD)
-                mig-keys=(USER_MIG_DB_USER USER_MIG_DB_PASSWORD USER_MIG_DB_HOST USER_MIG_DB_PORT USER_MIG_DB_NAME)
-                PREFIX=USER
-                ;;
-              order)
-                NS=shopease-order
-                SECRET_NAME=shopease-order-db
-                db-keys=(ORDER_DB_HOST ORDER_DB_PORT ORDER_DB_NAME ORDER_DB_USER ORDER_DB_PASSWORD)
-                mig-keys=(ORDER_MIG_DB_USER ORDER_MIG_DB_PASSWORD ORDER_MIG_DB_HOST ORDER_MIG_DB_PORT ORDER_MIG_DB_NAME)
-                PREFIX=ORDER
-                ;;
-              notification)
-                NS=shopease-notification
-                SECRET_NAME=shopease-notification-credentials
-                mail-keys=(NOTIFICATION_MAIL_HOST NOTIFICATION_MAIL_PORT NOTIFICATION_MAIL_USER NOTIFICATION_MAIL_PASSWORD NOTIFICATION_MAIL_FROM)
-                ;;
-            esac
+              let NS = '';
+              let SECRET_NAME = '';
+              let dbKeys = [];
+              let migKeys = [];
+              let mailKeys = [];
+              let PREFIX = '';
 
-            echo "Ensuring namespace $NS exists"
-            kubectl create namespace "$NS" --dry-run=client -o yaml | kubectl apply -f -
+              switch (svc) {
+                case 'frontend': NS = 'shopease-frontend'; break;
+                case 'product':
+                  NS = 'shopease-product'; SECRET_NAME = 'shopease-product-db';
+                  dbKeys = ['PRODUCT_DB_HOST','PRODUCT_DB_PORT','PRODUCT_DB_NAME','PRODUCT_DB_USER','PRODUCT_DB_PASSWORD'];
+                  migKeys = ['PRODUCT_MIG_DB_USER','PRODUCT_MIG_DB_PASSWORD','PRODUCT_MIG_DB_HOST','PRODUCT_MIG_DB_PORT','PRODUCT_MIG_DB_NAME'];
+                  PREFIX = 'PRODUCT'; break;
+                case 'user':
+                  NS = 'shopease-user'; SECRET_NAME = 'shopease-user-db';
+                  dbKeys = ['USER_DB_HOST','USER_DB_PORT','USER_DB_NAME','USER_DB_USER','USER_DB_PASSWORD'];
+                  migKeys = ['USER_MIG_DB_USER','USER_MIG_DB_PASSWORD','USER_MIG_DB_HOST','USER_MIG_DB_PORT','USER_MIG_DB_NAME'];
+                  PREFIX = 'USER'; break;
+                case 'order':
+                  NS = 'shopease-order'; SECRET_NAME = 'shopease-order-db';
+                  dbKeys = ['ORDER_DB_HOST','ORDER_DB_PORT','ORDER_DB_NAME','ORDER_DB_USER','ORDER_DB_PASSWORD'];
+                  migKeys = ['ORDER_MIG_DB_USER','ORDER_MIG_DB_PASSWORD','ORDER_MIG_DB_HOST','ORDER_MIG_DB_PORT','ORDER_MIG_DB_NAME'];
+                  PREFIX = 'ORDER'; break;
+                case 'notification':
+                  NS = 'shopease-notification'; SECRET_NAME = 'shopease-notification-credentials';
+                  mailKeys = ['NOTIFICATION_MAIL_HOST','NOTIFICATION_MAIL_PORT','NOTIFICATION_MAIL_USER','NOTIFICATION_MAIL_PASSWORD','NOTIFICATION_MAIL_FROM'];
+                  break;
+              }
 
-            # ========Ensure imagePullSecret for GHCR is created in the namespace=========#
+              console.log(`Ensuring namespace ${NS} exists`);
+              run(`kubectl create namespace ${NS} --dry-run=client -o yaml | kubectl apply -f -`);
 
-            echo "Ensuring ghcr-pull-secret exists in namespace $NS"
-            if [ -n "${GHCR_READ_USERNAME:-}" ] && [ -n "${GHCR_READ_TOKEN:-}" ]; then
-              kubectl -n "$NS" create secret docker-registry ghcr-pull-secret \
-                --docker-server=ghcr.io \
-                --docker-username="$GHCR_READ_USERNAME" \
-                --docker-password="$GHCR_READ_TOKEN" \
-                --docker-email="noreply@github.com" \
-                --dry-run=client -o yaml | kubectl apply -f -
-              echo "Created/updated ghcr-pull-secret in $NS"
-            else
-              echo "GHCR credentials not provided; skipping ghcr-pull-secret creation in $NS"
-            fi
+              // Ensure imagePullSecret
+              if (env.GHCR_READ_USERNAME && env.GHCR_READ_TOKEN) {
+                run(`kubectl -n ${NS} create secret docker-registry ghcr-pull-secret --docker-server=ghcr.io --docker-username='${env.GHCR_READ_USERNAME}' --docker-password='${env.GHCR_READ_TOKEN}' --docker-email='noreply@github.com' --dry-run=client -o yaml | kubectl apply -f -`);
+              } else {
+                console.log('GHCR credentials not provided; skipping ghcr-pull-secret creation in', NS);
+              }
 
-            if [ "$svc" = "notification" ]; then
-              echo "Provisioning notification secret $SECRET_NAME in namespace $NS for service $svc"
-              # Notification service secrets
-              ARGS=()
-              for key in "${mail-keys[@]}"; do
-                # Read from environment variable exported at the step level
-                val="${!key:-}"
-                if [ -n "$val" ]; then
-                  ARGS+=( --from-literal="${key}=$val" )
-                fi
-              done
-              if [ ${#ARGS[@]} -gt 0 ]; then
-                kubectl -n "$NS" create secret generic "$SECRET_NAME" "${ARGS[@]}" --dry-run=client -o yaml | kubectl apply -f -
-                echo "Created/updated $SECRET_NAME in $NS"
-              else
-                echo "No notification secrets found for $svc; skipping"
-              fi
-            fi
+              if (svc === 'notification') {
+                const args = [];
+                for (const k of mailKeys) {
+                  const v = env[k]; if (v) args.push(`--from-literal=${k}=${v}`);
+                }
+                if (args.length) run(`kubectl -n ${NS} create secret generic ${SECRET_NAME} ${args.join(' ')} --dry-run=client -o yaml | kubectl apply -f -`);
+              }
 
-            # ======Install DB secrets for product, user, order services========#
+              if (svc !== 'frontend' && svc !== 'notification') {
+                const args = [];
+                for (const k of dbKeys) {
+                  const v = env[k]; if (v) args.push(`--from-literal=${k}=${v}`);
+                }
+                if (args.length) run(`kubectl -n ${NS} create secret generic ${SECRET_NAME} ${args.join(' ')} --dry-run=client -o yaml | kubectl apply -f -`);
+              }
 
-            if [ "$svc" = "frontend" ] || [ "$svc" = "notification" ]; then
-              echo "Frontend and notification services have no DB secrets to provision; skipping"
-            else
-              echo "Provisioning DB secret $SECRET_NAME in namespace $NS for service $svc"           
-              ARGS=()
-              for key in "${db-keys[@]}"; do
-                # Write keys using the <SERVICE>_DB_* naming convention (e.g. PRODUCT_DB_HOST)
-                # GitHub secrets are referenced via environment substitution - use indirect expansion
-                val="${!key:-}"
-                if [ -n "$val" ]; then
-                  ARGS+=( --from-literal="${key}=$val" )
-                fi
-              done
-              if [ ${#ARGS[@]} -gt 0 ]; then
-                kubectl -n "$NS" create secret generic "$SECRET_NAME" "${ARGS[@]}" --dry-run=client -o yaml | kubectl apply -f -
-                echo "Created/updated $SECRET_NAME in $NS"
-              else
-                echo "No DB secrets present for $svc; skipping $SECRET_NAME"
-              fi
-            fi
+              // migration secret
+              if (PREFIX) {
+                const migUser = env[`${PREFIX}_MIG_DB_USER`];
+                const migPass = env[`${PREFIX}_MIG_DB_PASSWORD`];
+                if (migUser && migPass) {
+                  const args = [];
+                  for (const k of migKeys) { const v = env[k]; if (v) args.push(`--from-literal=${k}=${v}`); }
+                  if (args.length) run(`kubectl -n ${NS} create secret generic ${SECRET_NAME}-migration ${args.join(' ')} --dry-run=client -o yaml | kubectl apply -f -`);
+                }
+              }
+            }
 
-            # ======Migration secret (optional)========#
-            MIG_USER_KEY="${PREFIX}_MIG_DB_USER"
-            MIG_PASS_KEY="${PREFIX}_MIG_DB_PASSWORD"
-
-            MIG_USER_VAL="${!MIG_USER_KEY:-}"
-            MIG_PASS_VAL="${!MIG_PASS_KEY:-}"
-            # Skip services that do not need migration secrets
-            if [ "$svc" = "frontend" ] || [ "$svc" = "notification" ]; then
-              echo "Frontend and notification services have no migration secrets to provision; skipping"              
-            elif [ -n "$MIG_USER_VAL" ] && [ -n "$MIG_PASS_VAL" ]; then
-              echo "Provisioning migration DB secret for service $svc"             
-              ARGS=()
-              for key in "${mig-keys[@]}"; do
-                # Read from environment variable exported at the step level
-                val="${!key:-}"
-                if [ -n "$val" ]; then
-                  ARGS+=( --from-literal="${key}=$val" )
-                fi
-              done
-              if [ ${#ARGS[@]} -gt 0 ]; then
-                MIG_SECRET_NAME="${SECRET_NAME}-migration"
-                kubectl -n "$NS" create secret generic "$MIG_SECRET_NAME" "${ARGS[@]}" --dry-run=client -o yaml | kubectl apply -f -
-                echo "Created/updated migration secret $MIG_SECRET_NAME in $NS"
-              else
-                echo "No migration DB secrets present for $svc; skipping migration secret"
-              fi
-            fi            
-          done
-
-          #======= After provisioning loop, write RBAC targets and install RBAC chart========#
-          # Build temporary values.yaml containing only the selected targets
-          tmpvals=$(mktemp)
-          echo "targets:" > "$tmpvals"
-          for ns in "${NAMESPACES[@]}"; do
-            echo "- namespace: ${ns}" >> "$tmpvals"
-            echo "  serviceAccount: arc-runner-sa" >> "$tmpvals"
-            echo "  subjectNamespace: arc-runners" >> "$tmpvals"
-            echo "  roleName: deployer" >> "$tmpvals"
-            echo "  bindingName: deployer-binding" >> "$tmpvals"
-          done
-          echo "Using temporary RBAC values file: $tmpvals"
-          helm lint helm-charts/rbac || true
-          helm upgrade --install shopease-rbac helm-charts/rbac \
-            --namespace shopease-system --create-namespace --atomic --wait --timeout 5m \
-            -f "$tmpvals"
-          rm -f "$tmpvals" || true
-
-          echo "Provisioning completed"
+            // Build RBAC values and install chart
+            const tmp = '/tmp/rbac-targets.yaml';
+            const fs = require('fs');
+            let out = 'targets:\n';
+            for (const ns of namespaces) {
+              out += `- namespace: ${ns}\n  serviceAccount: arc-runner-sa\n  subjectNamespace: arc-runners\n  roleName: deployer\n  bindingName: deployer-binding\n`;
+            }
+            fs.writeFileSync(tmp, out);
+            console.log('Using temporary RBAC values file:', tmp);
+            try { run('helm lint helm-charts/rbac || true'); } catch (e) {}
+            run(`helm upgrade --install shopease-rbac helm-charts/rbac --namespace shopease-system --create-namespace --atomic --wait --timeout 5m -f ${tmp}`);
+            fs.unlinkSync(tmp);
+            console.log('Provisioning completed');
