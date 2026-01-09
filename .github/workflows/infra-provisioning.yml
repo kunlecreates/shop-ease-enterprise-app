@@ -155,24 +155,24 @@ jobs:
           else
             IFS=',' read -r -a items <<< "$INPUT_SERVICES"
             SERVICES=()
-            for s in "${items[@]}"; do
-              s_trim=$(echo "$s" | xargs)
-              case "$s_trim" in
-                product|user|order|notification|frontend)
-                  SERVICES+=("\"$s_trim\"") ;;
-                *) echo "Ignoring unknown service '$s_trim'" ;;
-              esac
-            done
+              for s in "${items[@]}"; do
+                s_trim=$(echo "$s" | xargs)
+                case "$s_trim" in
+                  product|user|order|notification|frontend)
+                    SERVICES+=("$s_trim") ;;
+                  *) echo "Ignoring unknown service '$s_trim'" ;;
+                esac
+              done
           fi
 
           for svc in "${SERVICES[@]}"; do
             # accumulate namespaces list for RBAC values
             case "$svc" in
-              product) NAMESPACES+=(shopease-product) ;;
-              user) NAMESPACES+=(shopease-user) ;;
-              order) NAMESPACES+=(shopease-order) ;;
-              notification) NAMESPACES+=(shopease-notification) ;;
-              frontend) NAMESPACES+=(shopease-frontend) ;;
+              product) NAMESPACES+=("shopease-product") ;;
+              user) NAMESPACES+=("shopease-user") ;;
+              order) NAMESPACES+=("shopease-order") ;;
+              notification) NAMESPACES+=("shopease-notification") ;;
+              frontend) NAMESPACES+=("shopease-frontend") ;;
             esac
 
             # ======Assigns as needed, the namespace, secret name, uppercase prefix, and migration credentials for each service in the 'for' loop=====#
@@ -203,7 +203,7 @@ jobs:
                 ;;
               notification)
                 NS=shopease-notification
-                SECRET_NAME=shopease-notification-credentials 
+                SECRET_NAME=shopease-notification-credentials
                 mail-keys=(NOTIFICATION_MAIL_HOST NOTIFICATION_MAIL_PORT NOTIFICATION_MAIL_USER NOTIFICATION_MAIL_PASSWORD NOTIFICATION_MAIL_FROM)
                 ;;
             esac
