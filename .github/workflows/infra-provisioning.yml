@@ -85,7 +85,7 @@ on:
 
 jobs:
   provision:
-    runs-on: self-hosted
+    runs-on: arc-runnerset-instance
     env:
       OWNER: ${{ github.repository_owner }}
     steps:
@@ -190,7 +190,7 @@ jobs:
               frontend) NAMESPACES+=(shopease-frontend) ;;
             esac
 
-            # ======Assigns as needed, the namespace, secret name, uppercase prefix, and chart directory for each service in the 'for' loop=====#
+            # ======Assigns as needed, the namespace, secret name, uppercase prefix, and migration credentials for each service in the 'for' loop=====#
 
             case "$svc" in
               frontend)

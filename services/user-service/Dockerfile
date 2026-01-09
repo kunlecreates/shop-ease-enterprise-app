@@ -10,10 +10,20 @@ WORKDIR /workspace
 # Copy the service sources and build the service jar (skip tests in CI build image)
 COPY services/user-service/pom.xml ./pom.xml
 COPY services/user-service/src ./src
-RUN if [ -n "$MAVEN_PROFILES" ]; then \
-			mvn -B -DskipTests -P"$MAVEN_PROFILES" -f pom.xml package; \
+RUN if [ -f /run/secrets/m2settings ]; then \
+			# Use provided Maven settings (from BuildKit secret) when available
+			if [ -n "$MAVEN_PROFILES" ]; then \
+				mvn -B -DskipTests -P"$MAVEN_PROFILES" -s /run/secrets/m2settings -f pom.xml package; \
+			else \
+				mvn -B -DskipTests -s /run/secrets/m2settings -f pom.xml package; \
+			fi; \
 		else \
-			mvn -B -DskipTests -f pom.xml package; \
+			# Fallback to default Maven settings
+			if [ -n "$MAVEN_PROFILES" ]; then \
+				mvn -B -DskipTests -P"$MAVEN_PROFILES" -f pom.xml package; \
+			else \
+				mvn -B -DskipTests -f pom.xml package; \
+			fi; \
 		fi
 
 FROM eclipse-temurin:21-jre-alpine AS runtime

@@ -50,6 +50,11 @@
             <artifactId>opentelemetry-exporter-otlp</artifactId>
             <version>1.40.0</version>
         </dependency>
+        <dependency>
+            <groupId>com.oracle.database.jdbc</groupId>
+            <artifactId>ojdbc17</artifactId>
+            <version>23.26.0.0.0</version>
+        </dependency>
                 <!--
                     Optional: Oracle JDBC driver and OpenTelemetry starter are not available
                     from Maven Central by default. Move them into profiles so local test
@@ -104,7 +109,8 @@
             <scope>test</scope>
         </dependency>
         <!-- Shared test utilities have been moved into each service's test sources. -->
-    </dependencies>
+        </dependencies>
+
     <build>
         <plugins>
             <plugin>
@@ -134,23 +140,9 @@
             </plugin>
         </plugins>
     </build>
+
     <profiles>
-        <profile>
-            <id>oracle</id>
-            <activation>
-                <property>
-                    <name>oracle</name>
-                    <value>true</value>
-                </property>
-            </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>com.oracle.database.jdbc</groupId>
-                    <artifactId>ojdbc11</artifactId>
-                    <version>23.4.0.24.07</version>
-                </dependency>
-            </dependencies>
-        </profile>
+        <!-- Oracle profile removed: artifacts resolved from Maven Central -->
         <profile>
             <id>otel</id>
             <activation>
@@ -167,5 +159,5 @@
                 </dependency>
             </dependencies>
         </profile>
-    </profiles>
+        </profiles>
 </project>

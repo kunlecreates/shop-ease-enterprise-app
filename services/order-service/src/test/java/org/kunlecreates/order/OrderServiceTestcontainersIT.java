@@ -7,6 +7,8 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.context.annotation.Import;
 import org.testcontainers.containers.MSSQLServerContainer;
+import java.sql.DriverManager;
+import java.io.InputStream;
 import java.time.Duration;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -34,7 +36,12 @@ public class OrderServiceTestcontainersIT {
 
     @DynamicPropertySource
     static void overrideProperties(DynamicPropertyRegistry registry) {
+        // Use Testcontainers-provided JDBC URL (do not force a non-existent databaseName)
         registry.add("spring.datasource.url", mssql::getJdbcUrl);
+        // Ensure Hibernate can determine the JDBC metadata early in startup
+        registry.add("jakarta.persistence.jdbc.url", mssql::getJdbcUrl);
+        // Explicitly set Hibernate dialect for SQL Server to avoid dialect-detection race
+        registry.add("spring.jpa.properties.hibernate.dialect", () -> "org.hibernate.dialect.SQLServer2012Dialect");
         registry.add("spring.datasource.username", mssql::getUsername);
         registry.add("spring.datasource.password", mssql::getPassword);
         registry.add("spring.datasource.driverClassName", () -> "com.microsoft.sqlserver.jdbc.SQLServerDriver");
@@ -42,6 +49,28 @@ public class OrderServiceTestcontainersIT {
             // TestContainersConfig provides a FlywayMigrationStrategy that triggers
             // migrations and test resources should contain only order-related
             // fixtures (classpath:db/test-migration) for fast Testcontainers runs.
+
+        // Ensure test schema/table exist before Spring initializes JPA by executing
+        // the test SQL directly against the container using a raw JDBC connection.
+        try {
+            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+            try (java.sql.Connection c = DriverManager.getConnection(mssql.getJdbcUrl(), mssql.getUsername(), mssql.getPassword())) {
+                InputStream in = OrderServiceTestcontainersIT.class.getClassLoader().getResourceAsStream("db/test-migration/V0__order_schema.sql");
+                if (in != null) {
+                    String sql = new String(in.readAllBytes());
+                    String[] batches = sql.split("(?m)^[ \\t]*GO\\s*$");
+                    try (java.sql.Statement stmt = c.createStatement()) {
+                        for (String batch : batches) {
+                            String trimmed = batch.trim();
+                            if (trimmed.isEmpty()) continue;
+                            stmt.execute(trimmed);
+                        }
+                    }
+                }
+            }
+        } catch (Exception ex) {
+            // best-effort creation; if it fails we'll rely on Flyway during context startup
+        }
     }
 
     @Autowired

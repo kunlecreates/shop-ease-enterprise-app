@@ -80,18 +80,15 @@ jobs:
           echo "Using Maven command: ${MVN_CMD[*]} -B -Dmaven.repo.local=$MAVEN_LOCAL_REPO -f $POM_FILE $GOAL ${EXTRA_ARGS[*]}"
           "${MVN_CMD[@]}" -B -Dmaven.repo.local="$MAVEN_LOCAL_REPO" -f "$POM_FILE" "$GOAL" "${EXTRA_ARGS[@]}"
 
-      - name: Prepare artifact name
-        id: prepare-artifact
+      - name: Set artifact name
         run: |
-          module_path="${{ env.MODULE_PATH }}"
-          safe_name="${module_path//\//-}-maven-artifacts"
-          echo "artifact_name=${safe_name}" >> $GITHUB_OUTPUT
+          echo "ARTIFACT_NAME=$(echo ${MODULE_PATH} | tr '/' '-')" >> "$GITHUB_ENV"
 
       - name: Upload Maven test artifacts
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.prepare-artifact.outputs.artifact_name }}
+          name: ${{ env.ARTIFACT_NAME }}-maven-artifacts
           path: |
             ${{ env.MODULE_PATH }}/target/failsafe-reports/**
             ${{ env.MODULE_PATH }}/target/surefire-reports/**

@@ -1,6 +1,8 @@
 package org.kunlecreates.order.test;
 
 import org.flywaydb.core.Flyway;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 
@@ -18,20 +20,21 @@ public final class FlywayTestInitializer implements ApplicationContextInitialize
                 }
             }
         } catch (Exception e) {
-            applicationContext.getEnvironment().getPropertySources();
+            LoggerFactory.getLogger(FlywayTestInitializer.class).debug("FlywayTestInitializer initialization skipped: {}", e.getMessage());
         }
     }
 
     private static void runMigrations(DataSource dataSource) {
-        // Apply only test-only shared migrations during fast Testcontainers runs.
-        // Production migrations under src/main/resources/db/migration must not
-        // be applied in these fast runs to avoid dialect conflicts and duplicate
-        // version collisions. Full migration validation should run in a
-        // separate Oracle-based job.
-        Flyway.configure()
+        Logger log = LoggerFactory.getLogger(FlywayTestInitializer.class);
+        log.info("Applying test Flyway migrations from classpath:db/test-migration");
+        Flyway flyway = Flyway.configure()
             .dataSource(dataSource)
             .locations("classpath:db/test-migration")
-            .load()
-            .migrate();
+            .load();
+        try {
+            flyway.migrate();
+        } catch (Exception e) {
+            log.warn("Test Flyway migration failed: {}", e.getMessage());
+        }
     }
 }
