@@ -68,8 +68,6 @@ jobs:
     uses: ./.github/workflows/infra-provisioning.yml
     with:
       services: "all"
-      image_tag: ${{ github.event.inputs.image_tag }}
-      run_migrations: false
     secrets:
       GHCR_READ_USERNAME: ${{ secrets.GHCR_READ_USERNAME }}
       GHCR_READ_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}

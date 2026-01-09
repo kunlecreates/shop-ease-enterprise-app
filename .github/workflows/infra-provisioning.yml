@@ -1,4 +1,4 @@
-name: Infra — Provision Secrets & Run Migrations
+name: Infra — Provision Secrets
 
 on:
   workflow_dispatch:
@@ -7,24 +7,11 @@ on:
         description: "Comma-separated services to provision (user,product,order,notification or 'all')"
         required: true
         default: "all"
-      image_tag:
-        description: "Optional image tag to use for migration image (e.g. staging-<sha>). If empty, migration.image/tag will not be set."
-        required: false
-      run_migrations:
-        description: "Whether to render and run Helm migration Jobs for services that support them"
-        required: false
-        default: "true"
   workflow_call:
     inputs:
       services:
         required: true
         type: string
-      image_tag:
-        required: false
-        type: string
-      run_migrations:
-        required: false
-        type: boolean
     secrets:
       GHCR_READ_USERNAME:
         required: false
@@ -124,8 +111,6 @@ jobs:
       - name: Provision secrets 
         env:
           KUBECONFIG: ${{ steps.configure.outputs.kubeconfig }}
-          IMAGE_TAG_INPUT: ${{ github.event.inputs.image_tag }}
-          RUN_MIGRATIONS: ${{ github.event.inputs.run_migrations }}
           INPUT_SERVICES: ${{ github.event.inputs.services }}
           GHCR_READ_USERNAME: ${{ secrets.GHCR_READ_USERNAME }}
           GHCR_READ_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
