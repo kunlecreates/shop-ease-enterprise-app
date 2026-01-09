@@ -189,17 +189,17 @@ jobs:
                 case 'product':
                   NS = 'shopease-product'; SECRET_NAME = 'shopease-product-db';
                   dbKeys = ['PRODUCT_DB_HOST','PRODUCT_DB_PORT','PRODUCT_DB_NAME','PRODUCT_DB_USER','PRODUCT_DB_PASSWORD'];
-                  migKeys = ['PRODUCT_MIG_DB_USER','PRODUCT_MIG_DB_PASSWORD','PRODUCT_MIG_DB_HOST','PRODUCT_MIG_DB_PORT','PRODUCT_MIG_DB_NAME'];
+                  migKeys = ['PRODUCT_MIG_DB_USER','PRODUCT_MIG_DB_PASSWORD','PRODUCT_DB_HOST','PRODUCT_DB_PORT','PRODUCT_DB_NAME'];
                   PREFIX = 'PRODUCT'; break;
                 case 'user':
                   NS = 'shopease-user'; SECRET_NAME = 'shopease-user-db';
                   dbKeys = ['USER_DB_HOST','USER_DB_PORT','USER_DB_NAME','USER_DB_USER','USER_DB_PASSWORD'];
-                  migKeys = ['USER_MIG_DB_USER','USER_MIG_DB_PASSWORD','USER_MIG_DB_HOST','USER_MIG_DB_PORT','USER_MIG_DB_NAME'];
+                  migKeys = ['USER_MIG_DB_USER','USER_MIG_DB_PASSWORD','USER_DB_HOST','USER_DB_PORT','USER_DB_NAME'];
                   PREFIX = 'USER'; break;
                 case 'order':
                   NS = 'shopease-order'; SECRET_NAME = 'shopease-order-db';
                   dbKeys = ['ORDER_DB_HOST','ORDER_DB_PORT','ORDER_DB_NAME','ORDER_DB_USER','ORDER_DB_PASSWORD'];
-                  migKeys = ['ORDER_MIG_DB_USER','ORDER_MIG_DB_PASSWORD','ORDER_MIG_DB_HOST','ORDER_MIG_DB_PORT','ORDER_MIG_DB_NAME'];
+                  migKeys = ['ORDER_MIG_DB_USER','ORDER_MIG_DB_PASSWORD','ORDER_DB_HOST','ORDER_DB_PORT','ORDER_DB_NAME'];
                   PREFIX = 'ORDER'; break;
                 case 'notification':
                   NS = 'shopease-notification'; SECRET_NAME = 'shopease-notification-credentials';

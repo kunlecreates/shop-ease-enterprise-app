@@ -40,17 +40,17 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{ required "migration.secretName must be set (infra-owned)" .Values.migration.secretName | quote }}
-                  key: USER_MIG_DB_HOST
+                  key: USER_DB_HOST
             - name: DB_PORT
               valueFrom:
                 secretKeyRef:
                   name: {{ required "migration.secretName must be set (infra-owned)" .Values.migration.secretName | quote }}
-                  key: USER_MIG_DB_PORT
+                  key: USER_DB_PORT
             - name: DB_NAME
               valueFrom:
                 secretKeyRef:
                   name: {{ required "migration.secretName must be set (infra-owned)" .Values.migration.secretName | quote }}
-                  key: USER_MIG_DB_NAME
+                  key: USER_DB_NAME
           args:
             - >
               -url=jdbc:oracle:thin:@$(DB_HOST):$(DB_PORT)/$(DB_NAME)

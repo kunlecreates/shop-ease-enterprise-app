@@ -40,17 +40,17 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{ required "migration.secretName must be set (infra-owned)" .Values.migration.secretName | quote }}
-                  key: PRODUCT_MIG_DB_HOST
+                  key: PRODUCT_DB_HOST
             - name: DB_PORT
               valueFrom:
                 secretKeyRef:
                   name: {{ required "migration.secretName must be set (infra-owned)" .Values.migration.secretName | quote }}
-                  key: PRODUCT_MIG_DB_PORT
+                  key: PRODUCT_DB_PORT
             - name: DB_NAME
               valueFrom:
                 secretKeyRef:
                   name: {{ required "migration.secretName must be set (infra-owned)" .Values.migration.secretName | quote }}
-                  key: PRODUCT_MIG_DB_NAME
+                  key: PRODUCT_DB_NAME
           args:
             - >
               -url=jdbc:postgresql://$(DB_HOST):$(DB_PORT)/$(DB_NAME)

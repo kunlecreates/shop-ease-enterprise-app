@@ -40,17 +40,17 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{ required "migration.secretName must be set (infra-owned)" .Values.migration.secretName | quote }}
-                  key: ORDER_MIG_DB_HOST
+                  key: ORDER_DB_HOST
             - name: DB_PORT
               valueFrom:
                 secretKeyRef:
                   name: {{ required "migration.secretName must be set (infra-owned)" .Values.migration.secretName | quote }}
-                  key: ORDER_MIG_DB_PORT
+                  key: ORDER_DB_PORT
             - name: DB_NAME
               valueFrom:
                 secretKeyRef:
                   name: {{ required "migration.secretName must be set (infra-owned)" .Values.migration.secretName | quote }}
-                  key: ORDER_MIG_DB_NAME
+                  key: ORDER_DB_NAME
           args:
             - >
               -url=jdbc:sqlserver://$(DB_HOST):$(DB_PORT);databaseName=$(DB_NAME)
