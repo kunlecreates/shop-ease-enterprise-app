@@ -284,7 +284,7 @@ jobs:
           # For staging, disable in-app Flyway for services that run migrations out-of-band
           case "${{ matrix.service }}" in
             user|order|product)
-              HELM_ARGS+=( --set flyway.enabled=false ) ;;
+              HELM_ARGS+=( --set "flyway.enabled=false" ) ;;
           esac
 
           # --- Handle optional values/migration/imagePullSecret args ---
