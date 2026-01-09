@@ -109,6 +109,37 @@ jobs:
           echo "kubeconfig=$KUBECONFIG_PATH" >> $GITHUB_OUTPUT
 
       - name: Provision secrets (node)
+        env:
+          KUBECONFIG: ${{ steps.configure.outputs.kubeconfig }}
+          INPUT_SERVICES: ${{ github.event.inputs.services }}
+          GHCR_READ_USERNAME: ${{ secrets.GHCR_READ_USERNAME }}
+          GHCR_READ_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
+          PRODUCT_DB_HOST: ${{ secrets.PRODUCT_DB_HOST }}
+          PRODUCT_DB_PORT: ${{ secrets.PRODUCT_DB_PORT }}
+          PRODUCT_DB_NAME: ${{ secrets.PRODUCT_DB_NAME }}
+          PRODUCT_DB_USER: ${{ secrets.PRODUCT_DB_USER }}
+          PRODUCT_DB_PASSWORD: ${{ secrets.PRODUCT_DB_PASSWORD }}
+          PRODUCT_MIG_DB_USER: ${{ secrets.PRODUCT_MIG_DB_USER }}
+          PRODUCT_MIG_DB_PASSWORD: ${{ secrets.PRODUCT_MIG_DB_PASSWORD }}
+          USER_DB_HOST: ${{ secrets.USER_DB_HOST }}
+          USER_DB_PORT: ${{ secrets.USER_DB_PORT }}
+          USER_DB_NAME: ${{ secrets.USER_DB_NAME }}
+          USER_DB_USER: ${{ secrets.USER_DB_USER }}
+          USER_DB_PASSWORD: ${{ secrets.USER_DB_PASSWORD }}
+          USER_MIG_DB_USER: ${{ secrets.USER_MIG_DB_USER }}
+          USER_MIG_DB_PASSWORD: ${{ secrets.USER_MIG_DB_PASSWORD }}
+          ORDER_DB_HOST: ${{ secrets.ORDER_DB_HOST }}
+          ORDER_DB_PORT: ${{ secrets.ORDER_DB_PORT }}
+          ORDER_DB_NAME: ${{ secrets.ORDER_DB_NAME }}
+          ORDER_DB_USER: ${{ secrets.ORDER_DB_USER }}
+          ORDER_DB_PASSWORD: ${{ secrets.ORDER_DB_PASSWORD }}
+          ORDER_MIG_DB_USER: ${{ secrets.ORDER_MIG_DB_USER }}
+          ORDER_MIG_DB_PASSWORD: ${{ secrets.ORDER_MIG_DB_PASSWORD }}
+          NOTIFICATION_MAIL_HOST: ${{ secrets.NOTIFICATION_MAIL_HOST }}
+          NOTIFICATION_MAIL_PORT: ${{ secrets.NOTIFICATION_MAIL_PORT }}
+          NOTIFICATION_MAIL_USER: ${{ secrets.NOTIFICATION_MAIL_USER }}
+          NOTIFICATION_MAIL_PASSWORD: ${{ secrets.NOTIFICATION_MAIL_PASSWORD }}
+          NOTIFICATION_MAIL_FROM: ${{ secrets.NOTIFICATION_MAIL_FROM }}
         uses: actions/github-script@v7
         with:
           script: |
