@@ -54,20 +54,24 @@ jobs:
           INPUT='${{ github.event.inputs.services }}'
 
           # If the workflow was manually triggered with a non-empty services input
-          if [ -n "$INPUT" ] && [ "$INPUT" != "all" ]; then
-            IFS=',' read -r -a items <<< "$INPUT"
-            arr=()
-            for s in "${items[@]}"; do
-              s_trim=$(echo "$s" | xargs)
-              case "$s_trim" in
-                user|user-service) arr+=("\"user-service\"") ;;
-                product|product-service) arr+=("\"product-service\"") ;;
-                order|order-service) arr+=("\"order-service\"") ;;
-                notification|notification-service) arr+=("\"notification-service\"") ;;
-                frontend) arr+=("\"frontend\"") ;;
-                *) echo "Ignoring unknown service '$s_trim'" ;;
-              esac
-            done
+          if [ -n "$INPUT" ]; then
+            if [ "$INPUT" = "all" ]; then
+              arr=( "\"user-service\"" "\"product-service\"" "\"order-service\"" "\"notification-service\"" "\"frontend\"" )
+            else
+              IFS=',' read -r -a items <<< "$INPUT"
+              arr=()
+              for s in "${items[@]}"; do
+                s_trim=$(echo "$s" | xargs)
+                case "$s_trim" in
+                  user|user-service) arr+=("\"user-service\"") ;;
+                  product|product-service) arr+=("\"product-service\"") ;;
+                  order|order-service) arr+=("\"order-service\"") ;;
+                  notification|notification-service) arr+=("\"notification-service\"") ;;
+                  frontend) arr+=("\"frontend\"") ;;
+                  *) echo "Ignoring unknown service '$s_trim'" ;;
+                esac
+              done
+            fi
           else
             # Build from detected changed paths
             arr=()
