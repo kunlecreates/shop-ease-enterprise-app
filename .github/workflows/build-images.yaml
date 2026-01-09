@@ -239,43 +239,7 @@ jobs:
             type=raw,value=staging-${{ steps.vars.outputs.short_sha }}
             type=raw,value=latest
 
-      - name: Compute build args and prepare Maven settings secret
-        id: buildargs
-        if: ${{ matrix.service == 'user-service' }}
-        env:
-          ORACLE_SETTINGS_XML: ${{ secrets.ORACLE_SETTINGS_XML }}
-        run: |
-          set -euo pipefail
-          svc="${{ matrix.service }}"
-          build_args=""
-          secrets_mapping=""
-
-          # Enable the 'oracle' Maven profile only when the ORACLE_SETTINGS_XML
-          # secret is provided (it indicates the CI has credentials to access
-          # Oracle's Maven repo). This prevents Maven from attempting to fetch
-          # ojdbc11 from Central when no Oracle repo is configured.
-          if [[ "$svc" == "user-service" ]] && [[ -n "${ORACLE_SETTINGS_XML:-}" ]]; then
-            echo "Oracle settings secret detected — enabling oracle Maven profile"
-            build_args+=$'\n'MAVEN_PROFILES=oracle
-
-            echo "Writing Maven settings.xml to runner temp"
-            dest="$RUNNER_TEMP/m2settings.xml"
-            mkdir -p "$(dirname "$dest")"
-            printf '%s' "${ORACLE_SETTINGS_XML}" > "$dest"
-            chmod 0400 "$dest"
-            secrets_mapping="id=m2settings,src=$dest"
-          else
-            echo "ORACLE_SETTINGS_XML secret not present; building without oracle profile"
-          fi
-
-          # Always emit a build_args output (may be empty) so downstream steps
-          # can safely reference it without causing undefined-step errors.
-          echo "build_args<<EOF" >> $GITHUB_OUTPUT
-          echo "$build_args" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-          # Emit the secrets mapping (empty string if not set)
-          echo "secrets_mapping=$secrets_mapping" >> $GITHUB_OUTPUT
+      # Oracle settings/profile support removed — builds will rely on Maven Central.
 
       - name: Build & Push (buildx)
         uses: docker/build-push-action@v5
@@ -293,9 +257,7 @@ jobs:
           # to avoid build-cache-backend errors when using the host driver.
           # Pull base images to reduce transient network failures during build
           pull: true
-          build-args: ${{ steps.buildargs.outputs.build_args }}
-          # Pass BuildKit secret mapping when present
-          secrets: ${{ steps.buildargs.outputs.secrets_mapping }}
+          # No build-args required; builds use Maven Central by default
 
       - name: Build & Push Flyway (buildx)
         if: ${{ steps.vars.outputs.flyway_image != '' }}
