@@ -388,6 +388,11 @@ jobs:
       # successful staging deploys. See .github/workflows/e2e.yml for the
       # post-deploy verification job.
 
+      - name: Ensure kubectl present for smoke tests
+        uses: azure/setup-kubectl@v4
+        with:
+          version: v1.30.0
+
       - name: Smoke test (per service)
         run: |
           case "${{ matrix.service }}" in
