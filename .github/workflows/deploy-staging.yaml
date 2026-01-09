@@ -393,6 +393,14 @@ jobs:
         with:
           version: v1.30.0
 
+      - name: Debug kubectl availability
+        run: |
+          echo "PATH=$PATH"
+          echo "GITHUB_PATH contents:"; if [ -f "$GITHUB_PATH" ]; then cat "$GITHUB_PATH"; else echo "(no GITHUB_PATH)"; fi
+          which kubectl || true
+          kubectl version --client --short || true
+          ls -l $(which kubectl 2>/dev/null) || true
+
       - name: Smoke test (per service)
         run: |
           case "${{ matrix.service }}" in
