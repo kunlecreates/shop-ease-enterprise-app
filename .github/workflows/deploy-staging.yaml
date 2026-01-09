@@ -241,23 +241,26 @@ jobs:
             user)
               CHART_DIR="services/user-service/helm";
               IMAGE_REPO="ghcr.io/${OWNER}/user-service";
-              SET_SECRET_NAME="db.secretName=shopease-user-db"
+              SECRET_BASE="shopease-user-db"
+              SET_SECRET_NAME="db.secretName=${SECRET_BASE}"
               MIGRATION_ENABLED="true"
-              MIGRATION_DB_SEC="${SET_SECRET_NAME}-migration"
+              MIGRATION_DB_SEC="${SECRET_BASE}-migration"
               ;;
             product)
               CHART_DIR="services/product-service/helm";
               IMAGE_REPO="ghcr.io/${OWNER}/product-service";
-              SET_SECRET_NAME="db.secretName=shopease-product-db"
+              SECRET_BASE="shopease-product-db"
+              SET_SECRET_NAME="db.secretName=${SECRET_BASE}"
               MIGRATION_ENABLED="true"
-              MIGRATION_DB_SEC="${SET_SECRET_NAME}-migration"
+              MIGRATION_DB_SEC="${SECRET_BASE}-migration"
               ;;
             order)
               CHART_DIR="services/order-service/helm";
               IMAGE_REPO="ghcr.io/${OWNER}/order-service";
-              SET_SECRET_NAME="db.secretName=shopease-order-db"
+              SECRET_BASE="shopease-order-db"
+              SET_SECRET_NAME="db.secretName=${SECRET_BASE}"
               MIGRATION_ENABLED="true"
-              MIGRATION_DB_SEC="${SET_SECRET_NAME}-migration"
+              MIGRATION_DB_SEC="${SECRET_BASE}-migration"
               ;;
             notification)
               CHART_DIR="services/notification-service/helm";
