@@ -4,7 +4,7 @@ kind: Ingress
 metadata:
   name: frontend
   annotations:
-    kubernetes.io/ingress.class: {{ .Values.ingress.className }}
+    kubernetes.io/ingressClassName: {{ .Values.ingress.className }}
 spec:
   rules:
     - host: {{ .Values.ingress.host }}

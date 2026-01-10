@@ -418,8 +418,7 @@ jobs:
           echo "Detected Service: $SERVICE_NAME"
           
           kubectl -n "$NAMESPACE" run curl-test --restart=Never --rm -i \
-            --image=curlimages/curl:8.8.0 --labels=run=curl-test \
-            --overrides='{"spec":{"automountServiceAccountToken":false}}' --command -- \
+            --image=curlimages/curl:8.8.0 --labels=run=curl-test --command -- \
             curl -fsS --connect-timeout 5 --max-time 10 http://$SERVICE_NAME.$NAMESPACE.svc.cluster.local:$PORT$PATH
 
           echo "Smoke test succeeded for $SERVICE_NAME"
