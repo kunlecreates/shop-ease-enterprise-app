@@ -388,50 +388,25 @@ jobs:
       # successful staging deploys. See .github/workflows/e2e.yml for the
       # post-deploy verification job.
 
-      - name: Ensure kubectl present for smoke tests
-        run: |
-          set -euo pipefail
-          echo "Checking kubectl availability..."
-          if command -v kubectl >/dev/null 2>&1; then
-            echo "kubectl already available: $(kubectl version --client --output=yaml 2>/dev/null || kubectl version --client || true)"
-          else
-            echo "kubectl not found — downloading v1.30.0 to $HOME/.local/bin"
-            mkdir -p "$HOME/.local/bin"
-            curl -fsSL -o "$HOME/.local/bin/kubectl" "https://dl.k8s.io/release/v1.30.0/bin/linux/amd64/kubectl"
-            chmod +x "$HOME/.local/bin/kubectl"
-            echo "$HOME/.local/bin" >> $GITHUB_PATH
-            export PATH="$HOME/.local/bin:$PATH"
-            kubectl version --client --output=yaml 2>/dev/null || kubectl version --client || true
-          fi
-
-      - name: Debug kubectl availability
-        run: |
-          echo "PATH=$PATH"
-          echo "GITHUB_PATH contents:"; if [ -f "$GITHUB_PATH" ]; then cat "$GITHUB_PATH"; else echo "(no GITHUB_PATH)"; fi
-          which kubectl || true
-          # Some kubectl builds do not support the --short flag; prefer portable outputs
-          kubectl version --client --output=yaml 2>/dev/null || kubectl version --client || true
-          ls -l $(which kubectl 2>/dev/null) || true
-
       - name: Smoke test (per service)
         run: |
           case "${{ matrix.service }}" in
             frontend)
-              SERVICE_NAME="frontend"; PORT=80; PATH="/api/health" ;;
+              SERVICE_NAME="frontend"; PORT=80; HEALTH_PATH="/api/health" ;;
             product)
-              SERVICE_NAME="product-service"; PORT=80; PATH="/api/health" ;;
+              SERVICE_NAME="product-service"; PORT=80; HEALTH_PATH="/api/health" ;;
             user)
-              SERVICE_NAME="user-service"; PORT=80; PATH="/actuator/health/readiness" ;;
+              SERVICE_NAME="user-service"; PORT=80; HEALTH_PATH="/actuator/health/readiness" ;;
             order)
-              SERVICE_NAME="order-service"; PORT=80; PATH="/actuator/health/readiness" ;;
+              SERVICE_NAME="order-service"; PORT=80; HEALTH_PATH="/actuator/health/readiness" ;;
             notification)
-              SERVICE_NAME="notification-service"; PORT=80; PATH="/health" ;;
+              SERVICE_NAME="notification-service"; PORT=80; HEALTH_PATH="/health" ;;
           esac
           echo "Detected Service: $SERVICE_NAME"
           
           kubectl -n "$NAMESPACE" run curl-test --restart=Never --rm -i \
             --image=curlimages/curl:8.8.0 --labels=run=curl-test --command -- \
-            curl -fsS --connect-timeout 5 --max-time 10 http://$SERVICE_NAME.$NAMESPACE.svc.cluster.local:$PORT$PATH
+            curl -fsS --connect-timeout 5 --max-time 10 http://$SERVICE_NAME.$NAMESPACE.svc.cluster.local:$PORT$HEALTH_PATH
 
           echo "Smoke test succeeded for $SERVICE_NAME"
         env:

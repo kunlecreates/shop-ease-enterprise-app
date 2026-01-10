@@ -15,6 +15,11 @@ env:
         - "http://staging.shopease.local"
   # Ensure Spring Boot binds to the container port used by probes (8081)
   SERVER_PORT: "8081"
+  # Prevent Hibernate from needing JDBC metadata at startup when DB may be unavailable
+  SPRING_JPA_DATABASE_PLATFORM: "org.hibernate.dialect.Oracle12cDialect"
+  SPRING_JPA_PROPERTIES_HIBERNATE_TEMP_USE_JDBC_METADATA_DEFAULTS: "false"
+  # Disable DB health indicator so actuator readiness does not block on DB availability
+  MANAGEMENT_HEALTH_DB_ENABLED: "false"
 
 db:
   # Name of a pre-created Secret containing DB connection envs.
@@ -41,8 +46,8 @@ service:
 
 resources:
   requests:
-    cpu: 50m
-    memory: 256Mi
+    cpu: 100m
+    memory: 512Mi
   limits:
     cpu: 250m
     memory: 1Gi
@@ -50,13 +55,13 @@ resources:
 probes:
   liveness:
     path: /actuator/health/liveness
-    initialDelaySeconds: 60
+    initialDelaySeconds: 240
     timeoutSeconds: 5
     periodSeconds: 10
     failureThreshold: 6
   readiness:
     path: /actuator/health/readiness
-    initialDelaySeconds: 20
+    initialDelaySeconds: 180
     timeoutSeconds: 3
     periodSeconds: 5
     failureThreshold: 5
