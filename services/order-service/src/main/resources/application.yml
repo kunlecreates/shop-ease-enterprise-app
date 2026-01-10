@@ -5,7 +5,7 @@ spring:
     name: order-service
   datasource:
     # Use ORDER_DB_* env vars (canonical names). No legacy fallback.
-    url: jdbc:sqlserver://${ORDER_DB_HOST:mssql}:${ORDER_DB_PORT:1433};databaseName=${ORDER_DB_NAME:order_svc};encrypt=true;trustServerCertificate=true
+    url: jdbc:sqlserver://${ORDER_DB_HOST}:${ORDER_DB_PORT:1433};databaseName=${ORDER_DB_NAME:order_svc};encrypt=true;trustServerCertificate=true
     username: ${ORDER_DB_USER}
     password: ${ORDER_DB_PASSWORD}
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
@@ -26,4 +26,4 @@ otel:
       endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://otel-collector:4317}
 logging:
   level:
-    root: INFO
+    root: DEBUG
