@@ -135,9 +135,9 @@ jobs:
         shell: bash
 
   deploy-helm:
-    concurrency:
-      group: deploy-staging-${{ github.repository }}-${{ github.event.inputs.services }}
-      cancel-in-progress: false
+    #concurrency:
+      #group: deploy-staging-${{ github.repository }}-${{ github.event.inputs.services }}
+      #cancel-in-progress: false
     runs-on: arc-runnerset-instance
     needs: [prepare, set-matrix]
     env:

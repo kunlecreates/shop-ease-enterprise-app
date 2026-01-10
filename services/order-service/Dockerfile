@@ -18,6 +18,7 @@ RUN if [ -n "$MAVEN_PROFILES" ]; then \
 FROM eclipse-temurin:21-jre-alpine AS runtime
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 WORKDIR /app
+# Keep JVM memory sensible inside containers; allow runtime override via JAVA_OPTS
 ENV JAVA_OPTS="-XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"
 # Copy the built artifact from the builder stage
 COPY --from=builder /workspace/target/order-service-*.jar /app/app.jar
@@ -31,5 +32,7 @@ EXPOSE 8083
 # Healthcheck (best-effort): adjust path to your health endpoint if different
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 CMD wget -qO- --no-check-certificate http://localhost:8083/actuator/health || exit 1
 
-ENTRYPOINT ["java","-jar","/app/app.jar"]
+# Use sh -c so the `JAVA_OPTS` environment variable is expanded at container start
+# and the JVM respects container memory limits (MaxRAMPercentage).
+ENTRYPOINT ["sh","-c","exec java $JAVA_OPTS -jar /app/app.jar"]
 # ci-trigger: rebuild-images on feat/dev-tests at 2026-01-01
