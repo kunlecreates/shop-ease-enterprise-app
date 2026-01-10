@@ -389,16 +389,28 @@ jobs:
       # post-deploy verification job.
 
       - name: Ensure kubectl present for smoke tests
-        uses: azure/setup-kubectl@v4
-        with:
-          version: v1.30.0
+        run: |
+          set -euo pipefail
+          echo "Checking kubectl availability..."
+          if command -v kubectl >/dev/null 2>&1; then
+            echo "kubectl already available: $(kubectl version --client --output=yaml 2>/dev/null || kubectl version --client || true)"
+          else
+            echo "kubectl not found — downloading v1.30.0 to $HOME/.local/bin"
+            mkdir -p "$HOME/.local/bin"
+            curl -fsSL -o "$HOME/.local/bin/kubectl" "https://dl.k8s.io/release/v1.30.0/bin/linux/amd64/kubectl"
+            chmod +x "$HOME/.local/bin/kubectl"
+            echo "$HOME/.local/bin" >> $GITHUB_PATH
+            export PATH="$HOME/.local/bin:$PATH"
+            kubectl version --client --output=yaml 2>/dev/null || kubectl version --client || true
+          fi
 
       - name: Debug kubectl availability
         run: |
           echo "PATH=$PATH"
           echo "GITHUB_PATH contents:"; if [ -f "$GITHUB_PATH" ]; then cat "$GITHUB_PATH"; else echo "(no GITHUB_PATH)"; fi
           which kubectl || true
-          kubectl version --client --short || true
+          # Some kubectl builds do not support the --short flag; prefer portable outputs
+          kubectl version --client --output=yaml 2>/dev/null || kubectl version --client || true
           ls -l $(which kubectl 2>/dev/null) || true
 
       - name: Smoke test (per service)
