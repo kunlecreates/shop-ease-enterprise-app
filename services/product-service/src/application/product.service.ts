@@ -1,9 +1,20 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, SelectQueryBuilder } from 'typeorm';
 import { Product } from '../domain/product.entity';
 import { Category } from '../domain/category.entity';
 import { StockMovement } from '../domain/stock-movement.entity';
+
+export interface ProductSearchOptions {
+  page?: number;
+  limit?: number;
+  q?: string;
+  category?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  inStock?: boolean;
+  sort?: 'name' | 'price_asc' | 'price_desc';
+}
 
 @Injectable()
 export class ProductService {
@@ -29,15 +40,79 @@ export class ProductService {
     return this.products.save(prod);
   }
 
-  async listProducts(pagination?: { page: number; limit: number }): Promise<Product[]> {
-    // For compatibility with an existing DB schema we avoid eager-loading
-    // the categories join here and return products only for the smoke test.
-    if (!pagination) {
+  async listProducts(options?: ProductSearchOptions): Promise<Product[]> {
+    if (!options) {
       return this.products.find();
     }
-    const { page, limit } = pagination;
+
+    const qb = this.products.createQueryBuilder('p');
+
+    if (options.q) {
+      qb.andWhere("p.search_vector @@ plainto_tsquery('english', :query)", { query: options.q });
+    }
+
+    if (options.category) {
+      qb.innerJoin('p.categories', 'c')
+        .andWhere('c.code = :category', { category: options.category });
+    }
+
+    if (options.minPrice !== undefined) {
+      const minPriceCents = Math.round(options.minPrice * 100);
+      qb.andWhere('p.priceCents >= :minPrice', { minPrice: minPriceCents });
+    }
+
+    if (options.maxPrice !== undefined) {
+      const maxPriceCents = Math.round(options.maxPrice * 100);
+      qb.andWhere('p.priceCents <= :maxPrice', { maxPrice: maxPriceCents });
+    }
+
+    if (options.inStock === true) {
+      const stockSubQuery = this.movements
+        .createQueryBuilder('m')
+        .select('SUM(m.quantity)', 'stock')
+        .where('m.productid = p.id')
+        .getQuery();
+      
+      qb.andWhere(`(${stockSubQuery}) > 0`);
+    }
+
+    switch (options.sort) {
+      case 'name':
+        qb.orderBy('p.name', 'ASC');
+        break;
+      case 'price_asc':
+        qb.orderBy('p.priceCents', 'ASC');
+        break;
+      case 'price_desc':
+        qb.orderBy('p.priceCents', 'DESC');
+        break;
+      default:
+        qb.orderBy('p.name', 'ASC');
+    }
+
+    const page = options.page || 1;
+    const limit = options.limit || 20;
     const skip = (page - 1) * limit;
-    return this.products.find({ skip, take: limit, order: { name: 'ASC' } });
+
+    qb.skip(skip).take(limit);
+
+    return qb.getMany();
+  }
+
+  async searchProducts(query: string, pagination?: { page: number; limit: number }): Promise<Product[]> {
+    const qb = this.products.createQueryBuilder('p');
+    
+    qb.where("p.search_vector @@ plainto_tsquery('english', :query)", { query })
+      .orderBy("ts_rank(p.search_vector, plainto_tsquery('english', :query))", 'DESC')
+      .setParameter('query', query);
+
+    if (pagination) {
+      const { page, limit } = pagination;
+      const skip = (page - 1) * limit;
+      qb.skip(skip).take(limit);
+    }
+
+    return qb.getMany();
   }
 
   async adjustStock(sku: string, quantity: number, reason: string) {

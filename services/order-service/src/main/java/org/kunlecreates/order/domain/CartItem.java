@@ -10,7 +10,7 @@ public class CartItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cart_id", nullable = false)
     private Cart cart;
 
@@ -33,12 +33,30 @@ public class CartItem {
     private Instant updatedAt = Instant.now();
 
     protected CartItem() {}
+    
     public CartItem(Cart cart, String productRef, Integer quantity, Long unitPriceCents) {
-        this.cart = cart; this.productRef = productRef; this.quantity = quantity; this.unitPriceCents = unitPriceCents;
+        this.cart = cart; 
+        this.productRef = productRef; 
+        this.quantity = quantity; 
+        this.unitPriceCents = unitPriceCents;
     }
+    
     public Long getId() { return id; }
     public Cart getCart() { return cart; }
     public String getProductRef() { return productRef; }
     public Integer getQuantity() { return quantity; }
     public Long getUnitPriceCents() { return unitPriceCents; }
+    public String getCurrency() { return currency; }
+    public Instant getCreatedAt() { return createdAt; }
+    public Instant getUpdatedAt() { return updatedAt; }
+    
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
+        this.updatedAt = Instant.now();
+    }
+    
+    public void setUnitPriceCents(Long unitPriceCents) {
+        this.unitPriceCents = unitPriceCents;
+        this.updatedAt = Instant.now();
+    }
 }

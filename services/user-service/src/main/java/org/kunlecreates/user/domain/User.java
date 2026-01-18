@@ -2,6 +2,8 @@ package org.kunlecreates.user.domain;
 
 import jakarta.persistence.*;
 import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "USERS")
@@ -31,6 +33,14 @@ public class User {
     @Column(name = "LAST_LOGIN_AT")
     private Instant lastLoginAt;
 
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "USER_ROLES",
+        joinColumns = @JoinColumn(name = "USER_ID"),
+        inverseJoinColumns = @JoinColumn(name = "ROLE_ID")
+    )
+    private Set<Role> roles = new HashSet<>();
+
     protected User() {}
 
     public User(String email, String passwordHash) {
@@ -47,4 +57,5 @@ public class User {
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
     public Instant getLastLoginAt() { return lastLoginAt; }
+    public Set<Role> getRoles() { return roles; }
 }

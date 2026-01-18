@@ -70,6 +70,7 @@ services:
     networkPolicy:
       allowedNamespaces:
         - shopease-frontend
+        - shopease-order        # Allow order-service to send notification requests
 frontend:
   image: shopease-frontend
   tag: "staging-${GITHUB_SHA_SHORT}"

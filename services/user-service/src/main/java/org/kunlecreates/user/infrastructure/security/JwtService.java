@@ -1,0 +1,41 @@
+package org.kunlecreates.user.infrastructure.security;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.oauth2.jwt.*;
+import org.springframework.stereotype.Service;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+
+@Service
+public class JwtService {
+
+    private final JwtEncoder jwtEncoder;
+
+    @Value("${jwt.issuer:shopease}")
+    private String issuer;
+
+    @Value("${jwt.expiry-minutes:60}")
+    private long expiryMinutes;
+
+    public JwtService(JwtEncoder jwtEncoder) {
+        this.jwtEncoder = jwtEncoder;
+    }
+
+    public String generateToken(String userId, String email, List<String> roles) {
+        Instant now = Instant.now();
+        Instant expiry = now.plus(expiryMinutes, ChronoUnit.MINUTES);
+
+        JwtClaimsSet claims = JwtClaimsSet.builder()
+                .issuer(issuer)
+                .issuedAt(now)
+                .expiresAt(expiry)
+                .subject(userId)
+                .claim("email", email)
+                .claim("roles", roles)
+                .build();
+
+        return jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
+    }
+}

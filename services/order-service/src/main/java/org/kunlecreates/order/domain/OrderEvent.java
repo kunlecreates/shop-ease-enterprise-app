@@ -23,6 +23,23 @@ public class OrderEvent {
     private Instant createdAt = Instant.now();
 
     protected OrderEvent() {}
-    public OrderEvent(Long orderId, String type, String payload) { this.orderId = orderId; this.type = type; this.payload = payload; }
+    
+    public OrderEvent(Long orderId, String type, String payload) { 
+        this.orderId = orderId; 
+        this.type = type; 
+        this.payload = payload; 
+    }
+    
+    public OrderEvent(Long orderId, String previousStatus, String newStatus, Instant occurredAt) {
+        this.orderId = orderId;
+        this.type = "STATUS_CHANGED";
+        this.payload = String.format("{\"from\":\"%s\",\"to\":\"%s\"}", previousStatus, newStatus);
+        this.createdAt = occurredAt;
+    }
+    
     public Long getId() { return id; }
+    public Long getOrderId() { return orderId; }
+    public String getType() { return type; }
+    public String getPayload() { return payload; }
+    public Instant getCreatedAt() { return createdAt; }
 }

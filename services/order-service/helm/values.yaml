@@ -34,6 +34,13 @@ db:
   #  DB_PASSWORD: "<change-me>"
   #  DATABASE_URL: sqlserver://sa:<change-me>@mssql-svc.mssql-system.svc.cluster.local:1433?database=orderdb
 
+jwt:
+  # Name of a pre-created Secret containing JWT_SECRET (shared with user-service)
+  secretName: ""
+  # Dev-only: inline secret (do NOT use in prod)
+  dev:
+    JWT_SECRET: "dev-secret-changeme-at-least-256-bits"
+
 service:
   port: 80
   # Port on the container the application listens on; used as Service targetPort and
@@ -42,22 +49,22 @@ service:
 
 resources:
   requests:
-    cpu: 50m
-    memory: 256Mi
-  limits:
     cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: 500m
     memory: 1Gi
 
 probes:
   liveness:
     path: /actuator/health/liveness
-    initialDelaySeconds: 240
+    initialDelaySeconds: 360
     timeoutSeconds: 5
     periodSeconds: 10
     failureThreshold: 6
   readiness:
     path: /actuator/health/readiness
-    initialDelaySeconds: 180
+    initialDelaySeconds: 300
     timeoutSeconds: 5
     periodSeconds: 10
     failureThreshold: 6

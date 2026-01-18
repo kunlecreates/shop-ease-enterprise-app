@@ -3,9 +3,8 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: frontend
-  annotations:
-    kubernetes.io/ingressClassName: {{ .Values.ingress.className }}
 spec:
+  ingressClassName: {{ .Values.ingress.className }}
   rules:
     - host: {{ .Values.ingress.host }}
       http:

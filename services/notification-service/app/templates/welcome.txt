@@ -1,0 +1,25 @@
+WELCOME TO SHOPEASE!
+
+Hi {{ username }},
+
+Welcome to ShopEase! We're thrilled to have you join our community.
+
+GET STARTED
+Your account has been created successfully. Here's what you can do:
+
+✨ Browse thousands of products
+🛒 Easy and secure checkout
+📦 Track your orders in real-time
+💳 Save your payment methods
+🎁 Exclusive member deals
+
+{% if verification_url %}
+VERIFY YOUR EMAIL
+Please verify your email address by clicking this link:
+{{ verification_url }}
+{% endif %}
+
+If you have any questions, our support team is here to help!
+
+---
+© 2026 ShopEase. All rights reserved.

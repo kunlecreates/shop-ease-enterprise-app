@@ -1,0 +1,14 @@
+YOUR ORDER HAS SHIPPED!
+
+Hi {{ customer_name }},
+
+Great news! Your order #{{ order_id }} is on its way!
+
+TRACKING INFORMATION
+Tracking Number: {{ tracking_number }}
+Estimated Delivery: {{ estimated_delivery }}
+
+You can track your package using the tracking number above.
+
+---
+© 2026 ShopEase. All rights reserved.

@@ -79,14 +79,29 @@ __pycache__/
 *.py[cod]
 *.pyo
 *.pyc
+**/.venv/
+**/venv/
+**/.pytest_cache/
 
 # Ignore built distribution artifacts and virtualenvs that should not be committed
 services/product-service/dist/
 services/notification-service/.venv/
+
+# Frontend build artifacts
+frontend/.next/
+frontend/out/
+frontend/next-env.d.ts
+frontend/.turbo/
+frontend/.vercel/
 
 # Misc
 **/env/
 /.env
 /.env.local
 .tmp_venv
+**/tmp/
+
+# Documentation (keep in repo for tracking)
+# These are intentionally tracked
+# *.md files in root are documentation
 

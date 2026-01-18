@@ -11,6 +11,8 @@ spring:
     driver-class-name: oracle.jdbc.OracleDriver
   flyway:
     enabled: ${FLYWAY_ENABLED:false}
+jwt:
+  secret: ${JWT_SECRET}
 management:
   endpoints:
     web:

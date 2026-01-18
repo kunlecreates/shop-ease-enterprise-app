@@ -346,6 +346,94 @@ Each pipeline uses:
 
 ## 🧪 Testing Strategy (Authoritative)
 
+### Test Pyramid Architecture
+
+This project follows the industry-standard **Test Pyramid** with four distinct test layers:
+
+```
+        /\
+       /E2E\         ← Playwright (browser, full system)
+      /------\
+     /  API  \       ← HTTP to deployed services (post-deployment)
+    /----------\
+   /Integration\     ← Testcontainers (real DB, in CI)
+  /--------------\
+ /     Unit      \   ← Mocked dependencies (fast)
+/------------------\
+```
+
+### Test Type Definitions
+
+| Test Type | Scope | Location | Database | When Runs | Example File |
+|-----------|-------|----------|----------|-----------|--------------|
+| **Unit** | Single class/module | `src/test/java/unit/` or `test/unit/` | Mocked or H2 | Every push | `UserServiceTest.java`, `product.service.spec.ts` |
+| **Integration** | Controller→Service→Repo→DB | `src/test/java/integration/` or `test/integration/` | Testcontainers | Every push (before build) | `UserControllerIT.java`, `product.controller.integration.spec.ts` |
+| **API Contract** | Cross-service HTTP | `/api-tests/` | Staging DB | After deployment | `customer-checkout.flow.test.ts` |
+| **E2E** | Browser + Full system | `/e2e/` | Staging DB | After deployment | `cart-checkout.spec.ts` (Playwright) |
+
+### Test Naming Conventions
+
+**Java (Spring Boot)**:
+- Unit tests: `*Test.java` (e.g., `UserServiceTest.java`)
+- Integration tests: `*IT.java` (e.g., `UserControllerIT.java`)
+- Maven Surefire runs `*Test.java`, Failsafe runs `*IT.java`
+
+**TypeScript (NestJS)**:
+- Unit tests: `*.spec.ts` (e.g., `product.service.spec.ts`)
+- Integration tests: `*.integration.spec.ts` (e.g., `product.controller.integration.spec.ts`)
+- npm scripts: `test:unit` and `test:integration`
+
+**Python (FastAPI)**:
+- Unit tests: `test_*.py` in `tests/unit/`
+- Integration tests: `test_*_integration.py` in `tests/integration/`
+
+### Integration Testing with Testcontainers
+
+**Purpose**: Validate persistence logic with real database before Docker build.
+
+**Key Principles**:
+- Run in CI **before** Docker image build (fast feedback: 5 min vs 20+ min)
+- Use Testcontainers to spin up ephemeral database containers
+- Test full stack: Controller → Service → Repository → Real Database
+- No mocks allowed in integration tests
+- Each test gets a clean database state (via cleanup hooks)
+
+**Example Structure (Java)**:
+```java
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@Testcontainers
+@ContextConfiguration(initializers = FlywayTestInitializer.class)
+public class UserControllerIT {
+    @Container
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine");
+    
+    @Autowired
+    private TestRestTemplate restTemplate;
+    
+    @Test
+    void registerUser_shouldPersistToDatabase() {
+        // Test REST endpoint with real DB persistence
+    }
+}
+```
+
+**Example Structure (TypeScript)**:
+```typescript
+describe('ProductController (Integration)', () => {
+  let app: INestApplication;
+  let container: StartedPostgreSqlContainer;
+  
+  beforeAll(async () => {
+    container = await new PostgreSqlContainer('postgres:15-alpine').start();
+    // Start NestJS app with real PostgreSQL
+  });
+  
+  it('should create product and persist to database', async () => {
+    // Test with supertest + real DB
+  });
+});
+```
+
 ### Test Ownership Model
 
 | Test Type | Scope | Location |

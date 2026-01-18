@@ -37,6 +37,19 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           
           env:
+            {{- if .Values.jwt.secretName }}
+            # JWT Secret (shared with user-service)
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.jwt.secretName }}
+                  key: JWT_SECRET
+            {{- else if .Values.jwt.dev.JWT_SECRET }}
+            # Dev-only JWT Secret (do NOT use in prod)
+            - name: JWT_SECRET
+              value: {{ .Values.jwt.dev.JWT_SECRET | quote }}
+            {{- end }}
+
             {{- if .Values.env }}
             {{- $root := . }}
             {{- range $key, $val := .Values.env }}

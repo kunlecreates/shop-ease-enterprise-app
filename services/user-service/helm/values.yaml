@@ -33,6 +33,14 @@ db:
   #  DB_PASSWORD: devpass
   #  DATABASE_URL: oracle+thin:@oracledb.oracle-system.svc.cluster.local:1521/XE
 
+jwt:
+  # Name of a pre-created Secret containing JWT_SECRET
+  # The deploy workflow creates this as `shopease-jwt` from GitHub Secrets
+  secretName: ""
+  # Dev-only: inline secret (do NOT use in prod)
+  dev:
+    JWT_SECRET: "dev-secret-changeme-at-least-256-bits"
+
 service:
   port: 80
   # Port on the container the application listens on; used as Service targetPort and
@@ -41,25 +49,25 @@ service:
 
 resources:
   requests:
-    cpu: 100m
+    cpu: 250m
     memory: 512Mi
   limits:
-    cpu: 250m
+    cpu: 500m
     memory: 1Gi
 
 probes:
   liveness:
     path: /actuator/health/liveness
-    initialDelaySeconds: 240
+    initialDelaySeconds: 300
     timeoutSeconds: 5
     periodSeconds: 10
     failureThreshold: 6
   readiness:
     path: /actuator/health/readiness
-    initialDelaySeconds: 180
-    timeoutSeconds: 3
-    periodSeconds: 5
-    failureThreshold: 5
+    initialDelaySeconds: 300
+    timeoutSeconds: 5
+    periodSeconds: 10
+    failureThreshold: 6
 
 autoscaling:
   enabled: true

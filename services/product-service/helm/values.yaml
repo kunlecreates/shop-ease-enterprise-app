@@ -31,6 +31,13 @@ db:
   #  DB_PASSWORD: devpass
   #  DATABASE_URL: postgresql://devuser:devpass@postgresql.postgres-system.svc.cluster.local:5432/productdb
 
+jwt:
+  # Name of a pre-created Secret containing JWT_SECRET (shared with user-service)
+  secretName: ""
+  # Dev-only: inline secret (do NOT use in prod)
+  dev:
+    JWT_SECRET: "dev-secret-changeme-at-least-256-bits"
+
 service:
   port: 80
   # Port on the container the application listens on; used as Service targetPort and

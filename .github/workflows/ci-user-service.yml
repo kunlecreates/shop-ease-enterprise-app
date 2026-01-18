@@ -53,6 +53,16 @@ jobs:
           docker --version || true
           docker info || true
 
+      - name: Run Unit Tests
+        run: |
+          echo "Running unit tests (*Test.java)"
+          mvn -B -f "${{ env.MODULE_PATH }}" test -Dtest=*Test
+
+      - name: Run Integration Tests (Testcontainers)
+        run: |
+          echo "Running integration tests (*IT.java) with real database (Testcontainers)"
+          mvn -B -f "${{ env.MODULE_PATH }}" verify -Dtest=*IT -Dtestcontainers.enabled=true -Dapi.version=1.44
+
       - name: Run Maven goal for module (inline helper)
         run: |
           set -euo pipefail

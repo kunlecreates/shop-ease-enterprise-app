@@ -1,14 +1,22 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { PassportModule } from '@nestjs/passport';
+import { JwtModule } from '@nestjs/jwt';
 import { Product } from './domain/product.entity';
 import { Category } from './domain/category.entity';
 import { StockMovement } from './domain/stock-movement.entity';
 import { ProductService } from './application/product.service';
 import { ProductController } from './presentation/product.controller';
 import { HealthController } from './presentation/health.controller';
+import { JwtStrategy } from './config/jwt.config';
 
 @Module({
   imports: [
+    PassportModule,
+    JwtModule.register({
+      secret: process.env.JWT_SECRET || 'dev-secret-changeme',
+      signOptions: { expiresIn: '60m' },
+    }),
     TypeOrmModule.forRootAsync({
       useFactory: () => {
         const entities = [Product, Category, StockMovement];
@@ -36,6 +44,6 @@ import { HealthController } from './presentation/health.controller';
     TypeOrmModule.forFeature([Product, Category, StockMovement])
   ],
   controllers: [ProductController, HealthController],
-  providers: [ProductService],
+  providers: [ProductService, JwtStrategy],
 })
 export class AppModule {}

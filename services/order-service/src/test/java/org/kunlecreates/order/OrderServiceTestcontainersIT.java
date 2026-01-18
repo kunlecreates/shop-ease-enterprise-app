@@ -81,7 +81,7 @@ public class OrderServiceTestcontainersIT {
     @Test
     void createAndFind_withMssql() {
         // Use a userRef string so order tests don't depend on a users fixture
-        Order o = orderService.createOrder("it-user-ref-1", null, "PENDING", 42.00);
+        Order o = orderService.createOrder("it-user-ref-1", null, "PENDING", 42.00, null);
         assertThat(o.getId()).isNotNull();
         assertThat(orderService.findById(o.getId())).isPresent();
     }
