@@ -37,7 +37,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class UserControllerIT {
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:14-alpine")
             .withDatabaseName("usersdb_it")
             .withUsername("test")
             .withPassword("test")
