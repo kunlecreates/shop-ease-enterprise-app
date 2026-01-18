@@ -27,6 +27,9 @@ public class JwtService {
         Instant now = Instant.now();
         Instant expiry = now.plus(expiryMinutes, ChronoUnit.MINUTES);
 
+        // Build JWT headers with explicit algorithm specification
+        JwsHeader headers = JwsHeader.with(() -> "HS256").build();
+
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer(issuer)
                 .issuedAt(now)
@@ -36,6 +39,6 @@ public class JwtService {
                 .claim("roles", roles)
                 .build();
 
-        return jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
+        return jwtEncoder.encode(JwtEncoderParameters.from(headers, claims)).getTokenValue();
     }
 }
