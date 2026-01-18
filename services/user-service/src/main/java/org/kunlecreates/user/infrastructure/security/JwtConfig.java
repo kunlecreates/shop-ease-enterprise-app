@@ -1,5 +1,6 @@
 package org.kunlecreates.user.infrastructure.security;
 
+import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,6 +12,7 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 
+import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
 @Configuration
@@ -26,9 +28,10 @@ public class JwtConfig {
 
     @Bean
     public JwtEncoder jwtEncoder() {
-        // Use builder pattern similar to JwtDecoder - withSecretKey() wraps key properly
-        SecretKeySpec secretKey = new SecretKeySpec(jwtSecret.getBytes(), "HmacSHA256");
-        return NimbusJwtEncoder.withSecretKey(secretKey).build();
+        // For Spring Security 6.x with symmetric HMAC keys:
+        // ImmutableSecret constructor accepts SecretKey (not OctetSequenceKey)
+        SecretKey key = new SecretKeySpec(jwtSecret.getBytes(), "HmacSHA256");
+        return new NimbusJwtEncoder(new ImmutableSecret<>(key));
     }
 
     @Bean
