@@ -41,16 +41,13 @@ jobs:
           export PYTHONPATH="$PWD":$PYTHONPATH
           pytest tests/ --ignore=tests/integration/ -v --tb=short --disable-warnings -k "not integration" || echo "No unit tests found"
 
-      - name: Run Integration Tests
+      - name: Run Integration Tests with Coverage
         working-directory: services/notification-service
         run: |
           export PYTHONPATH="$PWD":$PYTHONPATH
+          # Run integration tests first
           pytest tests/integration/ -v --tb=short
-
-      - name: Run All Tests with Coverage
-        working-directory: services/notification-service
-        run: |
-          export PYTHONPATH="$PWD":$PYTHONPATH
+          # Then run all tests with coverage
           pytest --cov=app --cov-report=json:coverage.json --cov-report=term
 
       - name: Upload coverage artifact (notification-service)

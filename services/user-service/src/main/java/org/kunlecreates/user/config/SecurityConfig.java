@@ -2,9 +2,11 @@ package org.kunlecreates.user.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -12,17 +14,37 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableMethodSecurity  // Enable @PreAuthorize, @PostAuthorize, @Secured annotations
 public class SecurityConfig {
 
+    /**
+     * Security filter chain for PUBLIC endpoints (no authentication required).
+     * This chain does NOT configure OAuth2 Resource Server, allowing unauthenticated access.
+     */
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    @Order(1)
+    public SecurityFilterChain publicFilterChain(HttpSecurity http) throws Exception {
         http
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/actuator/health/**", "/actuator/health", "/actuator/info").permitAll()
-                .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
-                .anyRequest().authenticated()
-            )
+            .securityMatcher("/actuator/health/**", "/actuator/health", "/actuator/info",
+                           "/api/auth/login", "/api/auth/register")
+            .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .csrf(AbstractHttpConfigurer::disable);
+        // NOTE: NO .oauth2ResourceServer() here - that's the key!
+
+        return http.build();
+    }
+
+    /**
+     * Security filter chain for PROTECTED endpoints (JWT authentication required).
+     * This chain requires JWT tokens for all other endpoints.
+     */
+    @Bean
+    @Order(2)
+    public SecurityFilterChain protectedFilterChain(HttpSecurity http) throws Exception {
+        http
+            .securityMatcher("/**")  // All other endpoints
+            .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .csrf(csrf -> csrf.disable());
+            .csrf(AbstractHttpConfigurer::disable);
 
         return http.build();
     }

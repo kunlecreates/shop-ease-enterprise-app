@@ -45,16 +45,12 @@ jobs:
           echo "Running unit tests (test/**/*.spec.ts excluding integration)"
           npm test -- --testPathIgnorePatterns=integration --passWithNoTests || echo "No unit tests found"
 
-      - name: Run Integration Tests (Testcontainers)
+      - name: Run Integration Tests with Coverage
         working-directory: services/product-service
         run: |
           echo "Running integration tests (test/integration/) with real PostgreSQL (Testcontainers)"
           npm run test:integration --if-present
-
-      - name: Run all tests with coverage
-        working-directory: services/product-service
-        run: |
-          # Run all tests with coverage (generate json-summary + lcov)
+          # Then run all tests with coverage
           npm test --if-present -- --coverage --coverageDirectory=coverage --coverageReporters=json-summary
 
       - name: Upload raw coverage (product-service)

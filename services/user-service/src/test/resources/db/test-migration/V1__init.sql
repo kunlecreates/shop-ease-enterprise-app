@@ -52,3 +52,4 @@ CREATE TABLE password_resets (
 -- Basic roles ---------------------------------------------------------------
 INSERT INTO roles (name) VALUES ('USER');
 INSERT INTO roles (name) VALUES ('ADMIN');
+INSERT INTO roles (name) VALUES ('customer');  -- Required by AuthService.register()

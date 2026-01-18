@@ -63,33 +63,6 @@ jobs:
           echo "Running integration tests (*IT.java) with real database (Testcontainers)"
           mvn -B -f "${{ env.MODULE_PATH }}" verify -Dtest=*IT -Dtestcontainers.enabled=true -Dapi.version=1.44
 
-      - name: Run Maven goal for module (inline helper)
-        run: |
-          set -euo pipefail
-          MODULE_PATH="${{ env.MODULE_PATH }}"
-          GOAL="${{ env.MAVEN_GOAL }}"
-          IFS=' ' read -r -a EXTRA_ARGS <<< "${{ env.MAVEN_ARGS }}"
-
-          POM_FILE="$MODULE_PATH/pom.xml"
-          if [ ! -f "$POM_FILE" ]; then
-            echo "POM not found at $POM_FILE" >&2
-            exit 3
-          fi
-
-          if [ -f ./mvnw ]; then
-            chmod +x ./mvnw || true
-            MVN_CMD=(./mvnw)
-          elif [ -f "$MODULE_PATH/mvnw" ]; then
-            chmod +x "$MODULE_PATH/mvnw" || true
-            MVN_CMD=("$MODULE_PATH/mvnw")
-          else
-            MVN_CMD=(mvn)
-          fi
-
-          MAVEN_LOCAL_REPO="$HOME/.m2/repository"
-          echo "Using Maven command: ${MVN_CMD[*]} -B -Dmaven.repo.local=$MAVEN_LOCAL_REPO -f $POM_FILE $GOAL ${EXTRA_ARGS[*]}"
-          "${MVN_CMD[@]}" -B -Dmaven.repo.local="$MAVEN_LOCAL_REPO" -f "$POM_FILE" "$GOAL" "${EXTRA_ARGS[@]}"
-
       - name: Prepare artifact name
         id: prepare-artifact
         run: |
