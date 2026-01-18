@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { PostgreSqlContainer } = require('testcontainers');
+const { PostgreSqlContainer } = require('@testcontainers/postgresql');
 const { Client } = require('pg');
 
 module.exports = async () => {
