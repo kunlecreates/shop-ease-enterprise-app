@@ -4,12 +4,14 @@ import * as request from 'supertest';
 import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import { AppModule } from '../../src/app.module';
 import { DataSource } from 'typeorm';
+import { JwtService } from '@nestjs/jwt';
 
 describe('ProductController (Integration)', () => {
   let app: INestApplication;
   let container: StartedPostgreSqlContainer;
   let dataSource: DataSource;
   let adminToken: string;
+  let jwtService: JwtService;
 
   beforeAll(async () => {
     // Start real PostgreSQL container
@@ -49,11 +51,19 @@ describe('ProductController (Integration)', () => {
     // Get DataSource for manual operations
     dataSource = app.get(DataSource);
 
+    // Get JwtService for proper token generation
+    jwtService = app.get(JwtService);
+
     // Run migrations
     await dataSource.runMigrations();
 
-    // Generate admin token for tests
-    adminToken = generateTestToken({ sub: '1', email: 'admin@test.com', roles: ['ADMIN'] });
+    // Generate admin token for tests using the actual JwtService
+    adminToken = jwtService.sign({ 
+      sub: '1', 
+      email: 'admin@test.com', 
+      roles: ['ADMIN'],
+      iss: 'product-service-test'
+    });
   });
 
   afterAll(async () => {
@@ -72,14 +82,6 @@ describe('ProductController (Integration)', () => {
     // Clean up products between tests
     await dataSource.query('TRUNCATE TABLE products CASCADE');
   });
-
-  function generateTestToken(payload: any): string {
-    // Simple base64-encoded token for testing (not production-grade)
-    const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64');
-    const body = Buffer.from(JSON.stringify(payload)).toString('base64');
-    const signature = Buffer.from('test-signature').toString('base64');
-    return `${header}.${body}.${signature}`;
-  }
 
   describe('POST /api/product', () => {
     it('should create product and persist to database', async () => {
