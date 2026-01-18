@@ -51,18 +51,21 @@ describe('ProductController (Integration)', () => {
     // Get DataSource for manual operations
     dataSource = app.get(DataSource);
 
-    // Get JwtService for proper token generation
-    jwtService = app.get(JwtService);
-
     // Run migrations
     await dataSource.runMigrations();
 
-    // Generate admin token for tests using the actual JwtService
+    // Generate admin token for tests using JwtService with the same secret
+    // Important: Must use the same secret that was set in process.env.JWT_SECRET
+    jwtService = new JwtService({
+      secret: process.env.JWT_SECRET,
+      signOptions: { expiresIn: '60m' },
+    });
+    
     adminToken = jwtService.sign({ 
       sub: '1', 
       email: 'admin@test.com', 
       roles: ['ADMIN'],
-      iss: 'product-service-test'
+      iss: 'shopease'
     });
   });
 
