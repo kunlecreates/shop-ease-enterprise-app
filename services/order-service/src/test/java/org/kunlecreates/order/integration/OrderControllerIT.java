@@ -3,6 +3,7 @@ package org.kunlecreates.order.integration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.kunlecreates.order.test.FlywayTestInitializer;
+import org.kunlecreates.order.test.JwtTestHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -12,7 +13,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -69,18 +69,22 @@ public class OrderControllerIT {
     }
 
     @Test
-    @WithMockUser(username = "test-user-1", roles = {"USER"})
     void createOrder_shouldPersistToDatabase_andReturnLocation() {
-        // Given: Valid order creation request
+        // Given: Valid order creation request with JWT authentication
+        String token = JwtTestHelper.createToken("test-user-1");
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + token);
+        
         Map<String, Object> orderRequest = Map.of(
                 "status", "PENDING",
                 "total", 99.99
         );
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(orderRequest, headers);
 
         // When: Create order via REST API
         ResponseEntity<Void> response = restTemplate.postForEntity(
                 "/api/order",
-                orderRequest,
+                entity,
                 Void.class
         );
 
@@ -101,18 +105,22 @@ public class OrderControllerIT {
     }
 
     @Test
-    @WithMockUser(username = "test-user-2", roles = {"USER"})
     void createOrder_shouldUseAuthenticatedUserId() {
-        // Given: Order creation request
+        // Given: Order creation request with JWT
+        String token = JwtTestHelper.createToken("test-user-2");
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + token);
+        
         Map<String, Object> orderRequest = Map.of(
                 "status", "PENDING",
                 "total", 49.99
         );
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(orderRequest, headers);
 
         // When: Create order
         ResponseEntity<Void> createResponse = restTemplate.postForEntity(
                 "/api/order",
-                orderRequest,
+                entity,
                 Void.class
         );
 
@@ -124,8 +132,11 @@ public class OrderControllerIT {
         String orderId = location.substring(location.lastIndexOf('/') + 1);
 
         // Fetch order and verify user_ref matches authenticated user
-        ResponseEntity<Map> getResponse = restTemplate.getForEntity(
+        HttpEntity<Void> getEntity = new HttpEntity<>(headers);
+        ResponseEntity<Map> getResponse = restTemplate.exchange(
                 "/api/order/" + orderId,
+                HttpMethod.GET,
+                getEntity,
                 Map.class
         );
         
@@ -135,17 +146,21 @@ public class OrderControllerIT {
     }
 
     @Test
-    @WithMockUser(username = "test-user-3", roles = {"USER"})
     void getOrder_withValidId_shouldReturnOrder() {
         // Given: Order exists in database
+        String token = JwtTestHelper.createToken("test-user-3");
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + token);
+        
         Map<String, Object> orderRequest = Map.of(
                 "status", "PENDING",
                 "total", 79.99
         );
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(orderRequest, headers);
 
         ResponseEntity<Void> createResponse = restTemplate.postForEntity(
                 "/api/order",
-                orderRequest,
+                entity,
                 Void.class
         );
 
@@ -153,8 +168,11 @@ public class OrderControllerIT {
         String orderId = location.substring(location.lastIndexOf('/') + 1);
 
         // When: Get order by ID
-        ResponseEntity<Map> response = restTemplate.getForEntity(
+        HttpEntity<Void> getEntity = new HttpEntity<>(headers);
+        ResponseEntity<Map> response = restTemplate.exchange(
                 "/api/order/" + orderId,
+                HttpMethod.GET,
+                getEntity,
                 Map.class
         );
 
@@ -167,11 +185,18 @@ public class OrderControllerIT {
     }
 
     @Test
-    @WithMockUser(username = "test-user-4", roles = {"USER"})
     void getOrder_withInvalidId_shouldReturn404() {
+        // Given: Valid JWT token
+        String token = JwtTestHelper.createToken("test-user-4");
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + token);
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+        
         // When: Get non-existent order
-        ResponseEntity<Map> response = restTemplate.getForEntity(
+        ResponseEntity<Map> response = restTemplate.exchange(
                 "/api/order/99999",
+                HttpMethod.GET,
+                entity,
                 Map.class
         );
 
@@ -180,19 +205,22 @@ public class OrderControllerIT {
     }
 
     @Test
-    @WithMockUser(username = "user-a", roles = {"USER"})
     void getOrder_belongingToAnotherUser_shouldReturn403() {
         // Given: Order created by user-b
+        String tokenUserB = JwtTestHelper.createToken("user-b");
+        HttpHeaders headersUserB = new HttpHeaders();
+        headersUserB.set("Authorization", "Bearer " + tokenUserB);
+        
         Map<String, Object> orderRequest = Map.of(
                 "status", "PENDING",
                 "total", 59.99
         );
+        HttpEntity<Map<String, Object>> createEntity = new HttpEntity<>(orderRequest, headersUserB);
 
         // Create order as user-b
-        TestRestTemplate userBTemplate = restTemplate.withBasicAuth("user-b", "password");
-        ResponseEntity<Void> createResponse = userBTemplate.postForEntity(
+        ResponseEntity<Void> createResponse = restTemplate.postForEntity(
                 "/api/order",
-                orderRequest,
+                createEntity,
                 Void.class
         );
 
@@ -200,8 +228,15 @@ public class OrderControllerIT {
         String orderId = location.substring(location.lastIndexOf('/') + 1);
 
         // When: user-a tries to access user-b's order
-        ResponseEntity<Map> response = restTemplate.getForEntity(
+        String tokenUserA = JwtTestHelper.createToken("user-a");
+        HttpHeaders headersUserA = new HttpHeaders();
+        headersUserA.set("Authorization", "Bearer " + tokenUserA);
+        HttpEntity<Void> getEntity = new HttpEntity<>(headersUserA);
+        
+        ResponseEntity<Map> response = restTemplate.exchange(
                 "/api/order/" + orderId,
+                HttpMethod.GET,
+                getEntity,
                 Map.class
         );
 
@@ -210,18 +245,21 @@ public class OrderControllerIT {
     }
 
     @Test
-    @WithMockUser(username = "admin-user", roles = {"ADMIN"})
     void getOrder_asAdmin_shouldAccessAnyOrder() {
         // Given: Order created by regular user
+        String regularUserToken = JwtTestHelper.createToken("regular-user");
+        HttpHeaders regularUserHeaders = new HttpHeaders();
+        regularUserHeaders.set("Authorization", "Bearer " + regularUserToken);
+        
         Map<String, Object> orderRequest = Map.of(
                 "status", "PENDING",
                 "total", 129.99
         );
+        HttpEntity<Map<String, Object>> createEntity = new HttpEntity<>(orderRequest, regularUserHeaders);
 
-        TestRestTemplate regularUserTemplate = restTemplate.withBasicAuth("regular-user", "password");
-        ResponseEntity<Void> createResponse = regularUserTemplate.postForEntity(
+        ResponseEntity<Void> createResponse = restTemplate.postForEntity(
                 "/api/order",
-                orderRequest,
+                createEntity,
                 Void.class
         );
 
@@ -229,8 +267,15 @@ public class OrderControllerIT {
         String orderId = location.substring(location.lastIndexOf('/') + 1);
 
         // When: Admin accesses the order
-        ResponseEntity<Map> response = restTemplate.getForEntity(
+        String adminToken = JwtTestHelper.createToken("admin-user", "admin@example.com", java.util.List.of("ROLE_ADMIN"));
+        HttpHeaders adminHeaders = new HttpHeaders();
+        adminHeaders.set("Authorization", "Bearer " + adminToken);
+        HttpEntity<Void> getEntity = new HttpEntity<>(adminHeaders);
+        
+        ResponseEntity<Map> response = restTemplate.exchange(
                 "/api/order/" + orderId,
+                HttpMethod.GET,
+                getEntity,
                 Map.class
         );
 
@@ -239,23 +284,31 @@ public class OrderControllerIT {
     }
 
     @Test
-    @WithMockUser(username = "test-user-5", roles = {"USER"})
     void listOrders_shouldReturnOnlyUserOrders() {
         // Given: Multiple orders for different users
+        String tokenUser5 = JwtTestHelper.createToken("test-user-5");
+        HttpHeaders headersUser5 = new HttpHeaders();
+        headersUser5.set("Authorization", "Bearer " + tokenUser5);
+        
         Map<String, Object> orderRequest1 = Map.of("status", "PENDING", "total", 10.00);
         Map<String, Object> orderRequest2 = Map.of("status", "COMPLETED", "total", 20.00);
 
         // Create orders as test-user-5
-        restTemplate.postForEntity("/api/order", orderRequest1, Void.class);
-        restTemplate.postForEntity("/api/order", orderRequest2, Void.class);
+        restTemplate.postForEntity("/api/order", new HttpEntity<>(orderRequest1, headersUser5), Void.class);
+        restTemplate.postForEntity("/api/order", new HttpEntity<>(orderRequest2, headersUser5), Void.class);
 
         // Create order as different user
-        TestRestTemplate otherUserTemplate = restTemplate.withBasicAuth("other-user", "password");
-        otherUserTemplate.postForEntity("/api/order", Map.of("status", "PENDING", "total", 30.00), Void.class);
+        String tokenOther = JwtTestHelper.createToken("other-user");
+        HttpHeaders headersOther = new HttpHeaders();
+        headersOther.set("Authorization", "Bearer " + tokenOther);
+        restTemplate.postForEntity("/api/order", new HttpEntity<>(Map.of("status", "PENDING", "total", 30.00), headersOther), Void.class);
 
         // When: List orders as test-user-5
-        ResponseEntity<Object[]> response = restTemplate.getForEntity(
+        HttpEntity<Void> getEntity = new HttpEntity<>(headersUser5);
+        ResponseEntity<Object[]> response = restTemplate.exchange(
                 "/api/order",
+                HttpMethod.GET,
+                getEntity,
                 Object[].class
         );
 
@@ -266,18 +319,29 @@ public class OrderControllerIT {
     }
 
     @Test
-    @WithMockUser(username = "admin-user-2", roles = {"ADMIN"})
     void listOrders_asAdmin_shouldReturnAllOrders() {
         // Given: Orders from multiple users
-        TestRestTemplate user1Template = restTemplate.withBasicAuth("user-1", "password");
-        TestRestTemplate user2Template = restTemplate.withBasicAuth("user-2", "password");
+        String tokenUser1 = JwtTestHelper.createToken("user-1");
+        HttpHeaders headersUser1 = new HttpHeaders();
+        headersUser1.set("Authorization", "Bearer " + tokenUser1);
+        
+        String tokenUser2 = JwtTestHelper.createToken("user-2");
+        HttpHeaders headersUser2 = new HttpHeaders();
+        headersUser2.set("Authorization", "Bearer " + tokenUser2);
 
-        user1Template.postForEntity("/api/order", Map.of("status", "PENDING", "total", 15.00), Void.class);
-        user2Template.postForEntity("/api/order", Map.of("status", "COMPLETED", "total", 25.00), Void.class);
+        restTemplate.postForEntity("/api/order", new HttpEntity<>(Map.of("status", "PENDING", "total", 15.00), headersUser1), Void.class);
+        restTemplate.postForEntity("/api/order", new HttpEntity<>(Map.of("status", "COMPLETED", "total", 25.00), headersUser2), Void.class);
 
         // When: Admin lists orders
-        ResponseEntity<Object[]> response = restTemplate.getForEntity(
+        String adminToken = JwtTestHelper.createToken("admin-user-2", "admin2@example.com", java.util.List.of("ROLE_ADMIN"));
+        HttpHeaders adminHeaders = new HttpHeaders();
+        adminHeaders.set("Authorization", "Bearer " + adminToken);
+        HttpEntity<Void> getEntity = new HttpEntity<>(adminHeaders);
+        
+        ResponseEntity<Object[]> response = restTemplate.exchange(
                 "/api/order",
+                HttpMethod.GET,
+                getEntity,
                 Object[].class
         );
 
