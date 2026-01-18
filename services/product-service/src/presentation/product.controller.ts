@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Query, UseGuards, Request, ForbiddenException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Query, UseGuards, Request, Delete, HttpCode, ForbiddenException, NotFoundException, ConflictException } from '@nestjs/common';
 import { ProductService } from '../application/product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { JwtAuthGuard } from '../config/jwt-auth.guard';
@@ -57,15 +57,46 @@ export class ProductController {
     if (!req.user.roles || !req.user.roles.includes('ADMIN')) {
       throw new ForbiddenException('Only administrators can create products');
     }
-    return this.service.createProduct(body);
+    try {
+      return await this.service.createProduct(body);
+    } catch (error: any) {
+      if (error.code === '23505' || error.message?.includes('duplicate key')) {
+        throw new ConflictException(`Product with SKU '${body.sku}' already exists`);
+      }
+      throw error;
+    }
+  }
+
+  @Get(':sku')
+  async getProductBySku(@Param('sku') sku: string) {
+    const product = await this.service.getProductBySku(sku);
+    if (!product) {
+      throw new NotFoundException(`Product with SKU '${sku}' not found`);
+    }
+    return product;
   }
 
   @Patch(':sku/stock')
   @UseGuards(JwtAuthGuard)
-  async adjustStock(@Param('sku') sku: string, @Body() body: { quantity: number; reason: string }, @Request() req: any) {
+  async adjustStock(@Param('sku') sku: string, @Body() body: { adjustment?: number; quantity?: number; reason?: string }, @Request() req: any) {
     if (!req.user.roles || !req.user.roles.includes('ADMIN')) {
       throw new ForbiddenException('Only administrators can adjust stock levels');
     }
-    return this.service.adjustStock(sku, body.quantity, body.reason);
+    const adjustment = body.adjustment ?? body.quantity ?? 0;
+    return this.service.adjustStock(sku, adjustment, body.reason || 'Manual adjustment');
+  }
+
+  @Delete(':sku')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(200)
+  async deleteProduct(@Param('sku') sku: string, @Request() req: any) {
+    if (!req.user.roles || !req.user.roles.includes('ADMIN')) {
+      throw new ForbiddenException('Only administrators can delete products');
+    }
+    const deleted = await this.service.deleteProduct(sku);
+    if (!deleted) {
+      throw new NotFoundException(`Product with SKU '${sku}' not found`);
+    }
+    return { message: 'Product deleted successfully', sku };
   }
 }

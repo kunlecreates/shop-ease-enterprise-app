@@ -112,7 +112,3 @@ FOR EACH ROW EXECUTE PROCEDURE products_search_vector_trigger();
 CREATE TRIGGER trg_inventory_updated_at
 BEFORE INSERT OR UPDATE ON product_inventory
 FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
-
-CREATE TRIGGER trg_stock_movements_updated_at
-BEFORE INSERT OR UPDATE ON stock_movements
-FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();

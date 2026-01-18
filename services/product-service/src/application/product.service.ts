@@ -42,10 +42,11 @@ export class ProductService {
 
   async listProducts(options?: ProductSearchOptions): Promise<Product[]> {
     if (!options) {
-      return this.products.find();
+      return this.products.find({ relations: ['movements'] });
     }
 
-    const qb = this.products.createQueryBuilder('p');
+    const qb = this.products.createQueryBuilder('p')
+      .leftJoinAndSelect('p.movements', 'movements');
 
     if (options.q) {
       qb.andWhere("p.search_vector @@ plainto_tsquery('english', :query)", { query: options.q });
@@ -126,7 +127,20 @@ export class ProductService {
     if (next < 0) throw new BadRequestException('Insufficient stock for decrement');
     const movement = this.movements.create({ product, quantity, reason });
     await this.movements.save(movement);
-    return { sku, previous: current, new: next, reason };
+    return { sku, previous: current, new: next, stock: next, reason };
+  }
+
+  async getProductBySku(sku: string): Promise<Product | null> {
+    return this.products.findOne({ where: { sku }, relations: ['categories', 'movements'] });
+  }
+
+  async deleteProduct(sku: string): Promise<boolean> {
+    const product = await this.products.findOne({ where: { sku } });
+    if (!product) {
+      return false;
+    }
+    await this.products.remove(product);
+    return true;
   }
 
   async getStock(sku: string): Promise<number> {

@@ -42,4 +42,22 @@ export class Product {
   categories!: Category[];
   @OneToMany(() => StockMovement, m => m.product)
   movements!: StockMovement[];
+
+  toJSON() {
+    return {
+      id: this.id,
+      sku: this.sku,
+      name: this.name,
+      description: this.description,
+      price: this.price,
+      priceCents: this.priceCents,
+      currency: this.currency,
+      attributes: this.attributes,
+      active: this.active,
+      createdAt: this.createdAt,
+      updatedAt: this.updatedAt,
+      categories: this.categories,
+      stock: this.movements?.reduce((sum, m) => sum + m.quantity, 0) ?? 0
+    };
+  }
 }
