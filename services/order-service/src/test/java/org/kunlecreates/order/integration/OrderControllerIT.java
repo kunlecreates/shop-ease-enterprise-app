@@ -61,7 +61,7 @@ public class OrderControllerIT {
     void cleanDatabase() {
         // Clean orders table before each test for isolation
         try {
-            jdbcTemplate.execute("DELETE FROM orders");
+            jdbcTemplate.execute("DELETE FROM order_svc.orders");
         } catch (Exception e) {
             // Table might not exist yet, ignore
         }
