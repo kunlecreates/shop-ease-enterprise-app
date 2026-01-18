@@ -15,6 +15,7 @@
     <properties>
         <java.version>21</java.version>
         <spring.boot.version>3.3.5</spring.boot.version>
+        <flyway.version>10.21.0</flyway.version>
     </properties>
     <!-- Removed Testcontainers BOM import to avoid CI resolving issues; using explicit versions below -->
     <dependencies>
