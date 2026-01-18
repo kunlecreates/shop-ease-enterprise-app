@@ -14,6 +14,7 @@ import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
 
 @Configuration
 public class JwtConfig {
@@ -28,15 +29,15 @@ public class JwtConfig {
 
     @Bean
     public JwtEncoder jwtEncoder() {
-        // For Spring Security 6.x with symmetric HMAC keys:
-        // ImmutableSecret constructor accepts SecretKey (not OctetSequenceKey)
-        SecretKey key = new SecretKeySpec(jwtSecret.getBytes(), "HmacSHA256");
-        return new NimbusJwtEncoder(new ImmutableSecret<>(key));
+        // ImmutableSecret byte[] constructor creates OctetSequenceKey internally
+        // This is the proper way for Spring Security 6.x with symmetric keys
+        byte[] secret = jwtSecret.getBytes(StandardCharsets.UTF_8);
+        return new NimbusJwtEncoder(new ImmutableSecret<>(secret));
     }
 
     @Bean
     public JwtDecoder jwtDecoder() {
-        byte[] bytes = jwtSecret.getBytes();
+        byte[] bytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
         SecretKeySpec originalKey = new SecretKeySpec(bytes, "HmacSHA256");
         return NimbusJwtDecoder.withSecretKey(originalKey).macAlgorithm(MacAlgorithm.HS256).build();
     }
