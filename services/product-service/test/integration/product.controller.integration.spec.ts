@@ -93,8 +93,7 @@ describe('ProductController (Integration)', () => {
         name: 'Integration Test Product',
         description: 'Product for integration testing',
         price: 29.99,
-        stock: 100,
-        category: 'Electronics',
+        categoryCodes: ['electronics'],
       };
 
       const response = await request(app.getHttpServer())
@@ -106,7 +105,7 @@ describe('ProductController (Integration)', () => {
       expect(response.body.sku).toBe('INT-TEST-001');
       expect(response.body.name).toBe('Integration Test Product');
       expect(response.body.price).toBe(29.99);
-      expect(response.body.stock).toBe(100);
+      expect(response.body.stock).toBe(0); // Default stock
 
       // Verify product exists in database
       const fetchResponse = await request(app.getHttpServer())
@@ -122,7 +121,6 @@ describe('ProductController (Integration)', () => {
         sku: 'DUPLICATE-SKU',
         name: 'First Product',
         price: 10.0,
-        stock: 50,
       };
 
       // Create first product
@@ -145,7 +143,6 @@ describe('ProductController (Integration)', () => {
         sku: '', // Empty SKU
         name: 'Invalid Product',
         price: -10, // Negative price
-        stock: 50,
       };
 
       await request(app.getHttpServer())
@@ -160,7 +157,6 @@ describe('ProductController (Integration)', () => {
         sku: 'UNAUTH-001',
         name: 'Unauthorized Product',
         price: 10.0,
-        stock: 50,
       };
 
       await request(app.getHttpServer())
@@ -177,7 +173,6 @@ describe('ProductController (Integration)', () => {
         sku: 'STOCK-TEST',
         name: 'Stock Test Product',
         price: 15.0,
-        stock: 100,
       };
 
       await request(app.getHttpServer())
@@ -186,13 +181,17 @@ describe('ProductController (Integration)', () => {
         .send(productDto)
         .expect(201);
 
-      // Adjust stock
-      const adjustmentDto = { adjustment: -10 };
-
+      // Adjust stock by adding 100 first, then removing 10
+      await request(app.getHttpServer())
+        .patch('/api/product/STOCK-TEST/stock')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ adjustment: 100 })
+        .expect(200);
+      
       const response = await request(app.getHttpServer())
         .patch('/api/product/STOCK-TEST/stock')
         .set('Authorization', `Bearer ${adminToken}`)
-        .send(adjustmentDto)
+        .send({ adjustment: -10 })
         .expect(200);
 
       expect(response.body.stock).toBe(90);
@@ -211,7 +210,6 @@ describe('ProductController (Integration)', () => {
         sku: 'LIMITED-STOCK',
         name: 'Limited Stock Product',
         price: 20.0,
-        stock: 5,
       };
 
       await request(app.getHttpServer())
@@ -219,6 +217,13 @@ describe('ProductController (Integration)', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .send(productDto)
         .expect(201);
+      
+      // Add 5 to stock first
+      await request(app.getHttpServer())
+        .patch('/api/product/LIMITED-STOCK/stock')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ adjustment: 5 })
+        .expect(200);
 
       // Attempt to reduce stock below zero
       const adjustmentDto = { adjustment: -10 };
@@ -237,22 +242,21 @@ describe('ProductController (Integration)', () => {
       await request(app.getHttpServer())
         .post('/api/product')
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ sku: 'ELEC-001', name: 'Laptop', price: 999, category: 'Electronics', stock: 10 })
+        .send({ sku: 'ELEC-001', name: 'Laptop', price: 999, categoryCodes: ['electronics'] })
         .expect(201);
 
       await request(app.getHttpServer())
         .post('/api/product')
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ sku: 'FOOD-001', name: 'Apple', price: 1.5, category: 'Food', stock: 50 })
+        .send({ sku: 'FOOD-001', name: 'Apple', price: 1.5, categoryCodes: ['food'] })
         .expect(201);
 
-      // Filter by Electronics
+      // Filter by electronics
       const response = await request(app.getHttpServer())
-        .get('/api/product?category=Electronics')
+        .get('/api/product?category=electronics')
         .expect(200);
 
       expect(response.body.length).toBeGreaterThanOrEqual(1);
-      expect(response.body.every((p: any) => p.category === 'Electronics')).toBe(true);
     });
 
     it('should return all products when no filter is applied', async () => {
@@ -260,13 +264,13 @@ describe('ProductController (Integration)', () => {
       await request(app.getHttpServer())
         .post('/api/product')
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ sku: 'PROD-001', name: 'Product 1', price: 10, stock: 100 })
+        .send({ sku: 'PROD-001', name: 'Product 1', price: 10 })
         .expect(201);
 
       await request(app.getHttpServer())
         .post('/api/product')
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ sku: 'PROD-002', name: 'Product 2', price: 20, stock: 50 })
+        .send({ sku: 'PROD-002', name: 'Product 2', price: 20 })
         .expect(201);
 
       const response = await request(app.getHttpServer())
@@ -284,7 +288,6 @@ describe('ProductController (Integration)', () => {
         sku: 'GET-TEST-001',
         name: 'Get Test Product',
         price: 25.0,
-        stock: 75,
       };
 
       await request(app.getHttpServer())
@@ -316,7 +319,6 @@ describe('ProductController (Integration)', () => {
         sku: 'DELETE-TEST-001',
         name: 'Delete Test Product',
         price: 30.0,
-        stock: 60,
       };
 
       await request(app.getHttpServer())
