@@ -12,15 +12,13 @@ import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-# Set JWT_SECRET before importing app
-os.environ['JWT_SECRET'] = os.getenv('JWT_SECRET', 'test-secret-for-jwt-verification')
+# JWT_SECRET is set in conftest.py, so just read it here
+# Do not override it - use the value from conftest
+TEST_JWT_SECRET = os.getenv('JWT_SECRET', 'test-secret-key-for-integration-tests')
 
 from app.main import app
 
 client = TestClient(app)
-
-# Test JWT secret (matches the one in JwtVerifier)
-TEST_JWT_SECRET = os.getenv('JWT_SECRET', 'test-secret-for-jwt-verification')
 
 
 def generate_token(user_id: str, email: str, roles: list[str], expired: bool = False) -> str:

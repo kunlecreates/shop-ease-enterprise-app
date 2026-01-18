@@ -12,7 +12,7 @@ spring:
   flyway:
     enabled: ${FLYWAY_ENABLED:false}
 jwt:
-  secret: ${JWT_SECRET}
+  secret: ${JWT_SECRET:test-secret-key-for-development-only-min-256-bits-required-for-hs256-algorithm}
 management:
   endpoints:
     web:

@@ -392,12 +392,12 @@ class TestErrorHandling:
 
     def test_email_service_failure_returns_500(self, auth_headers):
         """Should return 500 when email service fails"""
-        with patch('app.services.email_service.email_service.send_email') as mock_send:
-            mock_send.return_value = AsyncMock(return_value=EmailResponse(
+        with patch('app.services.email_service.email_service.send_email', new_callable=AsyncMock) as mock_send:
+            mock_send.return_value = EmailResponse(
                 message_id="",
                 status="failed",
                 recipient="recipient@example.com"
-            ))()
+            )
 
             email_request = {
                 "to": "recipient@example.com",

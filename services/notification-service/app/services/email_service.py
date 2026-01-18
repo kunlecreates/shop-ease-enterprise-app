@@ -33,7 +33,7 @@ class EmailService:
                 html_body = f"<html><body>{request.body}</body></html>"
                 text_body = request.body
             
-            result = self.email_provider.send_email(
+            result = await self.email_provider.send_email(
                 to=request.to,
                 subject=request.subject,
                 html_body=html_body,
@@ -67,7 +67,7 @@ class EmailService:
                 }
             )
             
-            result = self.email_provider.send_email(
+            result = await self.email_provider.send_email(
                 to=data.customer_email,
                 subject=f"Order Confirmation - #{data.order_id}",
                 html_body=html_body,
@@ -100,7 +100,7 @@ class EmailService:
                 }
             )
             
-            result = self.email_provider.send_email(
+            result = await self.email_provider.send_email(
                 to=data.customer_email,
                 subject=f"Your Order #{data.order_id} Has Shipped!",
                 html_body=html_body,
@@ -133,7 +133,7 @@ class EmailService:
                 }
             )
             
-            result = self.email_provider.send_email(
+            result = await self.email_provider.send_email(
                 to=data.email,
                 subject="Password Reset Request",
                 html_body=html_body,
@@ -165,7 +165,7 @@ class EmailService:
                 }
             )
             
-            result = self.email_provider.send_email(
+            result = await self.email_provider.send_email(
                 to=data.email,
                 subject="Welcome to ShopEase!",
                 html_body=html_body,
