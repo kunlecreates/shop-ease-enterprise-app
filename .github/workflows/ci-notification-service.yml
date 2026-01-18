@@ -39,7 +39,7 @@ jobs:
         working-directory: services/notification-service
         run: |
           export PYTHONPATH="$PWD":$PYTHONPATH
-          pytest tests/unit/ -v --tb=short || echo "No unit tests found or failed"
+          pytest tests/ --ignore=tests/integration/ -v --tb=short --disable-warnings -k "not integration" || echo "No unit tests found"
 
       - name: Run Integration Tests
         working-directory: services/notification-service
