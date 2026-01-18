@@ -1,6 +1,12 @@
 package org.kunlecreates.user.infrastructure.security;
 
-import com.nimbusds.jose.jwk.source.ImmutableSecret;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.jwk.JWK;
+import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.jwk.OctetSequenceKey;
+import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
+import com.nimbusds.jose.jwk.source.JWKSource;
+import com.nimbusds.jose.proc.SecurityContext;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,7 +18,6 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 
-import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 
@@ -29,10 +34,14 @@ public class JwtConfig {
 
     @Bean
     public JwtEncoder jwtEncoder() {
-        // ImmutableSecret byte[] constructor creates OctetSequenceKey internally
-        // This is the proper way for Spring Security 6.x with symmetric keys
+        // Manually create OctetSequenceKey with explicit HS256 algorithm
+        // Then wrap in ImmutableJWKSet (not ImmutableSecret) for proper JWK handling
         byte[] secret = jwtSecret.getBytes(StandardCharsets.UTF_8);
-        return new NimbusJwtEncoder(new ImmutableSecret<>(secret));
+        OctetSequenceKey jwk = new OctetSequenceKey.Builder(secret)
+                .algorithm(JWSAlgorithm.HS256)
+                .build();
+        JWKSource<SecurityContext> jwkSource = new ImmutableJWKSet<>(new JWKSet(jwk));
+        return new NimbusJwtEncoder(jwkSource);
     }
 
     @Bean
