@@ -63,7 +63,7 @@ public class UserControllerIT {
 
     @BeforeEach
     void setUp() {
-        baseUrl = "http://localhost:" + port + "/api/user";
+        baseUrl = "http://localhost:" + port + "/api/auth";
     }
 
     @Test
