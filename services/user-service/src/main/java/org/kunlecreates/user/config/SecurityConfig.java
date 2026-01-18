@@ -34,13 +34,15 @@ public class SecurityConfig {
 
     /**
      * Security filter chain for PROTECTED endpoints (JWT authentication required).
-     * This chain requires JWT tokens for all other endpoints.
+     * This chain automatically handles all requests NOT matched by the first chain.
+     * Per Spring Security docs: Do NOT use securityMatcher("/**") - the default RequestMatcher
+     * matches any request not matched by higher-priority chains.
      */
     @Bean
     @Order(2)
     public SecurityFilterChain protectedFilterChain(HttpSecurity http) throws Exception {
         http
-            .securityMatcher("/**")  // All other endpoints
+            // NO securityMatcher needed - will match everything not matched by Order(1)
             .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
