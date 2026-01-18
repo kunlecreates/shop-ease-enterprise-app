@@ -1,5 +1,7 @@
 package org.kunlecreates.user.infrastructure.security;
 
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.jwk.OctetSequenceKey;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
@@ -29,9 +31,12 @@ public class JwtConfig {
 
     @Bean
     public JwtEncoder jwtEncoder() {
-        // Create a SecretKeySpec with explicit algorithm
-        SecretKeySpec secretKey = new SecretKeySpec(jwtSecret.getBytes(), "HmacSHA256");
-        JWKSource<SecurityContext> immutableSecret = new ImmutableSecret<>(secretKey);
+        // Create OctetSequenceKey (JWK) for symmetric key (HS256)
+        // ImmutableSecret requires a proper JWK, not a Java crypto key
+        OctetSequenceKey jwk = new OctetSequenceKey.Builder(jwtSecret.getBytes())
+                .algorithm(JWSAlgorithm.HS256)
+                .build();
+        JWKSource<SecurityContext> immutableSecret = new ImmutableSecret<>(jwk);
         return new NimbusJwtEncoder(immutableSecret);
     }
 
