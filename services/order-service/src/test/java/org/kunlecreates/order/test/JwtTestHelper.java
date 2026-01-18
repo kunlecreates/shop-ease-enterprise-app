@@ -39,6 +39,7 @@ public class JwtTestHelper {
         claims.put("roles", roles);
         
         return Jwts.builder()
+                .header().add("alg", "HS256").and()  // Explicitly set algorithm header
                 .issuer("shopease")  // Match the default issuer in application.yml
                 .subject(username)
                 .claims(claims)
