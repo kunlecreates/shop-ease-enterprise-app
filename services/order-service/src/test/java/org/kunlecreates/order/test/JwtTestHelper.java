@@ -8,7 +8,9 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Helper class for generating JWT tokens in integration tests.
@@ -32,10 +34,14 @@ public class JwtTestHelper {
         Instant now = Instant.now();
         Instant expiration = now.plus(30, ChronoUnit.MINUTES);
         
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("email", email);
+        claims.put("roles", roles);
+        
         return Jwts.builder()
+                .issuer("shopease")  // Match the default issuer in application.yml
                 .subject(username)
-                .claim("email", email)
-                .claim("roles", roles)
+                .claims(claims)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expiration))
                 .signWith(SECRET_KEY)
@@ -62,10 +68,14 @@ public class JwtTestHelper {
         Instant past = Instant.now().minus(10, ChronoUnit.MINUTES);
         Instant expiration = past.minus(5, ChronoUnit.MINUTES);
         
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("email", username + "@example.com");
+        claims.put("roles", List.of("ROLE_USER"));
+        
         return Jwts.builder()
+                .issuer("shopease")
                 .subject(username)
-                .claim("email", username + "@example.com")
-                .claim("roles", List.of("ROLE_USER"))
+                .claims(claims)
                 .issuedAt(Date.from(past))
                 .expiration(Date.from(expiration))
                 .signWith(SECRET_KEY)
