@@ -30,16 +30,26 @@ describe('ProductService', () => {
       { id: '22222222-2222-2222-2222-222222222222' } as any,
     ]);
     const res = await service.listProducts();
-    expect(spy).toHaveBeenCalledWith();
+    expect(spy).toHaveBeenCalledWith({ relations: ['movements'] });
     expect(res).toHaveLength(2);
   });
 
   it('listProducts with pagination uses skip/take', async () => {
-    const spy = jest.spyOn(productRepo, 'find').mockResolvedValue([
-      { id: '33333333-3333-3333-3333-333333333333' } as any,
-    ]);
+    const mockQueryBuilder = {
+      leftJoinAndSelect: jest.fn().mockReturnThis(),
+      skip: jest.fn().mockReturnThis(),
+      take: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      getMany: jest.fn().mockResolvedValue([
+        { id: '33333333-3333-3333-3333-333333333333' } as any,
+      ]),
+    };
+    jest.spyOn(productRepo, 'createQueryBuilder').mockReturnValue(mockQueryBuilder as any);
     const res = await service.listProducts({ page: 2, limit: 10 });
-    expect(spy).toHaveBeenCalledWith({ skip: 10, take: 10, order: { name: 'ASC' } });
+    expect(productRepo.createQueryBuilder).toHaveBeenCalledWith('p');
+    expect(mockQueryBuilder.leftJoinAndSelect).toHaveBeenCalledWith('p.movements', 'movements');
+    expect(mockQueryBuilder.skip).toHaveBeenCalledWith(10);
+    expect(mockQueryBuilder.take).toHaveBeenCalledWith(10);
     expect(res).toHaveLength(1);
   });
 });
