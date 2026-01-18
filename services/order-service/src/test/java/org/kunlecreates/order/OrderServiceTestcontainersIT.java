@@ -3,6 +3,7 @@ package org.kunlecreates.order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.context.annotation.Import;
@@ -15,14 +16,12 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.kunlecreates.order.application.OrderService;
 import org.kunlecreates.order.domain.Order;
 import org.kunlecreates.order.test.TestContainersConfig;
-import org.kunlecreates.order.test.FlywayTestInitializer;
-import org.springframework.test.context.ContextConfiguration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Testcontainers
 @SpringBootTest
-@ContextConfiguration(initializers = FlywayTestInitializer.class)
+@ActiveProfiles("test")
 @Import(TestContainersConfig.class)
 public class OrderServiceTestcontainersIT {
 

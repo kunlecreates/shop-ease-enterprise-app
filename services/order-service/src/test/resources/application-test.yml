@@ -1,0 +1,8 @@
+spring:
+  flyway:
+    enabled: true
+    locations: classpath:db/test-migration
+    baseline-on-migrate: true
+  jpa:
+    hibernate:
+      ddl-auto: validate
