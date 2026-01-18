@@ -190,7 +190,7 @@ public class UserControllerIT {
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
         ResponseEntity<Map> profileResponse = restTemplate.exchange(
-                baseUrl + "/profile",
+                "http://localhost:" + port + "/api/user/profile",
                 HttpMethod.GET,
                 entity,
                 Map.class

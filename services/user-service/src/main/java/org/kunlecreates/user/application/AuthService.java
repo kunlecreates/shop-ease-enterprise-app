@@ -1,6 +1,7 @@
 package org.kunlecreates.user.application;
 
 import org.kunlecreates.user.domain.User;
+import org.kunlecreates.user.domain.exception.DuplicateUserException;
 import org.kunlecreates.user.repository.UserRepository;
 import org.kunlecreates.user.repository.RoleRepository;
 import org.kunlecreates.user.infrastructure.security.JwtService;
@@ -37,7 +38,7 @@ public class AuthService {
     @Transactional
     public AuthResponse register(CreateUserRequest request) {
         if (userRepository.findByEmail(request.email()).isPresent()) {
-            throw new IllegalArgumentException("User already exists");
+            throw new DuplicateUserException("User already exists");
         }
 
         String hashedPassword = passwordEncoder.encode(request.password());
