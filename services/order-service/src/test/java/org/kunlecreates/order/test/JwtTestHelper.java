@@ -19,7 +19,7 @@ import java.util.Map;
 public class JwtTestHelper {
     
     // Must match the default JWT secret in application.yml
-    private static final String JWT_SECRET = "test-secret-key-minimum-256-bits-for-development-only";
+    private static final String JWT_SECRET = "test-secret-key-for-development-only-min-256-bits-required-for-hs256-algorithm";
     private static final SecretKey SECRET_KEY = Keys.hmacShaKeyFor(JWT_SECRET.getBytes(StandardCharsets.UTF_8));
     
     /**

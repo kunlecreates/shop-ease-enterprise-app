@@ -12,7 +12,7 @@ spring:
   flyway:
     enabled: ${FLYWAY_ENABLED:false}
 jwt:
-  secret: ${JWT_SECRET:test-secret-key-minimum-256-bits-for-development-only}
+  secret: ${JWT_SECRET:test-secret-key-for-development-only-min-256-bits-required-for-hs256-algorithm}
 notification:
   service:
     url: ${NOTIFICATION_SERVICE_URL:http://localhost:8003}
