@@ -1,6 +1,8 @@
 package org.kunlecreates.user.infrastructure.security;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
+import com.nimbusds.jose.jwk.source.JWKSource;
+import com.nimbusds.jose.proc.SecurityContext;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,7 +29,10 @@ public class JwtConfig {
 
     @Bean
     public JwtEncoder jwtEncoder() {
-        return new NimbusJwtEncoder(new ImmutableSecret<>(jwtSecret.getBytes()));
+        // Create a SecretKeySpec with explicit algorithm
+        SecretKeySpec secretKey = new SecretKeySpec(jwtSecret.getBytes(), "HmacSHA256");
+        JWKSource<SecurityContext> immutableSecret = new ImmutableSecret<>(secretKey);
+        return new NimbusJwtEncoder(immutableSecret);
     }
 
     @Bean
