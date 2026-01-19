@@ -102,12 +102,11 @@
             <artifactId>h2</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- Byte Buddy - updated to support Java 25 -->
+        <!-- Byte Buddy - required by Hibernate at runtime for entity enhancement -->
         <dependency>
             <groupId>net.bytebuddy</groupId>
             <artifactId>byte-buddy</artifactId>
             <version>1.15.11</version>
-            <scope>test</scope>
         </dependency>
         <!-- Testcontainers + PostgreSQL (used for mock testing instead of real Oracle) -->
         <dependency>
