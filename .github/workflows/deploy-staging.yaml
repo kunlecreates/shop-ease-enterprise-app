@@ -246,7 +246,7 @@ jobs:
               CHART_DIR="services/user-service/helm";
               IMAGE_REPO="ghcr.io/${OWNER}/user-service";
               SECRET_BASE="shopease-user-db"
-              SET_SECRET_NAME="db.secretName=${SECRET_BASE}"
+              SET_SECRET_NAME="db.secretName=${SECRET_BASE},jwt.secretName=user-jwt"
               MIGRATION_ENABLED="true"
               MIGRATION_DB_SEC="${SECRET_BASE}-migration"
               ;;
@@ -262,7 +262,7 @@ jobs:
               CHART_DIR="services/order-service/helm";
               IMAGE_REPO="ghcr.io/${OWNER}/order-service";
               SECRET_BASE="shopease-order-db"
-              SET_SECRET_NAME="db.secretName=${SECRET_BASE}"
+              SET_SECRET_NAME="db.secretName=${SECRET_BASE},jwt.secretName=order-jwt"
               MIGRATION_ENABLED="true"
               MIGRATION_DB_SEC="${SECRET_BASE}-migration"
               ;;
