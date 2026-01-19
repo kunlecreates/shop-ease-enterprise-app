@@ -1,6 +1,7 @@
 package org.kunlecreates.order.test;
 
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 
 import javax.crypto.SecretKey;
@@ -39,13 +40,12 @@ public class JwtTestHelper {
         claims.put("roles", roles);
         
         return Jwts.builder()
-                .header().add("alg", "HS256").and()  // Explicitly set algorithm header
                 .issuer("shopease")  // Match the default issuer in application.yml
                 .subject(username)
                 .claims(claims)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expiration))
-                .signWith(SECRET_KEY)
+                .signWith(SECRET_KEY, SignatureAlgorithm.HS256)  // Explicitly specify HS256
                 .compact();
     }
     
@@ -79,7 +79,7 @@ public class JwtTestHelper {
                 .claims(claims)
                 .issuedAt(Date.from(past))
                 .expiration(Date.from(expiration))
-                .signWith(SECRET_KEY)
+                .signWith(SECRET_KEY, SignatureAlgorithm.HS256)  // Explicitly specify HS256
                 .compact();
     }
 }
