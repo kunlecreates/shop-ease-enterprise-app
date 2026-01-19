@@ -96,7 +96,7 @@ public class OrderControllerIT {
         String orderId = location.substring(location.lastIndexOf('/') + 1);
         
         Integer count = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM orders WHERE id = ?",
+                "SELECT COUNT(*) FROM order_svc.orders WHERE id = ?",
                 Integer.class,
                 Long.parseLong(orderId)
         );
