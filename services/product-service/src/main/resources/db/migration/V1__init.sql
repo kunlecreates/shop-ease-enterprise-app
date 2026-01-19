@@ -2,6 +2,12 @@
 -- Flyway baseline for product-service (UUID-based schema matching TypeORM entities)
 -- Creates pgcrypto extension, product/category/stock tables, inventory, audit timestamps, and search index
 
+-- Create product_svc schema if it doesn't exist
+CREATE SCHEMA IF NOT EXISTS product_svc;
+
+-- Set search path to product_svc schema
+SET search_path TO product_svc, public;
+
 -- Extension required for gen_random_uuid()
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
