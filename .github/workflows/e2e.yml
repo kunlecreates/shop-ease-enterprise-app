@@ -11,7 +11,7 @@ on:
 jobs:
   run-e2e:
     name: Run E2E Tests After Deploy (self-hosted)
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     # Use a self-hosted runner that has network access to your Cloudflared tunnel
     # Replace the labels below with your runner's labels if different.
     runs-on: arc-runnerset-instance

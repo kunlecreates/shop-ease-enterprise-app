@@ -16,7 +16,7 @@ permissions:
 jobs:
   run-api-tests:
     name: Run API contract tests against staging
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     env:
       ENV_FILE: api-tests/env/ci.env
