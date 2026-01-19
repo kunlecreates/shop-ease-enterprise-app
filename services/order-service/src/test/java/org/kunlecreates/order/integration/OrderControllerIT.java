@@ -261,6 +261,9 @@ public class OrderControllerIT {
                 createEntity,
                 Void.class
         );
+        
+        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(createResponse.getHeaders().getLocation()).isNotNull();
 
         String location = createResponse.getHeaders().getLocation().toString();
         String orderId = location.substring(location.lastIndexOf('/') + 1);
@@ -293,14 +296,18 @@ public class OrderControllerIT {
         Map<String, Object> orderRequest2 = Map.of("status", "COMPLETED", "total", 20.00);
 
         // Create orders as test-user-5
-        restTemplate.postForEntity("/api/order", new HttpEntity<>(orderRequest1, headersUser5), Void.class);
-        restTemplate.postForEntity("/api/order", new HttpEntity<>(orderRequest2, headersUser5), Void.class);
+        ResponseEntity<Void> createResponse1 = restTemplate.postForEntity("/api/order", new HttpEntity<>(orderRequest1, headersUser5), Void.class);
+        assertThat(createResponse1.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        
+        ResponseEntity<Void> createResponse2 = restTemplate.postForEntity("/api/order", new HttpEntity<>(orderRequest2, headersUser5), Void.class);
+        assertThat(createResponse2.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
         // Create order as different user
         String tokenOther = JwtTestHelper.createToken("other-user");
         HttpHeaders headersOther = new HttpHeaders();
         headersOther.set("Authorization", "Bearer " + tokenOther);
-        restTemplate.postForEntity("/api/order", new HttpEntity<>(Map.of("status", "PENDING", "total", 30.00), headersOther), Void.class);
+        ResponseEntity<Void> createResponse3 = restTemplate.postForEntity("/api/order", new HttpEntity<>(Map.of("status", "PENDING", "total", 30.00), headersOther), Void.class);
+        assertThat(createResponse3.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
         // When: List orders as test-user-5
         HttpEntity<Void> getEntity = new HttpEntity<>(headersUser5);
@@ -328,8 +335,11 @@ public class OrderControllerIT {
         HttpHeaders headersUser2 = new HttpHeaders();
         headersUser2.set("Authorization", "Bearer " + tokenUser2);
 
-        restTemplate.postForEntity("/api/order", new HttpEntity<>(Map.of("status", "PENDING", "total", 15.00), headersUser1), Void.class);
-        restTemplate.postForEntity("/api/order", new HttpEntity<>(Map.of("status", "COMPLETED", "total", 25.00), headersUser2), Void.class);
+        ResponseEntity<Void> createResponse1 = restTemplate.postForEntity("/api/order", new HttpEntity<>(Map.of("status", "PENDING", "total", 15.00), headersUser1), Void.class);
+        assertThat(createResponse1.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        
+        ResponseEntity<Void> createResponse2 = restTemplate.postForEntity("/api/order", new HttpEntity<>(Map.of("status", "COMPLETED", "total", 25.00), headersUser2), Void.class);
+        assertThat(createResponse2.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
         // When: Admin lists orders
         String adminToken = JwtTestHelper.createToken("admin-user-2", "admin2@example.com", java.util.List.of("ROLE_ADMIN"));
