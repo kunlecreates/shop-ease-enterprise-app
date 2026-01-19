@@ -83,7 +83,7 @@ describe('ProductController (Integration)', () => {
 
   beforeEach(async () => {
     // Clean up products between tests
-    await dataSource.query('TRUNCATE TABLE products CASCADE');
+    await dataSource.query('TRUNCATE TABLE product_svc.products CASCADE');
   });
 
   describe('POST /api/product', () => {
