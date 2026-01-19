@@ -5,10 +5,10 @@ import { Product } from './product.entity';
 export class StockMovement {
   @PrimaryGeneratedColumn('uuid') id!: string;
   @ManyToOne(() => Product, p => p.movements, { nullable: false })
-  @JoinColumn({ name: 'product_id' })
+  @JoinColumn({ name: 'productid' })
   product!: Product;
-  @Column({ name: 'change_qty' }) quantity!: number;
+  @Column() quantity!: number;
   @Column({ type: 'varchar', length: 64 }) reason!: string;
   @Column({ type: 'jsonb', nullable: true }) context?: Record<string, any>;
-  @CreateDateColumn({ name: 'created_at' }) occurredAt!: Date;
+  @CreateDateColumn({ name: 'occurredat' }) occurredAt!: Date;
 }
