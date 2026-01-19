@@ -56,5 +56,7 @@ spec:
               -url=jdbc:oracle:thin:@$(DB_HOST):$(DB_PORT)/$(DB_NAME)
               -user=$(MIG_DB_USER)
               -password=$(MIG_DB_PASSWORD)
+              -defaultSchema=$(MIG_DB_USER)
+              -baselineOnMigrate=true
               migrate
 {{- end }}
