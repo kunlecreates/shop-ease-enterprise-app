@@ -293,7 +293,7 @@ public class OrderControllerIT {
         headersUser5.set("Authorization", "Bearer " + tokenUser5);
         
         Map<String, Object> orderRequest1 = Map.of("status", "PENDING", "total", 10.00);
-        Map<String, Object> orderRequest2 = Map.of("status", "COMPLETED", "total", 20.00);
+        Map<String, Object> orderRequest2 = Map.of("status", "DELIVERED", "total", 20.00);
 
         // Create orders as test-user-5
         ResponseEntity<Void> createResponse1 = restTemplate.postForEntity("/api/order", new HttpEntity<>(orderRequest1, headersUser5), Void.class);
@@ -338,7 +338,7 @@ public class OrderControllerIT {
         ResponseEntity<Void> createResponse1 = restTemplate.postForEntity("/api/order", new HttpEntity<>(Map.of("status", "PENDING", "total", 15.00), headersUser1), Void.class);
         assertThat(createResponse1.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         
-        ResponseEntity<Void> createResponse2 = restTemplate.postForEntity("/api/order", new HttpEntity<>(Map.of("status", "COMPLETED", "total", 25.00), headersUser2), Void.class);
+        ResponseEntity<Void> createResponse2 = restTemplate.postForEntity("/api/order", new HttpEntity<>(Map.of("status", "DELIVERED", "total", 25.00), headersUser2), Void.class);
         assertThat(createResponse2.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
         // When: Admin lists orders
