@@ -13,9 +13,3 @@ jwt:
 notification:
   service:
     enabled: false
-
-logging:
-  level:
-    org.springframework.security: TRACE
-    org.springframework.security.oauth2: TRACE
-    com.nimbusds: TRACE
