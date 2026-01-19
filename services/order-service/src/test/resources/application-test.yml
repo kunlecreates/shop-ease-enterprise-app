@@ -9,3 +9,9 @@ spring:
 
 jwt:
   secret: test-secret-key-for-development-only-min-256-bits-required-for-hs256-algorithm
+
+logging:
+  level:
+    org.springframework.security: TRACE
+    org.springframework.security.oauth2: TRACE
+    com.nimbusds: TRACE
