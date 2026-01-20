@@ -1,9 +1,12 @@
 package org.kunlecreates.user.interfaces;
 
 import jakarta.validation.Valid;
+import org.kunlecreates.user.application.AuthService;
 import org.kunlecreates.user.application.UserService;
 import org.kunlecreates.user.domain.User;
+import org.kunlecreates.user.interfaces.dto.AuthResponse;
 import org.kunlecreates.user.interfaces.dto.CreateUserRequest;
+import org.kunlecreates.user.interfaces.dto.LoginRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,9 +22,11 @@ import java.util.List;
 @RequestMapping("/api/user")
 public class UserController {
     private final UserService userService;
+    private final AuthService authService;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, AuthService authService) {
         this.userService = userService;
+        this.authService = authService;
     }
 
     /**
@@ -66,8 +71,44 @@ public class UserController {
     }
 
     /**
+     * Alias for /profile - used by API tests
+     */
+    @GetMapping("/me")
+    public ResponseEntity<User> getMe(Authentication authentication) {
+        return getProfile(authentication);
+    }
+
+    /**
+     * Public registration endpoint (alias for /api/auth/register)
+     * This allows tests to use /api/user/register
+     */
+    @PostMapping("/register")
+    public ResponseEntity<AuthResponse> register(@Valid @RequestBody CreateUserRequest request) {
+        try {
+            AuthResponse response = authService.register(request);
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+    }
+
+    /**
+     * Public login endpoint (alias for /api/auth/login)
+     * This allows tests to use /api/user/login
+     */
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
+        try {
+            AuthResponse response = authService.login(request);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+    }
+
+    /**
      * PRD FR003: Only ADMIN can create users directly
-     * Regular user registration should use /api/auth/register instead
+     * Regular user registration should use /api/auth/register or /api/user/register instead
      */
     @PostMapping
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
