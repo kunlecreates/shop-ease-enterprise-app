@@ -16,19 +16,19 @@ public class SecurityConfig {
 
     /**
      * Security filter chain for PUBLIC endpoints (no authentication required).
-     * This chain does NOT configure OAuth2 Resource Server, allowing unauthenticated access.
+     * Uses requestMatchers within authorizeHttpRequests for better pattern matching.
      */
     @Bean
     @Order(1)
     public SecurityFilterChain publicFilterChain(HttpSecurity http) throws Exception {
         http
-            .securityMatcher("/actuator/**",
-                           "/api/auth/**",
-                           "/api/user/register", "/api/user/login")  // Allow both /api/auth and /api/user paths
-            .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+            .securityMatcher("/actuator/**", "/api/user/register", "/api/user/login", "/api/auth/**")
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/actuator/**", "/api/user/register", "/api/user/login", "/api/auth/**").permitAll()
+                .anyRequest().denyAll())  // Explicitly deny anything else matched by securityMatcher
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .csrf(AbstractHttpConfigurer::disable);
-        // NOTE: NO .oauth2ResourceServer() here - that's the key!
+        // NO oauth2ResourceServer() - allows anonymous access
 
         return http.build();
     }
