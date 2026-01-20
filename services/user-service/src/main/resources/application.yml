@@ -1,11 +1,5 @@
 server:
   port: 8081
-  tomcat:
-    basedir: /tmp
-    accesslog:
-      enabled: true
-      pattern: "%h %l %u %t \"%r\" %s %b %D"
-      directory: logs
 spring:
   application:
     name: user-service
@@ -57,5 +51,3 @@ logging:
     org.springframework.web.servlet.mvc: TRACE
     org.springframework.web.servlet.handler: TRACE
     org.kunlecreates.user: DEBUG
-    org.apache.catalina: TRACE
-    org.apache.tomcat: TRACE
