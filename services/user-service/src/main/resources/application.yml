@@ -46,5 +46,8 @@ logging:
     root: INFO
     org.springframework.security: DEBUG
     org.springframework.security.web: DEBUG
-    org.springframework.web: DEBUG
+    org.springframework.web: TRACE
+    org.springframework.web.servlet: TRACE
+    org.springframework.web.servlet.mvc: TRACE
+    org.springframework.web.servlet.handler: TRACE
     org.kunlecreates.user: DEBUG
