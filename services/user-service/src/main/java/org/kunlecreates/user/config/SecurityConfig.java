@@ -28,6 +28,7 @@ public class SecurityConfig {
         http
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers("/actuator/**").permitAll()
+                .requestMatchers("/error").permitAll()  // Allow error endpoint
                 .requestMatchers(HttpMethod.POST, "/api/user/register").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/user/login").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
