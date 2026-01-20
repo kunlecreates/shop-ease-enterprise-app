@@ -1,13 +1,11 @@
-import { request } from '../framework/http';
+import { orderHttp } from '../framework/http';
 import { waitFor } from '../framework/polling';
 
-const maybe = process.env.E2E_BASE_URL ? test : test.skip;
-
-maybe('Order -> Notification contract: outbox event appears after placing order', async () => {
+test('Order -> Notification contract: outbox event appears after placing order', async () => {
   // Create a cart and place an order, then poll for an outbox event
   let respCreate;
   try {
-    respCreate = await request('post', '/carts', { user_ref: 'int-test-user' });
+    respCreate = await orderHttp.post('/api/carts', { user_ref: 'int-test-user' }, { validateStatus: () => true });
   } catch (e) {
     return expect(true).toBe(true);
   }
@@ -20,12 +18,12 @@ maybe('Order -> Notification contract: outbox event appears after placing order'
     registerDelete((id: any) => `/carts/${id}`, cartId);
   } catch (e) {}
 
-  await request('post', `/carts/${cartId}/items`, { product_ref: 'prod-1', quantity: 1 }).catch(() => null);
-  await request('post', `/carts/${cartId}/checkout`).catch(() => null);
+  await orderHttp.post(`/api/carts/${cartId}/items`, { product_ref: 'prod-1', quantity: 1 }, { validateStatus: () => true }).catch(() => null);
+  await orderHttp.post(`/api/carts/${cartId}/checkout`, {}, { validateStatus: () => true }).catch(() => null);
 
   const ok = await waitFor(async () => {
     try {
-      const resp = await request('get', '/order-events');
+      const resp = await orderHttp.get('/api/order-events', { validateStatus: () => true });
       if (resp.status === 200 && Array.isArray(resp.data)) {
         return resp.data.some((e: any) => e && (e.cart_id === cartId || e.order_id));
       }

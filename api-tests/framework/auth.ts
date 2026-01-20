@@ -1,16 +1,12 @@
-import { http, authHeaders } from './http';
+/**
+ * Authentication helpers for API contract testing
+ * 
+ * Generates JWT tokens for testing authenticated endpoints.
+ * No external auth services or Cloudflare Access - uses local JWT generation.
+ */
 import jwt from 'jsonwebtoken';
 
-export async function serviceToken() {
-  // If CF service creds exist, return a header set to use for requests.
-  if (process.env.CF_ACCESS_CLIENT_ID && process.env.CF_ACCESS_CLIENT_SECRET) {
-    return authHeaders();
-  }
-  return {};
-}
-
 export async function adminLogin() {
-  // Generate a local JWT for testing
   const secret = process.env.TEST_JWT_SECRET;
   if (!secret) {
     throw new Error('TEST_JWT_SECRET environment variable is required');
@@ -29,7 +25,21 @@ export async function adminLogin() {
   return { token };
 }
 
-export async function loginAs(userRef: string) {
-  // Placeholder login; replace with the actual auth call if available
-  return { token: '' };
+export async function customerLogin() {
+  const secret = process.env.TEST_JWT_SECRET;
+  if (!secret) {
+    throw new Error('TEST_JWT_SECRET environment variable is required');
+  }
+
+  const payload = {
+    sub: '2',
+    email: 'customer@shopease.test',
+    roles: ['customer'],
+    iss: 'shopease',
+    iat: Math.floor(Date.now() / 1000),
+    exp: Math.floor(Date.now() / 1000) + (60 * 60),
+  };
+
+  const token = jwt.sign(payload, secret, { algorithm: 'HS256' });
+  return { token };
 }

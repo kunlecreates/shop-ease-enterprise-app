@@ -1,19 +1,15 @@
-import { request } from '../framework/http';
+import { productHttp } from '../framework/http';
 import Ajv from 'ajv';
 import { productSchema } from '../framework/schemas';
 
-const maybe = process.env.E2E_BASE_URL ? test : test.skip;
+// API Contract Test: Tests product-service API directly (not through frontend)
+const maybe = process.env.PRODUCT_SERVICE_URL ? test : test.skip;
 
 maybe('User-Service -> Product-Service contract: product listing', async () => {
   const ajv = new Ajv();
-  let resp;
 
-  resp = await request('get', '/product');
-  // Cloudflare Access layer
-  if (resp.status === 401 || resp.status === 403) {
-    expect([401, 403]).toContain(resp.status);
-    return;
-  }
+  // Direct call to product-service (no Cloudflare Access, no frontend proxy)
+  const resp = await productHttp.get('/api/product', { validateStatus: () => true });
 
   expect(resp.status).toBe(200);
   expect(Array.isArray(resp.data)).toBe(true);

@@ -1,51 +1,42 @@
+/**
+ * API Contract Test HTTP Clients
+ * 
+ * These clients connect directly to Kubernetes services for isolated API contract testing.
+ * No ingress, no Cloudflare Access, no frontend proxy - direct service-to-service testing.
+ */
 import axios, { AxiosInstance } from 'axios';
 import dotenv from 'dotenv';
 
 dotenv.config({ path: process.env.ENV_FILE || '.env' });
 
-const baseURL = process.env.E2E_BASE_URL || '';
+// Direct Kubernetes service URLs for API contract testing
+const PRODUCT_SERVICE_URL = process.env.PRODUCT_SERVICE_URL || '';
+const USER_SERVICE_URL = process.env.USER_SERVICE_URL || '';
+const ORDER_SERVICE_URL = process.env.ORDER_SERVICE_URL || '';
+const NOTIFICATION_SERVICE_URL = process.env.NOTIFICATION_SERVICE_URL || '';
 
-export const http: AxiosInstance = axios.create({
-  baseURL,
-  timeout: 30_000,
-  headers: {
-    'Content-Type': 'application/json'
-  }
+// Service-specific HTTP clients for direct API contract testing
+export const productHttp: AxiosInstance = axios.create({
+  baseURL: PRODUCT_SERVICE_URL,
+  timeout: 10_000,
+  headers: { 'Content-Type': 'application/json' }
 });
 
-export function authHeaders(token?: string) {
-  const headers: Record<string, string> = {};
-  if (process.env.CF_ACCESS_CLIENT_ID && process.env.CF_ACCESS_CLIENT_SECRET) {
-    headers['CF-Access-Client-Id'] = process.env.CF_ACCESS_CLIENT_ID;
-    headers['CF-Access-Client-Secret'] = process.env.CF_ACCESS_CLIENT_SECRET;
-  }
-  if (token) headers['Authorization'] = `Bearer ${token}`;
-  return headers;
-}
+export const userHttp: AxiosInstance = axios.create({
+  baseURL: USER_SERVICE_URL,
+  timeout: 10_000,
+  headers: { 'Content-Type': 'application/json' }
+});
 
-/**
- * Resilient request helper that tries the given path and common API prefixes.
- * Returns the axios response object or throws the last error.
- */
-export async function request(method: 'get' | 'post' | 'put' | 'delete', path: string, data?: any, opts: { headers?: Record<string,string> } = {}) {
-  const normalized = path.startsWith('/') ? path : `/${path}`;
-  const candidates = [normalized, `/api${normalized}`];
+export const orderHttp: AxiosInstance = axios.create({
+  baseURL: ORDER_SERVICE_URL,
+  timeout: 10_000,
+  headers: { 'Content-Type': 'application/json' }
+});
 
-  let lastResp: any = null;
-  for (const p of candidates) {
-    try {
-      const resp = await http.request({ method, url: p, data, headers: opts.headers, validateStatus: () => true });
-      lastResp = resp;
-
-      // If Cloudflare or service responded, stop retrying
-      if (resp.status !== 404) {
-        return resp;
-      }
-    } catch (err: any) {
-      // continue to next candidate
-      continue;      
-    }
-  }
-  return lastResp;
-}
+export const notificationHttp: AxiosInstance = axios.create({
+  baseURL: NOTIFICATION_SERVICE_URL,
+  timeout: 10_000,
+  headers: { 'Content-Type': 'application/json' }
+});
 

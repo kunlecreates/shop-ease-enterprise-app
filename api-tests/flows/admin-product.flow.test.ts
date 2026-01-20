@@ -1,24 +1,27 @@
-import { request, authHeaders } from '../framework/http';
+import { productHttp } from '../framework/http';
 import { adminLogin } from '../framework/auth';
 
-const maybe = process.env.E2E_BASE_URL ? test : test.skip;
+// API Contract Test: Tests product-service admin API directly
+const maybe = process.env.PRODUCT_SERVICE_URL ? test : test.skip;
 
 maybe('Admin product flow: create product (if allowed)', async () => {
   const { token } = await adminLogin();
-  const headers = authHeaders(token);
+  const headers = { 'Authorization': `Bearer ${token}` };
 
-  let resp;
-  
-  resp = await request('post', '/admin/products', { name: 'int-product', sku: `int-${Date.now()}` }, { headers });
+  // Direct call to product-service admin endpoint
+  const resp = await productHttp.post('/api/product', 
+    { name: 'int-product', sku: `int-${Date.now()}`, price_cents: 1000, currency: 'USD' }, 
+    { headers, validateStatus: () => true }
+  );
 
   // 201 if admin allowed, 403 if RBAC disabled in this environment
   expect([201, 403]).toContain(resp.status);
 
-  if (resp.status === 201 && resp.data && (resp.data.id || resp.data.product_id)) {
-    const id = resp.data.id || resp.data.product_id;
+  if (resp.status === 201 && resp.data && (resp.data.id || resp.data.sku)) {
+    const sku = resp.data.sku;
     try {
       const { registerDelete } = await import('../framework/cleanup');
-      registerDelete((i: any) => `/admin/products/${i}`, id);
+      registerDelete((s: any) => `/api/product/${s}`, sku);
     } catch (e) {}
   }
 });

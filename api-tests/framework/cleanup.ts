@@ -1,4 +1,5 @@
-import { request } from './http';
+import { productHttp, userHttp, orderHttp, notificationHttp } from './http';
+import { AxiosInstance } from 'axios';
 
 type CleanupFn = () => Promise<void>;
 
@@ -21,12 +22,18 @@ export async function teardownAll() {
 }
 
 // Helper shortcuts for common resources
-export function registerDelete(pathTemplate: (id: any) => string, id: any) {
+export function registerDelete(
+  httpClient: AxiosInstance,
+  pathTemplate: (id: any) => string,
+  id: any,
+  token?: string
+) {
   registerCleanup(async () => {
     try {
-      await request('delete', pathTemplate(id));
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      await httpClient.delete(pathTemplate(id), { headers, validateStatus: () => true });
     } catch (e) {
-      // ignore
+      // ignore cleanup errors
     }
   });
 }

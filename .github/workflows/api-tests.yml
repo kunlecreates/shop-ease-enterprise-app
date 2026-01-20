@@ -17,12 +17,16 @@ jobs:
   run-api-tests:
     name: Run API contract tests against staging
     if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request' || github.event.workflow_run.conclusion == 'success' }}
-    runs-on: ubuntu-latest
+    # API contract tests should run on self-hosted runner with cluster access
+    # to test backend services directly via Kubernetes service URLs
+    runs-on: arc-runnerset-instance
     env:
       ENV_FILE: api-tests/env/ci.env
-      E2E_BASE_URL: ${{ secrets.E2E_BASE_URL }}
-      CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
-      CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
+      # API tests use internal Kubernetes service URLs, not external ingress
+      PRODUCT_SERVICE_URL: http://product-service.shopease-product.svc.cluster.local
+      USER_SERVICE_URL: http://user-service.shopease-user.svc.cluster.local
+      ORDER_SERVICE_URL: http://order-service.shopease-order.svc.cluster.local
+      NOTIFICATION_SERVICE_URL: http://notification-service.shopease-notification.svc.cluster.local
       TEST_JWT_SECRET: ${{ secrets.JWT_SECRET }}
     steps:
       - name: Checkout
@@ -31,16 +35,12 @@ jobs:
       - name: Validate required environment
         run: |
           missing=false
-          if [ -z "$E2E_BASE_URL" ]; then
-            echo "ERROR: E2E_BASE_URL is required"
+          if [ -z "$PRODUCT_SERVICE_URL" ] || [ -z "$ORDER_SERVICE_URL" ]; then
+            echo "ERROR: Service URLs (PRODUCT_SERVICE_URL, ORDER_SERVICE_URL, etc.) are required for API contract tests"
             missing=true
           fi
           if [ -z "$TEST_JWT_SECRET" ]; then
-            echo "ERROR: TEST_JWT_SECRET is required"
-            missing=true
-          fi
-          if [ -z "$CF_ACCESS_CLIENT_ID" ] || [ -z "$CF_ACCESS_CLIENT_SECRET" ]; then
-            echo "WARNING: CF_ACCESS_* not set; tests may fail if staging is behind Cloudflare Access"
+            echo "WARNING: TEST_JWT_SECRET not set; auth tests may be limited"
           fi
           if [ "$missing" = true ]; then
             exit 1
