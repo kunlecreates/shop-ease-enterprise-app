@@ -17,7 +17,7 @@ test('Customer checkout flow: create cart, add item, place order, verify order e
   // register cleanup to delete the cart after test
   try {
     const { registerDelete } = await import('../framework/cleanup');
-    registerDelete((id: any) => `/carts/${id}`, cartId);
+    registerDelete(orderHttp, (id: any) => `/carts/${id}`, cartId);
   } catch (e) {}
 
   const itemResp = await orderHttp.post(`/api/carts/${cartId}/items`, { product_ref: products[0].id, quantity: 1 }, { validateStatus: () => true }).catch(() => ({ status: 500 }));

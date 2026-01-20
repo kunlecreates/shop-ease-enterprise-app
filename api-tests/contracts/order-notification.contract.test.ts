@@ -15,7 +15,7 @@ test('Order -> Notification contract: outbox event appears after placing order',
   // register delete for cart
   try {
     const { registerDelete } = await import('../framework/cleanup');
-    registerDelete((id: any) => `/carts/${id}`, cartId);
+    registerDelete(orderHttp, (id: any) => `/carts/${id}`, cartId);
   } catch (e) {}
 
   await orderHttp.post(`/api/carts/${cartId}/items`, { product_ref: 'prod-1', quantity: 1 }, { validateStatus: () => true }).catch(() => null);

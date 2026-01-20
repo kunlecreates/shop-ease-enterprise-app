@@ -15,7 +15,7 @@ test('User -> Order contract: create cart, add item, place order', async () => {
   // register cleanup to delete cart when possible
   try {
     const { registerDelete } = await import('../framework/cleanup');
-    registerDelete((id: any) => `/carts/${id}`, cartId);
+    registerDelete(orderHttp, (id: any) => `/carts/${id}`, cartId);
   } catch (e) {}
 
   // Add item

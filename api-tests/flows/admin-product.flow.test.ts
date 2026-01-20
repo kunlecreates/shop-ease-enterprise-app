@@ -21,7 +21,7 @@ maybe('Admin product flow: create product (if allowed)', async () => {
     const sku = resp.data.sku;
     try {
       const { registerDelete } = await import('../framework/cleanup');
-      registerDelete((s: any) => `/api/product/${s}`, sku);
+      registerDelete(productHttp, (s: any) => `/api/product/${s}`, sku);
     } catch (e) {}
   }
 });
