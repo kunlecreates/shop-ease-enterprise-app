@@ -17,6 +17,9 @@ spring:
         # For PostgreSQL tests, let Hibernate use the default public schema
         default_schema: ${HIBERNATE_DEFAULT_SCHEMA:}
         dialect: org.hibernate.dialect.OracleDialect
+        # Oracle stores unquoted identifiers as uppercase, so we need to match that
+        # This ensures Hibernate generates USERS instead of users in SQL
+        physical_naming_strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
   flyway:
     enabled: ${FLYWAY_ENABLED:false}
 jwt:
