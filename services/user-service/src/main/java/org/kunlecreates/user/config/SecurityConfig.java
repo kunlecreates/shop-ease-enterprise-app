@@ -22,8 +22,8 @@ public class SecurityConfig {
     @Order(1)
     public SecurityFilterChain publicFilterChain(HttpSecurity http) throws Exception {
         http
-            .securityMatcher("/actuator/health/**", "/actuator/health", "/actuator/info",
-                           "/api/auth/login", "/api/auth/register",
+            .securityMatcher("/actuator/**",
+                           "/api/auth/**",
                            "/api/user/register", "/api/user/login")  // Allow both /api/auth and /api/user paths
             .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
