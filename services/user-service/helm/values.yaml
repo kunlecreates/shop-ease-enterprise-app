@@ -8,6 +8,9 @@ imagePullSecrets: []
 env:
   OTEL_EXPORTER_OTLP_ENDPOINT: "${global.otel.collectorEndpoint}"
   SPRING_PROFILES_ACTIVE: "staging"
+  # Oracle-specific: Set default schema for Hibernate to access tables owned by USER_SVC
+  # This allows USER_SVC_APP to query tables via granted permissions
+  HIBERNATE_DEFAULT_SCHEMA: "USER_SVC"
   SECURITY:
     CORS:
       ALLOWED_ORIGINS:

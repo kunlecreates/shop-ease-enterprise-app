@@ -12,7 +12,9 @@ spring:
   jpa:
     properties:
       hibernate:
-        default_schema: USER_SVC
+        # Set default schema only for Oracle (where USER_SVC owns the tables)
+        # For PostgreSQL tests, let Hibernate use the default public schema
+        default_schema: ${HIBERNATE_DEFAULT_SCHEMA:}
   flyway:
     enabled: ${FLYWAY_ENABLED:false}
 jwt:
