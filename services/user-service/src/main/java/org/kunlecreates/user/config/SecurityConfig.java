@@ -1,6 +1,5 @@
 package org.kunlecreates.user.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -8,23 +7,17 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    private final JwtDecoder jwtDecoder;
-
-    @Autowired
-    public SecurityConfig(JwtDecoder jwtDecoder) {
-        this.jwtDecoder = jwtDecoder;
-    }
-
     /**
-     * Public endpoints filter chain - Completely bypasses authentication.
+     * Public endpoints filter chain - NO authentication required.
      * Order(1) ensures this is checked FIRST before protected chain.
+     * 
+     * This chain handles ALL public endpoints without ANY authentication filters.
      */
     @Bean
     @Order(1)
@@ -41,10 +34,11 @@ public class SecurityConfig {
     }
 
     /**
-     * Protected endpoints filter chain - Requires JWT authentication.
+     * Protected endpoints filter chain - Requires authentication via custom filter.
      * Order(2) ensures this is checked AFTER public chain.
      * 
-     * Uses manual JWT configuration with injected JwtDecoder.
+     * For now, this just requires authentication without specifying the mechanism.
+     * JWT authentication will be handled by a custom authentication filter.
      */
     @Bean
     @Order(2)
@@ -52,9 +46,6 @@ public class SecurityConfig {
         http
             .authorizeHttpRequests(authorize -> authorize
                 .anyRequest().authenticated()
-            )
-            .oauth2ResourceServer(oauth2 -> oauth2
-                .jwt(jwt -> jwt.decoder(jwtDecoder))
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .csrf(AbstractHttpConfigurer::disable);
