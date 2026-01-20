@@ -8,6 +8,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
 
 @Configuration
 @EnableMethodSecurity
@@ -17,13 +19,18 @@ public class SecurityConfig {
      * Public endpoints filter chain - NO authentication required.
      * Order(1) ensures this is checked FIRST before protected chain.
      * 
-     * This chain handles ALL public endpoints without ANY authentication filters.
+     * Uses OrRequestMatcher to explicitly match public endpoints.
      */
     @Bean
     @Order(1)
     public SecurityFilterChain publicFilterChain(HttpSecurity http) throws Exception {
         http
-            .securityMatcher("/actuator/**", "/api/user/register", "/api/user/login", "/api/auth/**")
+            .securityMatcher(new OrRequestMatcher(
+                new AntPathRequestMatcher("/actuator/**"),
+                new AntPathRequestMatcher("/api/user/register"),
+                new AntPathRequestMatcher("/api/user/login"),
+                new AntPathRequestMatcher("/api/auth/**")
+            ))
             .authorizeHttpRequests(authorize -> authorize
                 .anyRequest().permitAll()
             )
