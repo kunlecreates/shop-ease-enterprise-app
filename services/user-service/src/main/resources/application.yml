@@ -44,3 +44,7 @@ otel:
 logging:
   level:
     root: INFO
+    org.springframework.security: DEBUG
+    org.springframework.security.web: DEBUG
+    org.springframework.web: DEBUG
+    org.kunlecreates.user: DEBUG
