@@ -9,6 +9,10 @@ spring:
     username: ${USER_DB_USER}
     password: ${USER_DB_PASSWORD}
     driver-class-name: oracle.jdbc.OracleDriver
+  jpa:
+    properties:
+      hibernate:
+        default_schema: USER_SVC
   flyway:
     enabled: ${FLYWAY_ENABLED:false}
 jwt:
