@@ -2,60 +2,49 @@ package org.kunlecreates.user.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
-import org.springframework.security.web.util.matcher.OrRequestMatcher;
 
 @Configuration
 @EnableMethodSecurity  // Enable @PreAuthorize, @PostAuthorize, @Secured annotations
 public class SecurityConfig {
 
     /**
-     * Security filter chain for PUBLIC endpoints (no authentication required).
-     * This chain intercepts requests to public paths and allows them without JWT validation.
-     * Order 1 means it is evaluated FIRST.
+     * Single security filter chain that handles both public and protected endpoints.
+     * 
+     * KEY INSIGHT: When using OAuth2 Resource Server with public endpoints, you CANNOT
+     * use multiple filter chains where one has oauth2ResourceServer() configured.
+     * 
+     * The solution is a SINGLE chain where:
+     * 1. Public endpoints are declared with permitAll() BEFORE authenticated()
+     * 2. oauth2ResourceServer() is configured to apply JWT validation only when needed
+     * 3. The order matters: requestMatchers with permitAll() must come FIRST
+     * 
+     * This approach ensures that:
+     * - Public endpoints bypass JWT validation entirely (no 401 with WWW-Authenticate: Bearer)
+     * - Protected endpoints require valid JWT tokens
+     * - Spring Security correctly routes requests based on authorization rules, not filter chains
      */
     @Bean
-    @Order(1)
-    public SecurityFilterChain publicFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .securityMatcher(new OrRequestMatcher(
-                new AntPathRequestMatcher("/actuator/**"),
-                new AntPathRequestMatcher("/api/user/register"),
-                new AntPathRequestMatcher("/api/user/login"),
-                new AntPathRequestMatcher("/api/auth/**")
-            ))
-            .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .csrf(AbstractHttpConfigurer::disable);
-
-        return http.build();
-    }
-
-    /**
-     * Security filter chain for PROTECTED endpoints (JWT authentication required).
-     * This chain applies oauth2ResourceServer ONLY to paths NOT matched by the public chain.
-     * The NegatedRequestMatcher ensures OAuth2 filters are NOT applied to public endpoints.
-     * Order 2 means it is evaluated AFTER the public chain.
-     */
-    @Bean
-    @Order(2)
-    public SecurityFilterChain protectedFilterChain(HttpSecurity http) throws Exception {
-        http
-            .securityMatcher(new NegatedRequestMatcher(new OrRequestMatcher(
-                new AntPathRequestMatcher("/actuator/**"),
-                new AntPathRequestMatcher("/api/user/register"),
-                new AntPathRequestMatcher("/api/user/login"),
-                new AntPathRequestMatcher("/api/auth/**")
-            )))
-            .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
+            .authorizeHttpRequests(authorize -> authorize
+                // Public endpoints: Allow without authentication
+                .requestMatchers(
+                    "/actuator/**",
+                    "/api/user/register",
+                    "/api/user/login",
+                    "/api/auth/**"
+                ).permitAll()
+                // All other endpoints: Require authentication
+                .anyRequest().authenticated()
+            )
+            // Configure OAuth2 Resource Server with JWT
+            // This ONLY applies to requests that require authentication (not permitAll)
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .csrf(AbstractHttpConfigurer::disable);
