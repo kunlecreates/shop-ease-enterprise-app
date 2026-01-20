@@ -10,11 +10,13 @@ spring:
     password: ${USER_DB_PASSWORD}
     driver-class-name: oracle.jdbc.OracleDriver
   jpa:
+    database-platform: org.hibernate.dialect.OracleDialect
     properties:
       hibernate:
         # Set default schema only for Oracle (where USER_SVC owns the tables)
         # For PostgreSQL tests, let Hibernate use the default public schema
         default_schema: ${HIBERNATE_DEFAULT_SCHEMA:}
+        dialect: org.hibernate.dialect.OracleDialect
   flyway:
     enabled: ${FLYWAY_ENABLED:false}
 jwt:
