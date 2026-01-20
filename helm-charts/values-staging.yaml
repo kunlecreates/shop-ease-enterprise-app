@@ -29,6 +29,7 @@ services:
       allowedNamespaces:
         - shopease-frontend
         - arc-system  # GitHub Actions Runner Controller namespace for API tests
+        - arc-runners # GitHub Actions runner pods namespace
   product:
     image: product-service
     tag: "staging-${GITHUB_SHA_SHORT}"
@@ -44,6 +45,7 @@ services:
       allowedNamespaces:
         - shopease-frontend
         - arc-system  # GitHub Actions Runner Controller namespace for API tests
+        - arc-runners # GitHub Actions runner pods namespace
   order:
     image: order-service
     tag: "staging-${GITHUB_SHA_SHORT}"
@@ -59,6 +61,7 @@ services:
       allowedNamespaces:
         - shopease-frontend
         - arc-system  # GitHub Actions Runner Controller namespace for API tests
+        - arc-runners # GitHub Actions runner pods namespace
   notification:
     image: notification-service
     tag: "staging-${GITHUB_SHA_SHORT}"
@@ -75,6 +78,7 @@ services:
         - shopease-frontend
         - shopease-order        # Allow order-service to send notification requests
         - arc-system            # GitHub Actions Runner Controller namespace for API tests
+        - arc-runners           # GitHub Actions runner pods namespace
 frontend:
   image: shopease-frontend
   tag: "staging-${GITHUB_SHA_SHORT}"
