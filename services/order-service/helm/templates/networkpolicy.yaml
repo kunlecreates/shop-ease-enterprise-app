@@ -20,6 +20,11 @@ spec:
   policyTypes:
     - Ingress
   ingress:
+    # Allow kubelet health checks (from same namespace)
+    - ports:
+        - protocol: TCP
+          port: {{ .Values.service.targetPort | default 8083 }}
+    # Allow traffic from specified namespaces
     - from:
       {{- $global := (default (dict) .Values.global) }}
       {{- if and .Values.networkPolicy .Values.networkPolicy.allowedNamespaces }}
