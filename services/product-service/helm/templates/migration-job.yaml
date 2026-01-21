@@ -55,7 +55,8 @@ spec:
             - "-url=jdbc:postgresql://$(DB_HOST):$(DB_PORT)/$(DB_NAME)"
             - "-user=$(MIG_DB_USER)"
             - "-password=$(MIG_DB_PASSWORD)"
-            - "-schemas=public"
+            - "-schemas=$(DB_NAME)"
+            - "-defaultSchema=$(DB_NAME)"
             - "-baselineOnMigrate=true"
             - "migrate"
 {{- end }}

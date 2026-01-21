@@ -5,11 +5,8 @@
 -- Create product_svc schema if it doesn't exist
 CREATE SCHEMA IF NOT EXISTS product_svc;
 
--- Set search path to product_svc schema
-SET search_path TO product_svc, public;
-
 -- Extension required for gen_random_uuid()
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
+CREATE EXTENSION IF NOT EXISTS pgcrypto SCHEMA product_svc;
 
 -- Products table
 CREATE TABLE IF NOT EXISTS products (
