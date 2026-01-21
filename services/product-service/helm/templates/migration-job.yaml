@@ -22,7 +22,7 @@ spec:
       {{- end }}
       containers:
         - name: flyway-migrate
-          image: "{{ .Values.migration.image }}:{{ .Values.migration.tag }}"
+          image: "{{ .Values.migration.image }}"
           imagePullPolicy: {{ .Values.migration.imagePullPolicy | default "IfNotPresent" }}
           
           env:
