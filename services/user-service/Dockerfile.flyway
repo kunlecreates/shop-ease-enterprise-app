@@ -4,7 +4,7 @@ FROM flyway/flyway:11.1.0
 # Add latest Oracle 23ai JDBC driver (ojdbc17 23.26.0.0.0 - matches pom.xml)
 # This version is fully compatible with Oracle Database 23c and fixes authentication issues
 USER root
-RUN rm -f /flyway/drivers/oracle-*.jar && \
+RUN rm -f /flyway/drivers/ojdbc*.jar && \
     curl -L https://repo1.maven.org/maven2/com/oracle/database/jdbc/ojdbc17/23.26.0.0.0/ojdbc17-23.26.0.0.0.jar \
          -o /flyway/drivers/ojdbc17-23.26.0.0.0.jar && \
     chmod 644 /flyway/drivers/*.jar

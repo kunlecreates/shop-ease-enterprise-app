@@ -4,7 +4,7 @@ FROM flyway/flyway:11.1.0
 # Add latest Microsoft SQL Server JDBC driver (version 12.4.2)
 # This version is fully compatible with SQL Server 2019+ and fixes authentication issues
 USER root
-RUN rm -f /flyway/drivers/mssql-*.jar && \
+RUN rm -f /flyway/drivers/mssql-jdbc*.jar && \
     curl -L https://repo1.maven.org/maven2/com/microsoft/sqlserver/mssql-jdbc/12.4.2.jre11/mssql-jdbc-12.4.2.jre11.jar \
          -o /flyway/drivers/mssql-jdbc-12.4.2.jre11.jar && \
     chmod 644 /flyway/drivers/*.jar
