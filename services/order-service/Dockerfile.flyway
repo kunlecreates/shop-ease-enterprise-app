@@ -17,8 +17,6 @@ ARG SERVICE_NAME
 COPY services/${SERVICE_NAME}/src/main/resources/db/migration /flyway/sql
 RUN if [ ! -d /flyway/sql ]; then echo "ERROR: Migration directory missing!"; exit 1; fi
 
-# Switch back to flyway user
-USER flyway
-
-# Optional: set a default entrypoint to flyway CLI
+# Run as root to avoid Kubernetes user resolution issues
+# ENTRYPOINT already set by base image
 ENTRYPOINT ["flyway"]
