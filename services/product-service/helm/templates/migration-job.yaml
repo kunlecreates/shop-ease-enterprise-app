@@ -52,11 +52,10 @@ spec:
                   name: {{ required "migration.secretName must be set (infra-owned)" .Values.migration.secretName | quote }}
                   key: PRODUCT_DB_NAME
           args:
-            - >
-              -url=jdbc:postgresql://$(DB_HOST):$(DB_PORT)/$(DB_NAME)
-              -user=$(MIG_DB_USER)
-              -password=$(MIG_DB_PASSWORD)
-              -schemas=product_svc
-              -baselineOnMigrate=true
-              migrate
+            - "-url=jdbc:postgresql://$(DB_HOST):$(DB_PORT)/$(DB_NAME)"
+            - "-user=$(MIG_DB_USER)"
+            - "-password=$(MIG_DB_PASSWORD)"
+            - "-schemas=public"
+            - "-baselineOnMigrate=true"
+            - "migrate"
 {{- end }}

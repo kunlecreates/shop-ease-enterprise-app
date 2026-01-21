@@ -52,11 +52,10 @@ spec:
                   name: {{ required "migration.secretName must be set (infra-owned)" .Values.migration.secretName | quote }}
                   key: USER_DB_NAME
           args:
-            - >
-              -url=jdbc:oracle:thin:@$(DB_HOST):$(DB_PORT)/$(DB_NAME)
-              -user=$(MIG_DB_USER)
-              -password=$(MIG_DB_PASSWORD)
-              -defaultSchema=$(MIG_DB_USER)
-              -baselineOnMigrate=true
-              migrate
+            - "-url=jdbc:oracle:thin:@$(DB_HOST):$(DB_PORT)/$(DB_NAME)"
+            - "-user=$(MIG_DB_USER)"
+            - "-password=$(MIG_DB_PASSWORD)"
+            - "-defaultSchema=$(MIG_DB_USER)"
+            - "-baselineOnMigrate=true"
+            - "migrate"
 {{- end }}

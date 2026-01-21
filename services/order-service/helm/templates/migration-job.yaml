@@ -52,12 +52,11 @@ spec:
                   name: {{ required "migration.secretName must be set (infra-owned)" .Values.migration.secretName | quote }}
                   key: ORDER_DB_NAME
           args:
-            - >
-              -url=jdbc:sqlserver://$(DB_HOST):$(DB_PORT);databaseName=$(DB_NAME)
-              -user=$(MIG_DB_USER)
-              -password=$(MIG_DB_PASSWORD)
-              -schemas=order_svc
-              -defaultSchema=order_svc
-              -baselineOnMigrate=true
-              migrate
+            - "-url=jdbc:sqlserver://$(DB_HOST):$(DB_PORT);databaseName=$(DB_NAME)"
+            - "-user=$(MIG_DB_USER)"
+            - "-password=$(MIG_DB_PASSWORD)"
+            - "-schemas=order_svc"
+            - "-defaultSchema=order_svc"
+            - "-baselineOnMigrate=true"
+            - "migrate"
 {{- end }}
