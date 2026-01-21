@@ -309,6 +309,18 @@ jobs:
           # --- Handle optional values/migration/imagePullSecret args ---
           if [ -n "${MIGRATION_ENABLED:-}" ]; then
             HELM_ARGS+=( --set "migration.enabled=$MIGRATION_ENABLED" )
+            # Set migration image to use the flyway-specific image with same tag as service
+            case "${{ matrix.service }}" in
+              user)
+                HELM_ARGS+=( --set "migration.image=ghcr.io/${OWNER}/user-service-flyway:${IMAGE_TAG_INPUT}" )
+                ;;
+              product)
+                HELM_ARGS+=( --set "migration.image=ghcr.io/${OWNER}/product-service-flyway:${IMAGE_TAG_INPUT}" )
+                ;;
+              order)
+                HELM_ARGS+=( --set "migration.image=ghcr.io/${OWNER}/order-service-flyway:${IMAGE_TAG_INPUT}" )
+                ;;
+            esac
           fi
           if [ -n "${MIGRATION_DB_SEC:-}" ]; then
             HELM_ARGS+=( --set "migration.secretName=$MIGRATION_DB_SEC" )
