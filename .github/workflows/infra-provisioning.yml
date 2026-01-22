@@ -235,8 +235,8 @@ jobs:
                 }
                 if (args.length) run(`kubectl -n ${NS} create secret generic ${SECRET_NAME} ${args.join(' ')} --dry-run=client -o yaml | kubectl apply -f -`);
                 
-                // Create JWT secret for user-service and order-service
-                if ((svc === 'user' || svc === 'order') && env.JWT_SECRET) {
+                // Create JWT secret for user-service, order-service, and notification-service
+                if ((svc === 'user' || svc === 'order' || svc === 'notification') && env.JWT_SECRET) {
                   console.log(`Creating JWT secret for ${svc}-service in ${NS}`);
                   run(`kubectl -n ${NS} create secret generic ${svc}-jwt --from-literal=JWT_SECRET='${env.JWT_SECRET}' --dry-run=client -o yaml | kubectl apply -f -`);
                 }
