@@ -9,6 +9,13 @@ spring:
     username: ${ORDER_DB_USER}
     password: ${ORDER_DB_PASSWORD}
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+  jpa:
+    database-platform: org.hibernate.dialect.SQLServerDialect
+    properties:
+      hibernate:
+        default_schema: ${HIBERNATE_DEFAULT_SCHEMA:order_svc}
+        dialect: org.hibernate.dialect.SQLServerDialect
+    show-sql: false
   flyway:
     enabled: ${FLYWAY_ENABLED:false}
 jwt:

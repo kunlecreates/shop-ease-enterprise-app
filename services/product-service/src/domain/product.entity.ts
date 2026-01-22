@@ -36,8 +36,8 @@ export class Product {
   @ManyToMany(() => Category, c => c.products, { cascade: true })
   @JoinTable({
     name: 'product_categories',
-    joinColumn: { name: 'productsid', referencedColumnName: 'id' },
-    inverseJoinColumn: { name: 'categoriesid', referencedColumnName: 'id' }
+    joinColumn: { name: 'product_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'category_id', referencedColumnName: 'id' }
   })
   categories!: Category[];
   @OneToMany(() => StockMovement, m => m.product)
