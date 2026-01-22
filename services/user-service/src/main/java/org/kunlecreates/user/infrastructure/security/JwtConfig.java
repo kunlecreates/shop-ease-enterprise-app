@@ -29,7 +29,9 @@ public class JwtConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        // Use strength 4 for faster testing (default is 10)
+        // In production, use 10-12 for better security
+        return new BCryptPasswordEncoder(4);
     }
 
     @Bean
