@@ -1,7 +1,7 @@
 package org.kunlecreates.user.domain;
 
 import jakarta.persistence.*;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -25,13 +25,13 @@ public class User {
     private Integer isActive = 1;
 
     @Column(name = "CREATED_AT", nullable = false)
-    private Instant createdAt = Instant.now();
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     @Column(name = "UPDATED_AT", nullable = false)
-    private Instant updatedAt = Instant.now();
+    private LocalDateTime updatedAt = LocalDateTime.now();
 
     @Column(name = "LAST_LOGIN_AT")
-    private Instant lastLoginAt;
+    private LocalDateTime lastLoginAt;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -54,8 +54,8 @@ public class User {
     public String getPasswordHash() { return passwordHash; }
     public String getFullName() { return fullName; }
     public Integer getIsActive() { return isActive; }
-    public Instant getCreatedAt() { return createdAt; }
-    public Instant getUpdatedAt() { return updatedAt; }
-    public Instant getLastLoginAt() { return lastLoginAt; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public LocalDateTime getLastLoginAt() { return lastLoginAt; }
     public Set<Role> getRoles() { return roles; }
 }
