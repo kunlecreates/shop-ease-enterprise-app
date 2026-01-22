@@ -4,7 +4,7 @@ import { StockMovement } from './stock-movement.entity';
 
 @Entity('products')
 export class Product {
-  @PrimaryGeneratedColumn('uuid') id!: string;
+  @PrimaryGeneratedColumn('increment') id!: number;
   @Column({ type: 'varchar', length: 64, unique: true }) sku!: string;
   @Column({ type: 'varchar', length: 200 }) name!: string;
   @Column({ type: 'text', nullable: true }) description?: string;

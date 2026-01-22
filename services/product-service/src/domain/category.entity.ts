@@ -3,9 +3,9 @@ import { Product } from './product.entity';
 
 @Entity('categories')
 export class Category {
-  @PrimaryGeneratedColumn('uuid') id!: string;
-  @Column({ type: 'varchar', length: 64, unique: true }) code!: string;
-  @Column({ type: 'varchar', length: 200 }) name!: string;
+  @PrimaryGeneratedColumn('increment') id!: number;
+  @Column({ type: 'varchar', length: 200, unique: true }) name!: string;
+  @Column({ type: 'text', nullable: true }) description?: string;
   @Column({ name: 'is_active', default: true }) isActive!: boolean;
   @CreateDateColumn({ name: 'created_at' }) createdAt!: Date;
   @UpdateDateColumn({ name: 'updated_at' }) updatedAt!: Date;
