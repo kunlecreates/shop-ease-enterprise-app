@@ -7,37 +7,54 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
-@EnableWebSecurity(debug = true)  // Enable debug mode to see detailed filter chain logs
-//@EnableMethodSecurity  // TEMPORARILY DISABLED to test if this is causing 403
+@EnableWebSecurity(debug = true)
 public class SecurityConfig {
 
     /**
-     * Single filter chain with permitAll for public endpoints.
-     * NO OAuth2 Resource Server configuration to avoid Bearer challenges.
+     * Security filter chain with JWT authentication for protected endpoints.
      * 
      * Public endpoints (/actuator/**, /api/user/register, /api/user/login, /api/auth/**) 
      * are allowed without authentication.
      * 
-     * All other endpoints require authentication (will return 403 until JWT filter is added).
+     * All other endpoints require JWT Bearer token authentication.
      */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers("/actuator/**").permitAll()
-                .requestMatchers("/error").permitAll()  // Allow error endpoint
+                .requestMatchers("/error").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/user/register").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/user/login").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
                 .anyRequest().authenticated()
             )
-            .anonymous(anonymous -> anonymous.authorities("ROLE_ANONYMOUS"))
+            .oauth2ResourceServer(oauth2 -> oauth2
+                .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
+            )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .csrf(AbstractHttpConfigurer::disable);
 
         return http.build();
+    }
+
+    /**
+     * Convert JWT claims to Spring Security authorities.
+     * Maps the "roles" claim to ROLE_ prefixed authorities.
+     */
+    @Bean
+    public JwtAuthenticationConverter jwtAuthenticationConverter() {
+        JwtGrantedAuthoritiesConverter grantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
+        grantedAuthoritiesConverter.setAuthoritiesClaimName("roles");
+        grantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
+
+        JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
+        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter);
+        return jwtAuthenticationConverter;
     }
 }
