@@ -2,7 +2,7 @@ name: E2E — Playwright tests
 
 on:
   workflow_run:
-    workflows: ["CD — Kubernetes Deploy (Helm)"]
+    workflows: ["API Contract Tests — Staging"]
     types: [completed]
 
   # Allow manual runs for diagnostics or ad-hoc verification
@@ -37,6 +37,40 @@ jobs:
       - name: Install Playwright browsers
         working-directory: e2e
         run: npx playwright install --with-deps
+
+      - name: Wait for backend services to be ready
+        run: |
+          set -euo pipefail
+          echo "Waiting for all backend services to be Ready before running E2E tests..."
+          
+          NAMESPACES="shopease-user shopease-product shopease-order shopease-notification"
+          MAX_WAIT=600  # 10 minutes max
+          INTERVAL=10
+          
+          for ns in $NAMESPACES; do
+            echo "Checking namespace: $ns"
+            elapsed=0
+            while [ $elapsed -lt $MAX_WAIT ]; do
+              ready=$(kubectl get pods -n $ns -l 'app.kubernetes.io/name in (user-service,product-service,order-service,notification-service)' -o jsonpath='{range .items[*]}{.status.conditions[?(@.type=="Ready")].status}{"\n"}{end}' | grep -c "True" || echo "0")
+              total=$(kubectl get pods -n $ns -l 'app.kubernetes.io/name in (user-service,product-service,order-service,notification-service)' --no-headers | wc -l || echo "0")
+              
+              if [ "$total" -gt 0 ] && [ "$ready" -eq "$total" ]; then
+                echo "✓ All pods in $ns are Ready ($ready/$total)"
+                break
+              fi
+              
+              echo "  Waiting... ($ready/$total pods ready) - ${elapsed}s elapsed"
+              sleep $INTERVAL
+              elapsed=$((elapsed + INTERVAL))
+            done
+            
+            if [ $elapsed -ge $MAX_WAIT ]; then
+              echo "⚠ Warning: Timeout waiting for $ns pods to be ready"
+              kubectl get pods -n $ns
+            fi
+          done
+          
+          echo "All backend services are ready. Proceeding with E2E tests."
 
       - name: Verify E2E host reachable (supports optional service token)
         working-directory: e2e
