@@ -5,7 +5,7 @@ spring:
     name: user-service
   datasource:
     # Use USER_DB_* env vars (canonical names). No legacy fallback.
-    url: jdbc:oracle:thin:@${USER_DB_HOST}:${USER_DB_PORT:1521}/${USER_DB_NAME:FREEPDB1}
+    url: jdbc:oracle:thin:@${USER_DB_HOST}:${USER_DB_PORT:1521}/${USER_DB_NAME:FREEPDB1}?oracle.jdbc.timezoneAsRegion=false
     username: ${USER_DB_USER}
     password: ${USER_DB_PASSWORD}
     driver-class-name: oracle.jdbc.OracleDriver
