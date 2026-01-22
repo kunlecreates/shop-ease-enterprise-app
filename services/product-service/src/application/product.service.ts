@@ -24,13 +24,13 @@ export class ProductService {
     @InjectRepository(StockMovement) private readonly movements: Repository<StockMovement>
   ) {}
 
-  async createProduct(data: { sku: string; name: string; price: number; categoryCodes?: string[] }) {
+  async createProduct(data: { sku: string; name: string; price: number; categoryNames?: string[] }) {
     const cats: Category[] = [];
-    if (data.categoryCodes) {
-      for (const code of data.categoryCodes) {
-        let cat = await this.categories.findOne({ where: { code } });
+    if (data.categoryNames) {
+      for (const name of data.categoryNames) {
+        let cat = await this.categories.findOne({ where: { name } });
         if (!cat) {
-          cat = this.categories.create({ code, name: code });
+          cat = this.categories.create({ name });
           cat = await this.categories.save(cat);
         }
         cats.push(cat);
@@ -54,7 +54,7 @@ export class ProductService {
 
     if (options.category) {
       qb.innerJoin('p.categories', 'c')
-        .andWhere('c.code = :category', { category: options.category });
+        .andWhere('c.name = :category', { category: options.category });
     }
 
     if (options.minPrice !== undefined) {
