@@ -28,7 +28,7 @@ EXPOSE 8081
 # Healthcheck (best-effort): adjust path to your health endpoint if different
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 CMD wget -qO- --no-check-certificate http://localhost:8081/actuator/health || exit 1
 
-ENV JAVA_OPTS="-XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"
+ENV JAVA_OPTS="-XX:MaxRAMPercentage=75.0 -XX:+UseG1GC -Duser.timezone=UTC -Doracle.jdbc.timezoneAsRegion=false"
 
 # Use sh -c so the `JAVA_OPTS` environment variable is expanded at container start
 # and the JVM respects container memory limits (MaxRAMPercentage).
