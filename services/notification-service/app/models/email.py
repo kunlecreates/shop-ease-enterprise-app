@@ -12,7 +12,7 @@ class EmailRequest(BaseModel):
         populate_by_name = True
 
 class EmailResponse(BaseModel):
-    message_id: str = Field(alias="messageId")
+    message_id: str = Field(serialization_alias="messageId")
     status: str
     recipient: str
     success: bool = True
