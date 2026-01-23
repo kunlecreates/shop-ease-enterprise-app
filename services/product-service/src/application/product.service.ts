@@ -24,7 +24,7 @@ export class ProductService {
     @InjectRepository(StockMovement) private readonly movements: Repository<StockMovement>
   ) {}
 
-  async createProduct(data: { sku: string; name: string; description?: string; price?: number; price_cents?: number; currency?: string; categoryNames?: string[] }) {
+  async createProduct(data: { sku: string; name: string; description?: string; price?: number; priceCents?: number; currency?: string; categoryNames?: string[] }) {
     const cats: Category[] = [];
     if (data.categoryNames) {
       for (const name of data.categoryNames) {
