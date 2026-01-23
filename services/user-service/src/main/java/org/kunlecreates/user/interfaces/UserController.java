@@ -7,6 +7,7 @@ import org.kunlecreates.user.domain.User;
 import org.kunlecreates.user.interfaces.dto.AuthResponse;
 import org.kunlecreates.user.interfaces.dto.CreateUserRequest;
 import org.kunlecreates.user.interfaces.dto.LoginRequest;
+import org.kunlecreates.user.interfaces.dto.UserResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -35,8 +36,10 @@ public class UserController {
      */
     @GetMapping
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public List<User> list() {
-        return userService.listUsers();
+    public List<UserResponse> list() {
+        return userService.listUsers().stream()
+                .map(UserResponse::from)
+                .toList();
     }
 
     /**
@@ -44,7 +47,7 @@ public class UserController {
      * Users can view their own profile, admins can view any profile
      */
     @GetMapping("/{id}")
-    public ResponseEntity<User> get(@PathVariable Long id, Authentication authentication) {
+    public ResponseEntity<UserResponse> get(@PathVariable Long id, Authentication authentication) {
         Long currentUserId = extractUserIdFromAuth(authentication);
         boolean isAdmin = hasRole(authentication, "ADMIN");
         
@@ -54,6 +57,7 @@ public class UserController {
         }
         
         return userService.findById(id)
+                .map(UserResponse::from)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -63,9 +67,10 @@ public class UserController {
      * Convenience endpoint for current user profile
      */
     @GetMapping("/profile")
-    public ResponseEntity<User> getProfile(Authentication authentication) {
+    public ResponseEntity<UserResponse> getProfile(Authentication authentication) {
         Long userId = extractUserIdFromAuth(authentication);
         return userService.findById(userId)
+                .map(UserResponse::from)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -74,7 +79,7 @@ public class UserController {
      * Alias for /profile - used by API tests
      */
     @GetMapping("/me")
-    public ResponseEntity<User> getMe(Authentication authentication) {
+    public ResponseEntity<UserResponse> getMe(Authentication authentication) {
         return getProfile(authentication);
     }
 
