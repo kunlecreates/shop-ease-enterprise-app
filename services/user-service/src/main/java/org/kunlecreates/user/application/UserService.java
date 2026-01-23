@@ -43,16 +43,24 @@ public class UserService {
     }
 
     @Transactional
-    public Optional<User> updateProfile(Long userId, String fullName, String email) {
+    public Optional<User> updateProfile(Long userId, String firstName, String lastName, String email) {
         Optional<User> userOpt = userRepository.findById(userId);
         if (userOpt.isEmpty()) {
             return Optional.empty();
         }
 
         User user = userOpt.get();
-        if (fullName != null) {
-            user.setFullName(fullName);
+        
+        // Combine firstName and lastName into fullName
+        if (firstName != null || lastName != null) {
+            String first = firstName != null ? firstName : "";
+            String last = lastName != null ? lastName : "";
+            String fullName = (first + " " + last).trim();
+            if (!fullName.isEmpty()) {
+                user.setFullName(fullName);
+            }
         }
+        
         if (email != null && !email.equals(user.getEmail())) {
             // Check if email is already taken
             if (userRepository.findByEmail(email).isPresent()) {

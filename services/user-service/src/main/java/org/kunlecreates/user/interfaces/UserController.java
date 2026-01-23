@@ -19,7 +19,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/user")
@@ -147,7 +149,8 @@ public class UserController {
         Long userId = extractUserIdFromAuth(authentication);
         
         try {
-            return userService.updateProfile(userId, request.fullName(), request.email())
+            return userService.updateProfile(userId, request.firstName(), request.lastName(), 
+                                           request.email())
                     .map(UserResponse::from)
                     .map(ResponseEntity::ok)
                     .orElse(ResponseEntity.notFound().build());
@@ -190,6 +193,34 @@ public class UserController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
         }
+    }
+
+    /**
+     * Get user role
+     */
+    @GetMapping("/{id}/role")
+    public ResponseEntity<Map<String, Object>> getRole(
+            @PathVariable Long id, 
+            Authentication authentication) {
+        Long currentUserId = extractUserIdFromAuth(authentication);
+        boolean isAdmin = hasRole(authentication, "ADMIN");
+        
+        // Users can view their own role, admins can view any role
+        if (!currentUserId.equals(id) && !isAdmin) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        
+        return userService.findById(id)
+                .map(user -> {
+                    Map<String, Object> response = new HashMap<>();
+                    if (!user.getRoles().isEmpty()) {
+                        String roleName = user.getRoles().iterator().next().getName();
+                        response.put("role", roleName.toUpperCase());
+                        response.put("userId", user.getId().toString());
+                    }
+                    return ResponseEntity.ok(response);
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 
     /**
