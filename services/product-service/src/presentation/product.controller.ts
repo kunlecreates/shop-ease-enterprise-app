@@ -7,6 +7,13 @@ import { JwtAuthGuard } from '../config/jwt-auth.guard';
 export class ProductController {
   constructor(private readonly service: ProductService) {}
 
+  private hasRole(user: any, role: string): boolean {
+    if (!user || !user.roles || !Array.isArray(user.roles)) {
+      return false;
+    }
+    return user.roles.some((r: string) => r.toLowerCase() === role.toLowerCase());
+  }
+
   @Get()
   async list(
     @Query('page') page?: string,
@@ -54,7 +61,7 @@ export class ProductController {
   @Post()
   @UseGuards(JwtAuthGuard)
   async create(@Body() body: CreateProductDto, @Request() req: any) {
-    if (!req.user.roles || !req.user.roles.includes('ADMIN')) {
+    if (!this.hasRole(req.user, 'admin')) {
       throw new ForbiddenException('Only administrators can create products');
     }
     try {
@@ -79,7 +86,7 @@ export class ProductController {
   @Patch(':sku/stock')
   @UseGuards(JwtAuthGuard)
   async adjustStock(@Param('sku') sku: string, @Body() body: { adjustment?: number; quantity?: number; reason?: string }, @Request() req: any) {
-    if (!req.user.roles || !req.user.roles.includes('ADMIN')) {
+    if (!this.hasRole(req.user, 'admin')) {
       throw new ForbiddenException('Only administrators can adjust stock levels');
     }
     const adjustment = body.adjustment ?? body.quantity ?? 0;
@@ -90,7 +97,7 @@ export class ProductController {
   @UseGuards(JwtAuthGuard)
   @HttpCode(200)
   async deleteProduct(@Param('sku') sku: string, @Request() req: any) {
-    if (!req.user.roles || !req.user.roles.includes('ADMIN')) {
+    if (!this.hasRole(req.user, 'admin')) {
       throw new ForbiddenException('Only administrators can delete products');
     }
     const deleted = await this.service.deleteProduct(sku);

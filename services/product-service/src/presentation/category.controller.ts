@@ -6,6 +6,13 @@ import { JwtAuthGuard } from '../config/jwt-auth.guard';
 export class CategoryController {
   constructor(private readonly service: CategoryService) {}
 
+  private hasRole(user: any, role: string): boolean {
+    if (!user || !user.roles || !Array.isArray(user.roles)) {
+      return false;
+    }
+    return user.roles.some((r: string) => r.toLowerCase() === role.toLowerCase());
+  }
+
   @Get()
   async listCategories() {
     return this.service.listCategories();
@@ -26,7 +33,7 @@ export class CategoryController {
   @Post()
   @UseGuards(JwtAuthGuard)
   async createCategory(@Body() body: CreateCategoryDto, @Request() req: any) {
-    if (!req.user.roles || !req.user.roles.includes('admin')) {
+    if (!this.hasRole(req.user, 'admin')) {
       throw new ForbiddenException('Only administrators can create categories');
     }
     
@@ -47,7 +54,7 @@ export class CategoryController {
     @Body() body: UpdateCategoryDto,
     @Request() req: any
   ) {
-    if (!req.user.roles || !req.user.roles.includes('admin')) {
+    if (!this.hasRole(req.user, 'admin')) {
       throw new ForbiddenException('Only administrators can update categories');
     }
 
@@ -65,7 +72,7 @@ export class CategoryController {
   @UseGuards(JwtAuthGuard)
   @HttpCode(200)
   async deleteCategory(@Param('id') id: string, @Request() req: any) {
-    if (!req.user.roles || !req.user.roles.includes('admin')) {
+    if (!this.hasRole(req.user, 'admin')) {
       throw new ForbiddenException('Only administrators can delete categories');
     }
 
