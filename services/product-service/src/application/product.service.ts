@@ -24,7 +24,7 @@ export class ProductService {
     @InjectRepository(StockMovement) private readonly movements: Repository<StockMovement>
   ) {}
 
-  async createProduct(data: { sku: string; name: string; price: number; categoryNames?: string[] }) {
+  async createProduct(data: { sku: string; name: string; description?: string; price?: number; price_cents?: number; currency?: string; categoryNames?: string[] }) {
     const cats: Category[] = [];
     if (data.categoryNames) {
       for (const name of data.categoryNames) {
@@ -36,7 +36,25 @@ export class ProductService {
         cats.push(cat);
       }
     }
-    const prod = this.products.create({ sku: data.sku, name: data.name, price: data.price, categories: cats, active: true });
+    
+    const prod = this.products.create({ 
+      sku: data.sku, 
+      name: data.name,
+      description: data.description,
+      categories: cats, 
+      active: true,
+      currency: data.currency || 'USD'
+    });
+    
+    // Handle both price (decimal) and price_cents (integer) formats
+    if (data.price_cents !== undefined) {
+      prod.priceCents = data.price_cents;
+    } else if (data.price !== undefined) {
+      prod.price = data.price;
+    } else {
+      prod.priceCents = 0;
+    }
+    
     return this.products.save(prod);
   }
 
