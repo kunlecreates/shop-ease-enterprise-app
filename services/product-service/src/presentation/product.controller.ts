@@ -74,6 +74,21 @@ export class ProductController {
     }
   }
 
+  @Get('inventory')
+  async getInventorySummary() {
+    try {
+      const products = await this.service.listProducts();
+      const inventory = products.map(p => ({
+        sku: p.sku,
+        name: p.name,
+        stock: p.toJSON().stock
+      }));
+      return { total: inventory.length, items: inventory };
+    } catch (error) {
+      return { total: 0, items: [] };
+    }
+  }
+
   @Get(':sku')
   async getProductBySku(@Param('sku') sku: string) {
     const product = await this.service.getProductBySku(sku);
