@@ -242,10 +242,11 @@ public class UserController {
     }
 
     /**
-     * Check if user has specific role
+     * Check if user has specific role (case-insensitive)
      */
     private boolean hasRole(Authentication authentication, String role) {
+        String targetRole = ("ROLE_" + role).toUpperCase();
         return authentication.getAuthorities().stream()
-                .anyMatch(auth -> auth.getAuthority().equals("ROLE_" + role));
+                .anyMatch(auth -> auth.getAuthority().toUpperCase().equals(targetRole));
     }
 }
