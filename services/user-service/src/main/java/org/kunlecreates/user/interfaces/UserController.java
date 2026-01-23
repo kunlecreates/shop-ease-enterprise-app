@@ -7,6 +7,8 @@ import org.kunlecreates.user.domain.User;
 import org.kunlecreates.user.interfaces.dto.AuthResponse;
 import org.kunlecreates.user.interfaces.dto.CreateUserRequest;
 import org.kunlecreates.user.interfaces.dto.LoginRequest;
+import org.kunlecreates.user.interfaces.dto.UpdateProfileRequest;
+import org.kunlecreates.user.interfaces.dto.UpdateRoleRequest;
 import org.kunlecreates.user.interfaces.dto.UserResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -121,6 +123,73 @@ public class UserController {
         User created = userService.createUser(req.email(), req.password());
         URI location = uriBuilder.path("/api/user/{id}").buildAndExpand(created.getId()).toUri();
         return ResponseEntity.created(location).build();
+    }
+
+    /**
+     * Logout endpoint - invalidates JWT token
+     * Note: JWT tokens are stateless, so we return 200 to indicate success
+     * Client should remove the token from storage
+     */
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout() {
+        // JWT tokens are stateless, client handles token removal
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * Update user profile
+     * Users can update their own profile
+     */
+    @PatchMapping("/profile")
+    public ResponseEntity<UserResponse> updateProfile(
+            @Valid @RequestBody UpdateProfileRequest request,
+            Authentication authentication) {
+        Long userId = extractUserIdFromAuth(authentication);
+        
+        try {
+            return userService.updateProfile(userId, request.fullName(), request.email())
+                    .map(UserResponse::from)
+                    .map(ResponseEntity::ok)
+                    .orElse(ResponseEntity.notFound().build());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    /**
+     * Delete user account
+     * Users can delete their own account, admins can delete any account
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id, Authentication authentication) {
+        Long currentUserId = extractUserIdFromAuth(authentication);
+        boolean isAdmin = hasRole(authentication, "ADMIN");
+        
+        // Users can only delete their own account unless they are admin
+        if (!currentUserId.equals(id) && !isAdmin) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        
+        boolean deleted = userService.deleteUser(id);
+        return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+    }
+
+    /**
+     * Update user role - admin only
+     */
+    @PatchMapping("/{id}/role")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<UserResponse> updateRole(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateRoleRequest request) {
+        try {
+            return userService.updateUserRole(id, request.role())
+                    .map(UserResponse::from)
+                    .map(ResponseEntity::ok)
+                    .orElse(ResponseEntity.notFound().build());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     /**

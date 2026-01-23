@@ -58,4 +58,44 @@ public class User {
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public LocalDateTime getLastLoginAt() { return lastLoginAt; }
     public Set<Role> getRoles() { return roles; }
+
+    public void setEmail(String email) { 
+        this.email = email;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void setFullName(String fullName) { 
+        this.fullName = fullName;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void setPasswordHash(String passwordHash) { 
+        this.passwordHash = passwordHash;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void setIsActive(Integer isActive) { 
+        this.isActive = isActive;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void setLastLoginAt(LocalDateTime lastLoginAt) { 
+        this.lastLoginAt = lastLoginAt;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void addRole(Role role) {
+        this.roles.add(role);
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void removeRole(Role role) {
+        this.roles.remove(role);
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles;
+        this.updatedAt = LocalDateTime.now();
+    }
 }
