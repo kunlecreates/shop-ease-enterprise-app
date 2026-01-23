@@ -88,7 +88,7 @@ public class UserService {
             return Optional.empty();
         }
 
-        Optional<Role> roleOpt = roleRepository.findByName(roleName);
+        Optional<Role> roleOpt = roleRepository.findByNameIgnoreCase(roleName);
         if (roleOpt.isEmpty()) {
             throw new IllegalArgumentException("Role not found: " + roleName);
         }

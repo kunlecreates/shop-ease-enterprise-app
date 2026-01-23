@@ -62,7 +62,7 @@ public class AuthService {
         User user = new User(request.email(), hashedPassword);
         user = userRepository.save(user);
 
-        var customerRole = roleRepository.findByName("customer")
+        var customerRole = roleRepository.findByNameIgnoreCase("customer")
                 .orElseThrow(() -> new IllegalStateException("Customer role not found"));
         user.getRoles().add(customerRole);
         userRepository.save(user);
