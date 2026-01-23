@@ -162,7 +162,7 @@ class TestGenericEmailEndpoint:
         data = response.json()
         assert data["status"] == "sent"
         assert data["recipient"] == "recipient@example.com"
-        assert "message_id" in data
+        assert "messageId" in data
 
     def test_send_email_requires_authentication(self, mock_email_service):
         """Should reject request without authentication"""
@@ -237,7 +237,7 @@ class TestOrderConfirmationEndpoint:
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "sent"
-        assert "message_id" in data
+        assert "messageId" in data
 
     def test_order_confirmation_requires_authentication(self, mock_email_service):
         """Should reject request without authentication"""
