@@ -10,7 +10,7 @@ maybe('Admin product flow: create product (if allowed)', async () => {
 
   // Direct call to product-service admin endpoint
   const resp = await productHttp.post('/api/product', 
-    { name: 'int-product', sku: `int-${Date.now()}`, price_cents: 1000, currency: 'USD' }, 
+    { name: 'int-product', sku: `int-${Date.now()}`, priceCents: 1000, currency: 'USD' }, 
     { headers, validateStatus: () => true }
   );
 

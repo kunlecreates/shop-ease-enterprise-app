@@ -46,9 +46,9 @@ export class ProductService {
       currency: data.currency || 'USD'
     });
     
-    // Handle both price (decimal) and price_cents (integer) formats
-    if (data.price_cents !== undefined) {
-      prod.priceCents = data.price_cents;
+    // Handle both price (decimal) and priceCents (integer) formats
+    if (data.priceCents !== undefined) {
+      prod.priceCents = data.priceCents;
     } else if (data.price !== undefined) {
       prod.price = data.price;
     } else {
