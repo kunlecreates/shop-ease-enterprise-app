@@ -6,7 +6,9 @@ import { Product } from './domain/product.entity';
 import { Category } from './domain/category.entity';
 import { StockMovement } from './domain/stock-movement.entity';
 import { ProductService } from './application/product.service';
+import { CategoryService } from './application/category.service';
 import { ProductController } from './presentation/product.controller';
+import { CategoryController } from './presentation/category.controller';
 import { HealthController } from './presentation/health.controller';
 import { JwtStrategy } from './config/jwt.config';
 
@@ -44,7 +46,7 @@ import { JwtStrategy } from './config/jwt.config';
     }),
     TypeOrmModule.forFeature([Product, Category, StockMovement])
   ],
-  controllers: [ProductController, HealthController],
-  providers: [ProductService, JwtStrategy],
+  controllers: [ProductController, CategoryController, HealthController],
+  providers: [ProductService, CategoryService, JwtStrategy],
 })
 export class AppModule {}
