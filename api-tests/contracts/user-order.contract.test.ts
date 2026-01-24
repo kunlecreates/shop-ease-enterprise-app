@@ -21,7 +21,7 @@ test('User -> Order contract: create cart, add item, place order', async () => {
   // Create cart
   let respCreate;
   try {
-    respCreate = await orderHttp.post('/api/carts', { user_ref: user.username }, {
+    respCreate = await orderHttp.post('/api/cart', { user_ref: user.username }, {
       headers: { Authorization: `Bearer ${userToken}` },
       validateStatus: () => true
     });
@@ -39,14 +39,14 @@ test('User -> Order contract: create cart, add item, place order', async () => {
   } catch (e) {}
 
   // Add item
-  const addItem = await orderHttp.post(`/api/carts/${cartId}/items`, { product_ref: 'prod-1', quantity: 1 }, {
+  const addItem = await orderHttp.post(`/api/cart/${cartId}/items`, { product_ref: 'prod-1', quantity: 1 }, {
     headers: { Authorization: `Bearer ${userToken}` },
     validateStatus: () => true
   }).catch(() => ({ status: 500 }));
   expect([200,201,500]).toContain(addItem.status);
 
   // Attempt checkout (API may vary)
-  const checkout = await orderHttp.post(`/api/carts/${cartId}/checkout`, {}, {
+  const checkout = await orderHttp.post(`/api/cart/${cartId}/checkout`, {}, {
     headers: { Authorization: `Bearer ${userToken}` },
     validateStatus: () => true
   }).catch(() => ({ status: 500 }));

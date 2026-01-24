@@ -21,7 +21,7 @@ test('Customer checkout flow: create cart, add item, place order, verify order e
 
   let cartResp;
   try {
-    cartResp = await orderHttp.post('/api/carts', { user_ref: customer.username }, {
+    cartResp = await orderHttp.post('/api/cart', { user_ref: customer.username }, {
       headers: { Authorization: `Bearer ${customerToken}` },
       validateStatus: () => true
     });
@@ -38,13 +38,13 @@ test('Customer checkout flow: create cart, add item, place order, verify order e
     registerDelete(orderHttp, (id: any) => `/carts/${id}`, cartId);
   } catch (e) {}
 
-  const itemResp = await orderHttp.post(`/api/carts/${cartId}/items`, { product_ref: products[0].id, quantity: 1 }, {
+  const itemResp = await orderHttp.post(`/api/cart/${cartId}/items`, { product_ref: products[0].id, quantity: 1 }, {
     headers: { Authorization: `Bearer ${customerToken}` },
     validateStatus: () => true
   }).catch(() => ({ status: 500 }));
   expect([200,201,500]).toContain(itemResp.status);
 
-  const checkout = await orderHttp.post(`/api/carts/${cartId}/checkout`, {}, {
+  const checkout = await orderHttp.post(`/api/cart/${cartId}/checkout`, {}, {
     headers: { Authorization: `Bearer ${customerToken}` },
     validateStatus: () => true
   }).catch(() => ({ status: 500 }));

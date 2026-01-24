@@ -53,6 +53,28 @@ public class CartController {
         return ResponseEntity.ok(CartResponse.from(cart));
     }
 
+    @PostMapping
+    public ResponseEntity<CartResponse> createCart(
+            @RequestBody(required = false) java.util.Map<String, String> body,
+            Authentication authentication,
+            UriComponentsBuilder uriBuilder) {
+        
+        String userId = extractUserIdFromAuth(authentication);
+        
+        // If user_ref is provided in body, use it (for compatibility)
+        if (body != null && body.containsKey("user_ref")) {
+            userId = body.get("user_ref");
+        }
+        
+        Cart cart = cartService.getOrCreateActiveCart(userId);
+        
+        URI location = uriBuilder.path("/api/cart/{id}")
+                .buildAndExpand(cart.getId())
+                .toUri();
+        
+        return ResponseEntity.created(location).body(CartResponse.from(cart));
+    }
+
     @PostMapping("/{cartId}/items")
     public ResponseEntity<Void> addItem(
             @PathVariable Long cartId,
@@ -135,5 +157,29 @@ public class CartController {
 
         cartService.clearCart(cartId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{cartId}/checkout")
+    public ResponseEntity<java.util.Map<String, Object>> checkout(
+            @PathVariable Long cartId,
+            Authentication authentication) {
+        
+        String userId = extractUserIdFromAuth(authentication);
+        
+        Cart cart = cartService.findById(cartId)
+                .orElseThrow(() -> new IllegalArgumentException("Cart not found"));
+        
+        if (!cart.getUserRef().equals(userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        // For now, return a simple success response
+        // In a full implementation, this would create an Order
+        java.util.Map<String, Object> response = new java.util.HashMap<>();
+        response.put("success", true);
+        response.put("cartId", cartId);
+        response.put("message", "Checkout initiated");
+        
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
     }
 }

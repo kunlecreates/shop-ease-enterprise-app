@@ -68,7 +68,7 @@ public class AuthService {
         userRepository.save(user);
 
         List<String> roles = user.getRoles().stream()
-                .map(r -> r.getName())
+                .map(r -> r.getName().toUpperCase())
                 .collect(Collectors.toList());
 
         String token = jwtService.generateToken(
@@ -90,7 +90,7 @@ public class AuthService {
         }
 
         List<String> roles = user.getRoles().stream()
-                .map(r -> r.getName())
+                .map(r -> r.getName().toUpperCase())
                 .collect(Collectors.toList());
 
         String token = jwtService.generateToken(

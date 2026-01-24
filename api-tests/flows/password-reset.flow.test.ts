@@ -14,7 +14,7 @@ describe('Password Reset Flow', () => {
     await userHttp.post('/api/user/register', user);
 
     // Step 1: Request password reset
-    const resetReqResp = await userHttp.post('/api/user/password-reset/request', {
+    const resetReqResp = await userHttp.post('/api/auth/password-reset-request', {
       email: user.email
     }, { validateStatus: () => true });
 
@@ -28,7 +28,7 @@ describe('Password Reset Flow', () => {
   });
 
   test('Password reset validation: reject invalid token', async () => {
-    const resp = await userHttp.post('/api/user/password-reset/confirm', {
+    const resp = await userHttp.post('/api/auth/password-reset-confirm', {
       token: 'invalid-token-12345',
       newPassword: 'NewPassword123!'
     }, { validateStatus: () => true });
@@ -37,7 +37,7 @@ describe('Password Reset Flow', () => {
   });
 
   test('Password reset validation: enforce password complexity', async () => {
-    const resp = await userHttp.post('/api/user/password-reset/confirm', {
+    const resp = await userHttp.post('/api/auth/password-reset-confirm', {
       token: 'some-token',
       newPassword: 'weak'
     }, { validateStatus: () => true });
