@@ -47,7 +47,7 @@ public class Cart {
     }
     
     public void close() {
-        setStatus("CLOSED");
+        setStatus("CHECKED_OUT");
     }
     
     public boolean isOpen() {
