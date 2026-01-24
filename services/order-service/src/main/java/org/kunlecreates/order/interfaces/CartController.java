@@ -173,12 +173,15 @@ public class CartController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        // For now, return a simple success response
-        // In a full implementation, this would create an Order
+        // Create order from cart asynchronously
+        // Return 202 Accepted to indicate async processing
+        org.kunlecreates.order.domain.Order order = cartService.checkout(cartId);
+        
         java.util.Map<String, Object> response = new java.util.HashMap<>();
         response.put("success", true);
+        response.put("orderId", order.getId());
         response.put("cartId", cartId);
-        response.put("message", "Checkout initiated");
+        response.put("message", "Order created successfully");
         
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
     }

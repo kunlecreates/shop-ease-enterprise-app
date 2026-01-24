@@ -2,8 +2,10 @@ package org.kunlecreates.order.application;
 
 import org.kunlecreates.order.domain.Cart;
 import org.kunlecreates.order.domain.CartItem;
+import org.kunlecreates.order.domain.Order;
 import org.kunlecreates.order.repository.CartItemRepository;
 import org.kunlecreates.order.repository.CartRepository;
+import org.kunlecreates.order.repository.OrderRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,10 +15,18 @@ import java.util.Optional;
 public class CartService {
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
+    private final OrderRepository orderRepository;
+    private final PaymentService paymentService;
 
-    public CartService(CartRepository cartRepository, CartItemRepository cartItemRepository) {
+    public CartService(
+            CartRepository cartRepository, 
+            CartItemRepository cartItemRepository,
+            OrderRepository orderRepository,
+            PaymentService paymentService) {
         this.cartRepository = cartRepository;
         this.cartItemRepository = cartItemRepository;
+        this.orderRepository = orderRepository;
+        this.paymentService = paymentService;
     }
 
     @Transactional
@@ -77,5 +87,34 @@ public class CartService {
                 .orElseThrow(() -> new IllegalArgumentException("Cart not found"));
         cart.close();
         cartRepository.save(cart);
+    }
+
+    @Transactional
+    public Order checkout(Long cartId) {
+        Cart cart = cartRepository.findById(cartId)
+                .orElseThrow(() -> new IllegalArgumentException("Cart not found"));
+        
+        if (!cart.isOpen()) {
+            throw new IllegalStateException("Cart is not open");
+        }
+        
+        if (cart.getItems().isEmpty()) {
+            throw new IllegalStateException("Cart is empty");
+        }
+        
+        // Calculate total from cart items
+        long totalCents = cart.getItems().stream()
+                .mapToLong(item -> item.getUnitPriceCents() * item.getQuantity())
+                .sum();
+        
+        // Create order
+        Order order = new Order(cart.getUserRef(), "PENDING", totalCents);
+        order = orderRepository.save(order);
+        
+        // Close the cart
+        cart.close();
+        cartRepository.save(cart);
+        
+        return order;
     }
 }
