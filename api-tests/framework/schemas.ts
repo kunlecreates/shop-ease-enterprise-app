@@ -13,7 +13,7 @@ export const userSchema = {
 export const productSchema = {
   type: 'object',
   properties: {
-    id: { type: 'string' },
+    id: { type: 'number' },
     sku: { type: 'string' },
     name: { type: 'string' },
     price: { type: 'number' }
