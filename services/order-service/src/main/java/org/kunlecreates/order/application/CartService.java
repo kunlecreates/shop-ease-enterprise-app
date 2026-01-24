@@ -9,6 +9,7 @@ import org.kunlecreates.order.repository.OrderRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -95,12 +96,15 @@ public class CartService {
             throw new IllegalStateException("Cart is not open");
         }
         
-        if (cart.getItems().isEmpty()) {
+        // Fetch cart items explicitly
+        List<CartItem> items = cartItemRepository.findByCartId(cartId);
+        
+        if (items.isEmpty()) {
             throw new IllegalStateException("Cart is empty");
         }
         
         // Calculate total from cart items
-        long totalCents = cart.getItems().stream()
+        long totalCents = items.stream()
                 .mapToLong(item -> item.getUnitPriceCents() * item.getQuantity())
                 .sum();
         
