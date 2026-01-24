@@ -86,10 +86,15 @@ public class CartService {
     }
 
     @Transactional
-    public Order checkout(Long cartId) {
+    public Order checkout(Long cartId, String userId) {
         // Use JOIN FETCH to eagerly load cart items within transaction
         Cart cart = cartRepository.findByIdWithItems(cartId)
                 .orElseThrow(() -> new IllegalArgumentException("Cart not found"));
+        
+        // Check authorization
+        if (!cart.getUserRef().equals(userId)) {
+            throw new IllegalArgumentException("Unauthorized");
+        }
         
         if (!cart.isOpen()) {
             throw new IllegalStateException("Cart is not open");

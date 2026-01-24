@@ -166,16 +166,8 @@ public class CartController {
         
         String userId = extractUserIdFromAuth(authentication);
         
-        Cart cart = cartService.findById(cartId)
-                .orElseThrow(() -> new IllegalArgumentException("Cart not found"));
-        
-        if (!cart.getUserRef().equals(userId)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-
-        // Create order from cart asynchronously
-        // Return 202 Accepted to indicate async processing
-        org.kunlecreates.order.domain.Order order = cartService.checkout(cartId);
+        // Create order from cart - authorization check is inside checkout method
+        org.kunlecreates.order.domain.Order order = cartService.checkout(cartId, userId);
         
         java.util.Map<String, Object> response = new java.util.HashMap<>();
         response.put("success", true);
