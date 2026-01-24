@@ -47,7 +47,21 @@ describe('Order Cancellation Flow', () => {
       });
 
       if (orderResp.status === 201 || orderResp.status === 200 || orderResp.status === 202) {
-        orderId = orderResp.data.orderId || orderResp.data.id;
+        // Backend may return orderId directly or require fetching from orders list
+        if (orderResp.data.orderId) {
+          orderId = orderResp.data.orderId;
+        } else if (orderResp.data.id) {
+          orderId = orderResp.data.id;
+        } else {
+          // Checkout initiated but orderId not returned - fetch from orders list
+          const ordersResp = await orderHttp.get('/api/order', {
+            headers: { Authorization: `Bearer ${customerToken}` },
+            validateStatus: () => true
+          });
+          if (ordersResp.status === 200 && Array.isArray(ordersResp.data) && ordersResp.data.length > 0) {
+            orderId = ordersResp.data[0].id;
+          }
+        }
       }
     }
   });
