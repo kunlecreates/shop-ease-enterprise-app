@@ -26,8 +26,6 @@ public class CartService {
         this.cartItemRepository = cartItemRepository;
         this.orderRepository = orderRepository;
     }
-
-    @Transactional
     public Cart getOrCreateActiveCart(String userRef) {
         return cartRepository.findByUserRefAndStatus(userRef, "OPEN")
                 .orElseGet(() -> cartRepository.save(new Cart(userRef)));
@@ -89,15 +87,16 @@ public class CartService {
 
     @Transactional
     public Order checkout(Long cartId) {
-        Cart cart = cartRepository.findById(cartId)
+        // Use JOIN FETCH to eagerly load cart items within transaction
+        Cart cart = cartRepository.findByIdWithItems(cartId)
                 .orElseThrow(() -> new IllegalArgumentException("Cart not found"));
         
         if (!cart.isOpen()) {
             throw new IllegalStateException("Cart is not open");
         }
         
-        // Fetch cart items explicitly
-        List<CartItem> items = cartItemRepository.findByCartId(cartId);
+        // Access items within transaction (already loaded via JOIN FETCH)
+        List<CartItem> items = cart.getItems();
         
         if (items.isEmpty()) {
             throw new IllegalStateException("Cart is empty");

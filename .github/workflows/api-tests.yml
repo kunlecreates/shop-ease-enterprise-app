@@ -51,6 +51,11 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: v1.30.0
+          
       - name: Install deps
         working-directory: api-tests
         run: |
