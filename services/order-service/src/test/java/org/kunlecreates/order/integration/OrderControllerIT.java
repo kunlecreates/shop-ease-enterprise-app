@@ -269,7 +269,7 @@ public class OrderControllerIT {
         String orderId = location.substring(location.lastIndexOf('/') + 1);
 
         // When: Admin accesses the order
-        String adminToken = JwtTestHelper.createToken("admin-user", "admin@example.com", java.util.List.of("ROLE_ADMIN"));
+        String adminToken = JwtTestHelper.createToken("admin-user", "admin@example.com", java.util.List.of("ADMIN"));
         HttpHeaders adminHeaders = new HttpHeaders();
         adminHeaders.set("Authorization", "Bearer " + adminToken);
         HttpEntity<Void> getEntity = new HttpEntity<>(adminHeaders);
@@ -342,7 +342,7 @@ public class OrderControllerIT {
         assertThat(createResponse2.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
         // When: Admin lists orders
-        String adminToken = JwtTestHelper.createToken("admin-user-2", "admin2@example.com", java.util.List.of("ROLE_ADMIN"));
+        String adminToken = JwtTestHelper.createToken("admin-user-2", "admin2@example.com", java.util.List.of("ADMIN"));
         HttpHeaders adminHeaders = new HttpHeaders();
         adminHeaders.set("Authorization", "Bearer " + adminToken);
         HttpEntity<Void> getEntity = new HttpEntity<>(adminHeaders);

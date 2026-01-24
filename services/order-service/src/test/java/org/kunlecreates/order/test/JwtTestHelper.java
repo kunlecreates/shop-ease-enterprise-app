@@ -51,16 +51,18 @@ public class JwtTestHelper {
     
     /**
      * Creates a valid JWT token with default USER role
+     * Note: roles should NOT have ROLE_ prefix as JwtGrantedAuthoritiesConverter adds it
      * 
      * @param username The username (subject) for the token
      * @return A valid JWT token string
      */
     public static String createToken(String username) {
-        return createToken(username, username + "@example.com", List.of("ROLE_USER"));
+        return createToken(username, username + "@example.com", List.of("USER"));
     }
     
     /**
      * Creates an expired JWT token for testing
+     * Note: roles should NOT have ROLE_ prefix as JwtGrantedAuthoritiesConverter adds it
      * 
      * @param username The username (subject) for the token
      * @return An expired JWT token string
@@ -71,7 +73,7 @@ public class JwtTestHelper {
         
         Map<String, Object> claims = new HashMap<>();
         claims.put("email", username + "@example.com");
-        claims.put("roles", List.of("ROLE_USER"));
+        claims.put("roles", List.of("USER"));
         
         return Jwts.builder()
                 .issuer("shopease")
