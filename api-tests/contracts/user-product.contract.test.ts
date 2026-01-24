@@ -15,6 +15,10 @@ maybe('User-Service -> Product-Service contract: product listing', async () => {
   expect(Array.isArray(resp.data)).toBe(true);
   if (resp.data.length > 0) {
     const valid = ajv.validate(productSchema as any, resp.data[0]);
+    if (!valid) {
+      console.log('Validation errors:', JSON.stringify(ajv.errors, null, 2));
+      console.log('Product data:', JSON.stringify(resp.data[0], null, 2));
+    }
     expect(valid).toBe(true);
   }
 });
