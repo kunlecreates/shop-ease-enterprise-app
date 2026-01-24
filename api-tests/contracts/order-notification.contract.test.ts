@@ -18,7 +18,11 @@ test('Order -> Notification contract: outbox event appears after placing order',
     registerDelete(orderHttp, (id: any) => `/carts/${id}`, cartId);
   } catch (e) {}
 
-  await orderHttp.post(`/api/carts/${cartId}/items`, { product_ref: 'prod-1', quantity: 1 }, { validateStatus: () => true }).catch(() => null);
+  await orderHttp.post(`/api/cart/${cartId}/items`, { 
+    productRef: 'prod-1', 
+    quantity: 1,
+    unitPriceCents: 1999
+  }, { validateStatus: () => true }).catch(() => null);
   await orderHttp.post(`/api/carts/${cartId}/checkout`, {}, { validateStatus: () => true }).catch(() => null);
 
   const ok = await waitFor(async () => {

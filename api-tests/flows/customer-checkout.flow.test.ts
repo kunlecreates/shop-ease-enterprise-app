@@ -35,7 +35,11 @@ test('Customer checkout flow: create cart, add item, place order, verify order e
     registerDelete(orderHttp, (id: any) => `/carts/${id}`, cartId);
   } catch (e) {}
 
-  const itemResp = await orderHttp.post(`/api/cart/${cartId}/items`, { product_ref: products[0].id, quantity: 1 }, {
+  const itemResp = await orderHttp.post(`/api/cart/${cartId}/items`, { 
+    productRef: products[0].id, 
+    quantity: 1,
+    unitPriceCents: products[0].price || 1999
+  }, {
     headers: { Authorization: `Bearer ${customerToken}` }
   });
   

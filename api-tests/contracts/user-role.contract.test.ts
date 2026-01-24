@@ -43,7 +43,7 @@ describe('User Role Contract', () => {
 
     expect(resp.status).toBe(200);
     expect(resp.data).toHaveProperty('roles');
-    expect(resp.data.roles).toContain('ADMIN');
+    expect(resp.data.roles).toContain('admin');
   });
 
   test('PATCH /api/user/:id/role - reject non-admin role change', async () => {

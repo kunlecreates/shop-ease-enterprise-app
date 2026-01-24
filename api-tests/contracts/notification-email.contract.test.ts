@@ -105,6 +105,7 @@ describe('Notification Email Contract', () => {
     });
 
     expect([400, 422]).toContain(resp.status);
-    expect(resp.data).toHaveProperty('error');
+    expect(resp.data).toHaveProperty('detail');
+    expect(Array.isArray(resp.data.detail)).toBe(true);
   });
 });

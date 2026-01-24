@@ -35,7 +35,11 @@ test('User -> Order contract: create cart, add item, place order', async () => {
   } catch (e) {}
 
   // Add item
-  const addItem = await orderHttp.post(`/api/cart/${cartId}/items`, { product_ref: 'prod-1', quantity: 1 }, {
+  const addItem = await orderHttp.post(`/api/cart/${cartId}/items`, { 
+    productRef: 'prod-1', 
+    quantity: 1,
+    unitPriceCents: 1999
+  }, {
     headers: { Authorization: `Bearer ${userToken}` }
   });
   
