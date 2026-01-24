@@ -29,6 +29,11 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: v1.30.0
+          
       - name: Install e2e deps
         working-directory: e2e
         run: |
@@ -41,36 +46,47 @@ jobs:
       - name: Wait for backend services to be ready
         run: |
           set -euo pipefail
-          echo "Waiting for all backend services to be Ready before running E2E tests..."
+          echo "Waiting for backend services to become Ready (up to 8 minutes)..."
           
-          NAMESPACES="shopease-user shopease-product shopease-order shopease-notification"
-          MAX_WAIT=600  # 10 minutes max
-          INTERVAL=10
-          
-          for ns in $NAMESPACES; do
-            echo "Checking namespace: $ns"
-            elapsed=0
-            while [ $elapsed -lt $MAX_WAIT ]; do
-              ready=$(kubectl get pods -n $ns -l 'app.kubernetes.io/name in (user-service,product-service,order-service,notification-service)' -o jsonpath='{range .items[*]}{.status.conditions[?(@.type=="Ready")].status}{"\n"}{end}' | grep -c "True" || echo "0")
-              total=$(kubectl get pods -n $ns -l 'app.kubernetes.io/name in (user-service,product-service,order-service,notification-service)' --no-headers | wc -l || echo "0")
-              
-              if [ "$total" -gt 0 ] && [ "$ready" -eq "$total" ]; then
-                echo "✓ All pods in $ns are Ready ($ready/$total)"
-                break
-              fi
-              
-              echo "  Waiting... ($ready/$total pods ready) - ${elapsed}s elapsed"
-              sleep $INTERVAL
-              elapsed=$((elapsed + INTERVAL))
-            done
+          # Wait for all backend service pods to be Ready (not just Running)
+          for namespace in shopease-user shopease-product shopease-order shopease-notification frontend; do
+            echo "Checking namespace: $namespace"
             
-            if [ $elapsed -ge $MAX_WAIT ]; then
-              echo "⚠ Warning: Timeout waiting for $ns pods to be ready"
-              kubectl get pods -n $ns
+            # Get deployment name in namespace
+            DEPLOY=$(kubectl -n "$namespace" get deploy -o name | head -n1 | cut -d'/' -f2 || true)
+            
+            if [ -n "$DEPLOY" ]; then
+              echo "Waiting for deployment/$DEPLOY in $namespace to have ready pods..."
+              
+              # Wait up to 8 minutes for at least 1 ready replica
+              timeout=480
+              elapsed=0
+              while [ $elapsed -lt $timeout ]; do
+                READY=$(kubectl -n "$namespace" get deploy "$DEPLOY" -o jsonpath='{.status.readyReplicas}' 2>/dev/null || echo "0")
+                DESIRED=$(kubectl -n "$namespace" get deploy "$DEPLOY" -o jsonpath='{.spec.replicas}' 2>/dev/null || echo "1")
+                
+                echo "  $DEPLOY: $READY/$DESIRED ready replicas"
+                
+                if [ "$READY" -ge 1 ] && [ "$READY" -eq "$DESIRED" ]; then
+                  echo "  ✓ $DEPLOY is ready!"
+                  break
+                fi
+                
+                if [ $elapsed -ge $timeout ]; then
+                  echo "  ✗ Timeout waiting for $DEPLOY to be ready"
+                  kubectl -n "$namespace" get pods -l "app.kubernetes.io/name=${DEPLOY}" || true
+                  exit 1
+                fi
+                
+                sleep 10
+                elapsed=$((elapsed + 10))
+              done
+            else
+              echo "  No deployment found in $namespace (skipping)"
             fi
           done
           
-          echo "All backend services are ready. Proceeding with E2E tests."
+          echo "All backend services are Ready!"
 
       - name: Verify E2E host reachable (supports optional service token)
         working-directory: e2e
