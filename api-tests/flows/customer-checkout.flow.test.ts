@@ -21,7 +21,7 @@ test('Customer checkout flow: create cart, add item, place order, verify order e
 
   let cartResp;
   try {
-    cartResp = await orderHttp.post('/api/cart', { user_ref: customer.username }, {
+    cartResp = await orderHttp.post('/api/cart', {}, {
       headers: { Authorization: `Bearer ${customerToken}` },
       validateStatus: () => true
     });

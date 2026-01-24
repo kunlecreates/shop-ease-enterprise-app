@@ -21,7 +21,7 @@ test('User -> Order contract: create cart, add item, place order', async () => {
   // Create cart
   let respCreate;
   try {
-    respCreate = await orderHttp.post('/api/cart', { user_ref: user.username }, {
+    respCreate = await orderHttp.post('/api/cart', {}, {
       headers: { Authorization: `Bearer ${userToken}` },
       validateStatus: () => true
     });
