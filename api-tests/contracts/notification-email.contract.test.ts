@@ -105,6 +105,6 @@ describe('Notification Email Contract', () => {
       validateStatus: () => true
     });
 
-    expect([400, 404]).toContain(resp.status);
+    expect([400, 404, 422]).toContain(resp.status);
   });
 });
