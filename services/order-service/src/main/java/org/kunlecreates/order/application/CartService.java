@@ -16,17 +16,14 @@ public class CartService {
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
     private final OrderRepository orderRepository;
-    private final PaymentService paymentService;
 
     public CartService(
             CartRepository cartRepository, 
             CartItemRepository cartItemRepository,
-            OrderRepository orderRepository,
-            PaymentService paymentService) {
+            OrderRepository orderRepository) {
         this.cartRepository = cartRepository;
         this.cartItemRepository = cartItemRepository;
         this.orderRepository = orderRepository;
-        this.paymentService = paymentService;
     }
 
     @Transactional
