@@ -20,6 +20,13 @@ spec:
   policyTypes:
     - Ingress
   ingress:
+    # Allow kubelet health checks (from same namespace) on both service port and target port
+    - ports:
+        - protocol: TCP
+          port: {{ .Values.service.port | default 80 }}
+        - protocol: TCP
+          port: {{ .Values.service.targetPort | default 8084 }}
+    # Allow traffic from specified namespaces
     - from:
       {{- $global := (default (dict) .Values.global) }}
       {{- if and .Values.networkPolicy .Values.networkPolicy.allowedNamespaces }}
@@ -37,5 +44,7 @@ spec:
           matchLabels:
             run: curl-test
       ports:
+        - protocol: TCP
+          port: {{ .Values.service.port | default 80 }}
         - protocol: TCP
           port: {{ .Values.service.targetPort | default 8084 }}
