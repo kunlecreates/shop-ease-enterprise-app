@@ -38,7 +38,7 @@ test('Customer checkout flow: create cart, add item, place order, verify order e
   const itemResp = await orderHttp.post(`/api/cart/${cartId}/items`, { 
     productRef: products[0].id, 
     quantity: 1,
-    unitPriceCents: products[0].price || 1999
+    unitPriceCents: products[0].price_cents || 1999
   }, {
     headers: { Authorization: `Bearer ${customerToken}` }
   });
