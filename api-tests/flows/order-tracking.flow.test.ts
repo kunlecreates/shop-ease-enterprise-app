@@ -42,14 +42,13 @@ describe('Order Status Tracking Flow', () => {
 
     // Get order tracking
     const trackingResp = await orderHttp.get(`/api/order/${orderId}/tracking`, {
-      headers: { Authorization: `Bearer ${customerToken}` },
-      validateStatus: () => true
+      headers: { Authorization: `Bearer ${customerToken}` }
     });
 
-    expect([200, 404]).toContain(trackingResp.status);
-    if (trackingResp.status === 200) {
-      expect(Array.isArray(trackingResp.data)).toBe(true);
-    }
+    expect(trackingResp.status).toBe(200);
+    expect(Array.isArray(trackingResp.data)).toBe(true);
+    expect(trackingResp.data.length).toBeGreaterThan(0);
+    expect(trackingResp.data[0]).toHaveProperty('status');
   });
 
   test('Get order history with status changes', async () => {
@@ -59,14 +58,11 @@ describe('Order Status Tracking Flow', () => {
     }
 
     const historyResp = await orderHttp.get(`/api/order/${orderId}/history`, {
-      headers: { Authorization: `Bearer ${customerToken}` },
-      validateStatus: () => true
+      headers: { Authorization: `Bearer ${customerToken}` }
     });
 
-    expect([200, 404]).toContain(historyResp.status);
-    if (historyResp.status === 200) {
-      expect(Array.isArray(historyResp.data)).toBe(true);
-    }
+    expect(historyResp.status).toBe(200);
+    expect(Array.isArray(historyResp.data)).toBe(true);
   });
 
   test('Customer receives real-time status updates', async () => {
@@ -76,12 +72,11 @@ describe('Order Status Tracking Flow', () => {
     }
 
     const initialResp = await orderHttp.get(`/api/order/${orderId}`, {
-      headers: { Authorization: `Bearer ${customerToken}` },
-      validateStatus: () => true
+      headers: { Authorization: `Bearer ${customerToken}` }
     });
 
-    if (initialResp.status === 200) {
-      expect(initialResp.data).toHaveProperty('status');
-    }
+    expect(initialResp.status).toBe(200);
+    expect(initialResp.data).toHaveProperty('status');
+    expect(initialResp.data).toHaveProperty('id', orderId);
   });
 });

@@ -30,11 +30,10 @@ describe('User Profile CRUD Contract', () => {
       validateStatus: () => true
     });
 
-    expect([200, 404]).toContain(resp.status);
-    if (resp.status === 200) {
-      expect(resp.data).toHaveProperty('id');
-      expect(resp.data.id).toBe(userId);
-    }
+    expect(resp.status).toBe(200);
+    expect(resp.data).toHaveProperty('id');
+    expect(resp.data.id).toBe(userId);
+    expect(resp.data).toHaveProperty('email');
   });
 
   test('PATCH /api/user/profile - update user profile', async () => {
@@ -49,11 +48,9 @@ describe('User Profile CRUD Contract', () => {
       validateStatus: () => true
     });
 
-    expect([200, 404]).toContain(resp.status);
-    if (resp.status === 200) {
-      expect(resp.data.firstName).toBe(updates.firstName);
-      expect(resp.data.lastName).toBe(updates.lastName);
-    }
+    expect(resp.status).toBe(200);
+    expect(resp.data.firstName).toBe(updates.firstName);
+    expect(resp.data.lastName).toBe(updates.lastName);
   });
 
   test('PATCH /api/user/profile - reject unauthenticated update', async () => {
@@ -88,6 +85,6 @@ describe('User Profile CRUD Contract', () => {
       validateStatus: () => true
     });
 
-    expect([200, 204, 404]).toContain(resp.status);
+    expect([200, 204]).toContain(resp.status);
   });
 });

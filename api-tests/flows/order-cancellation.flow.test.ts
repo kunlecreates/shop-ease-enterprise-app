@@ -36,8 +36,7 @@ describe('Order Cancellation Flow', () => {
 
   test('Customer cancels pending order', async () => {
     if (!orderId) {
-      console.warn('Skipping: no order created');
-      return;
+      throw new Error('Order not created in setup');
     }
 
     const resp = await orderHttp.post(`/api/order/${orderId}/cancel`, {}, {
@@ -45,7 +44,11 @@ describe('Order Cancellation Flow', () => {
       validateStatus: () => true
     });
 
-    expect([200, 204, 400, 404]).toContain(resp.status);
+    expect([200, 204]).toContain(resp.status);
+    if (resp.data) {
+      expect(resp.data).toHaveProperty('status');
+      expect(resp.data.status).toMatch(/cancel/i);
+    }
   });
 
   test('Cannot cancel already shipped order', async () => {
@@ -58,8 +61,7 @@ describe('Order Cancellation Flow', () => {
     });
 
     if (orderResp.status !== 201 && orderResp.status !== 200) {
-      console.warn('Skipping: order not created');
-      return;
+      throw new Error(`Order creation failed with status ${orderResp.status}`);
     }
 
     const newOrderId = orderResp.data.id;
@@ -79,6 +81,9 @@ describe('Order Cancellation Flow', () => {
     });
 
     // Should fail if order is shipped
-    expect([400, 409, 404]).toContain(cancelResp.status);
+    expect([400, 409]).toContain(cancelResp.status);
+    if (cancelResp.data) {
+      expect(cancelResp.data).toHaveProperty('error');
+    }
   });
 });

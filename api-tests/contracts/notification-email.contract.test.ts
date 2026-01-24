@@ -22,14 +22,11 @@ describe('Notification Email Contract', () => {
     };
 
     const resp = await notificationHttp.post('/api/notification/order-confirmation', orderData, {
-      headers: { Authorization: `Bearer ${adminToken}` },
-      validateStatus: () => true
+      headers: { Authorization: `Bearer ${adminToken}` }
     });
 
-    expect([200, 202, 404]).toContain(resp.status);
-    if (resp.status === 200 || resp.status === 202) {
-      expect(resp.data).toHaveProperty('success');
-    }
+    expect([200, 202]).toContain(resp.status);
+    expect(resp.data).toHaveProperty('success', true);
   });
 
   test('POST /api/notification/shipping - send shipping notification', async () => {
@@ -42,11 +39,11 @@ describe('Notification Email Contract', () => {
     };
 
     const resp = await notificationHttp.post('/api/notification/shipping', shippingData, {
-      headers: { Authorization: `Bearer ${adminToken}` },
-      validateStatus: () => true
+      headers: { Authorization: `Bearer ${adminToken}` }
     });
 
-    expect([200, 202, 404]).toContain(resp.status);
+    expect([200, 202]).toContain(resp.status);
+    expect(resp.data).toHaveProperty('success', true);
   });
 
   test('POST /api/notification/welcome - send welcome email', async () => {
@@ -57,11 +54,11 @@ describe('Notification Email Contract', () => {
     };
 
     const resp = await notificationHttp.post('/api/notification/welcome', welcomeData, {
-      headers: { Authorization: `Bearer ${adminToken}` },
-      validateStatus: () => true
+      headers: { Authorization: `Bearer ${adminToken}` }
     });
 
-    expect([200, 202, 404]).toContain(resp.status);
+    expect([200, 202]).toContain(resp.status);
+    expect(resp.data).toHaveProperty('success', true);
   });
 
   test('POST /api/notification/password-reset - send password reset email', async () => {
@@ -72,11 +69,10 @@ describe('Notification Email Contract', () => {
       expiresInHours: 24
     };
 
-    const resp = await notificationHttp.post('/api/notification/password-reset', resetData, {
-      validateStatus: () => true
-    });
+    const resp = await notificationHttp.post('/api/notification/password-reset', resetData);
 
-    expect([200, 202, 404]).toContain(resp.status);
+    expect([200, 202]).toContain(resp.status);
+    expect(resp.data).toHaveProperty('success', true);
   });
 
   test('POST /api/notification/email - generic email sending', async () => {
@@ -92,7 +88,10 @@ describe('Notification Email Contract', () => {
       validateStatus: () => true
     });
 
-    expect([200, 202, 400, 404]).toContain(resp.status);
+    expect([200, 202, 400]).toContain(resp.status);
+    if (resp.status === 200 || resp.status === 202) {
+      expect(resp.data).toHaveProperty('success', true);
+    }
   });
 
   test('POST /api/notification/email - reject invalid email address', async () => {
@@ -105,6 +104,7 @@ describe('Notification Email Contract', () => {
       validateStatus: () => true
     });
 
-    expect([400, 404, 422]).toContain(resp.status);
+    expect([400, 422]).toContain(resp.status);
+    expect(resp.data).toHaveProperty('error');
   });
 });

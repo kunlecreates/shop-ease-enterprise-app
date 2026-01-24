@@ -18,13 +18,9 @@ describe('Password Reset Flow', () => {
       email: user.email
     }, { validateStatus: () => true });
 
-    expect([200, 202, 404]).toContain(resetReqResp.status);
-
-    if (resetReqResp.status === 200 || resetReqResp.status === 202) {
-      // In test environment, we might get a reset token directly
-      // Or we'd need to check notification service for the email
-      console.log('Password reset requested successfully');
-    }
+    expect([200, 202]).toContain(resetReqResp.status);
+    expect(resetReqResp.data).toHaveProperty('success');
+    expect(resetReqResp.data.success).toBe(true);
   });
 
   test('Password reset validation: reject invalid token', async () => {
@@ -33,7 +29,8 @@ describe('Password Reset Flow', () => {
       newPassword: 'NewPassword123!'
     }, { validateStatus: () => true });
 
-    expect([400, 401, 404]).toContain(resp.status);
+    expect([400, 401]).toContain(resp.status);
+    expect(resp.data).toHaveProperty('error');
   });
 
   test('Password reset validation: enforce password complexity', async () => {
@@ -42,6 +39,8 @@ describe('Password Reset Flow', () => {
       newPassword: 'weak'
     }, { validateStatus: () => true });
 
-    expect([400, 401, 404]).toContain(resp.status);
+    expect(resp.status).toBe(400);
+    expect(resp.data).toHaveProperty('error');
+    expect(resp.data.error).toMatch(/password/i);
   });
 });

@@ -32,7 +32,9 @@ describe('Product Bulk Operations Flow', () => {
       validateStatus: () => true
     });
 
-    expect([200, 201, 404]).toContain(resp.status);
+    expect(resp.status).toBe(201);
+    expect(resp.data).toHaveProperty('created');
+    expect(resp.data.created).toBeGreaterThanOrEqual(products.length);
   });
 
   test('Bulk update product prices', async () => {
@@ -48,7 +50,8 @@ describe('Product Bulk Operations Flow', () => {
       validateStatus: () => true
     });
 
-    expect([200, 404]).toContain(resp.status);
+    expect(resp.status).toBe(200);
+    expect(resp.data).toHaveProperty('updated');
   });
 
   test('Bulk stock adjustment', async () => {
@@ -64,7 +67,8 @@ describe('Product Bulk Operations Flow', () => {
       validateStatus: () => true
     });
 
-    expect([200, 404]).toContain(resp.status);
+    expect(resp.status).toBe(200);
+    expect(resp.data).toHaveProperty('adjusted');
   });
 
   test('Export products to CSV/JSON', async () => {
@@ -74,6 +78,7 @@ describe('Product Bulk Operations Flow', () => {
       validateStatus: () => true
     });
 
-    expect([200, 404]).toContain(resp.status);
+    expect(resp.status).toBe(200);
+    expect(Array.isArray(resp.data) || typeof resp.data === 'string').toBe(true);
   });
 });

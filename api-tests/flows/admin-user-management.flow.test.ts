@@ -25,29 +25,32 @@ describe('Admin User Management Flow', () => {
 
     // Step 2: Admin lists users
     const listResp = await userHttp.get('/api/user', {
-      headers: { Authorization: `Bearer ${adminToken}` },
-      validateStatus: () => true
+      headers: { Authorization: `Bearer ${adminToken}` }
     });
 
-    expect([200, 404]).toContain(listResp.status);
+    expect(listResp.status).toBe(200);
+    expect(Array.isArray(listResp.data)).toBe(true);
+    expect(listResp.data.length).toBeGreaterThan(0);
 
     // Step 3: Admin views specific user profile
     const profileResp = await userHttp.get(`/api/user/${userId}`, {
-      headers: { Authorization: `Bearer ${adminToken}` },
-      validateStatus: () => true
+      headers: { Authorization: `Bearer ${adminToken}` }
     });
 
-    expect([200, 404]).toContain(profileResp.status);
+    expect(profileResp.status).toBe(200);
+    expect(profileResp.data).toHaveProperty('id', userId);
+    expect(profileResp.data).toHaveProperty('email');
 
     // Step 4: Admin updates user role
     const roleUpdateResp = await userHttp.patch(`/api/user/${userId}/role`, {
       role: 'ADMIN'
     }, {
-      headers: { Authorization: `Bearer ${adminToken}` },
-      validateStatus: () => true
+      headers: { Authorization: `Bearer ${adminToken}` }
     });
 
-    expect([200, 403, 404]).toContain(roleUpdateResp.status);
+    expect(roleUpdateResp.status).toBe(200);
+    expect(roleUpdateResp.data).toHaveProperty('roles');
+    expect(roleUpdateResp.data.roles).toContain('ADMIN');
   });
 
   test('Admin can disable/enable user accounts', async () => {
@@ -66,10 +69,10 @@ describe('Admin User Management Flow', () => {
     const disableResp = await userHttp.patch(`/api/user/${userId}/status`, {
       enabled: false
     }, {
-      headers: { Authorization: `Bearer ${adminToken}` },
-      validateStatus: () => true
+      headers: { Authorization: `Bearer ${adminToken}` }
     });
 
-    expect([200, 404]).toContain(disableResp.status);
+    expect(disableResp.status).toBe(200);
+    expect(disableResp.data).toHaveProperty('enabled', false);
   });
 });

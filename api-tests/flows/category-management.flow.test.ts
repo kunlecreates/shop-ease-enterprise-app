@@ -24,33 +24,30 @@ describe('Product Category Management Flow', () => {
       validateStatus: () => true
     });
 
-    expect([200, 201, 404]).toContain(createResp.status);
-    if (createResp.status === 200 || createResp.status === 201) {
-      categoryId = createResp.data.id;
-      expect(createResp.data.name).toBe(newCategory.name);
-    }
+    expect(createResp.status).toBe(201);
+    expect(createResp.data).toHaveProperty('id');
+    expect(createResp.data.name).toBe(newCategory.name);
+    expect(createResp.data.slug).toBe(newCategory.slug);
+    categoryId = createResp.data.id;
 
     // Step 2: Update category
-    if (categoryId) {
-      const updateResp = await productHttp.patch(`/api/category/${categoryId}`, {
-        description: 'Updated description'
-      }, {
-        headers: { Authorization: `Bearer ${adminToken}` },
-        validateStatus: () => true
-      });
+    const updateResp = await productHttp.patch(`/api/category/${categoryId}`, {
+      description: 'Updated description'
+    }, {
+      headers: { Authorization: `Bearer ${adminToken}` },
+      validateStatus: () => true
+    });
 
-      expect([200, 404]).toContain(updateResp.status);
-    }
+    expect(updateResp.status).toBe(200);
+    expect(updateResp.data.description).toBe('Updated description');
 
     // Step 3: Delete category
-    if (categoryId) {
-      const deleteResp = await productHttp.delete(`/api/category/${categoryId}`, {
-        headers: { Authorization: `Bearer ${adminToken}` },
-        validateStatus: () => true
-      });
+    const deleteResp = await productHttp.delete(`/api/category/${categoryId}`, {
+      headers: { Authorization: `Bearer ${adminToken}` },
+      validateStatus: () => true
+    });
 
-      expect([200, 204, 404]).toContain(deleteResp.status);
-    }
+    expect([200, 204]).toContain(deleteResp.status);
   });
 
   test('List all categories', async () => {
@@ -58,10 +55,8 @@ describe('Product Category Management Flow', () => {
       validateStatus: () => true
     });
 
-    expect([200, 404]).toContain(resp.status);
-    if (resp.status === 200) {
-      expect(Array.isArray(resp.data)).toBe(true);
-    }
+    expect(resp.status).toBe(200);
+    expect(Array.isArray(resp.data)).toBe(true);
   });
 
   test('Non-admin cannot create categories', async () => {

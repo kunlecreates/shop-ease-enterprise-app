@@ -28,11 +28,9 @@ describe('User Role Contract', () => {
       validateStatus: () => true
     });
 
-    expect([200, 404]).toContain(resp.status);
-    if (resp.status === 200) {
-      expect(resp.data).toHaveProperty('role');
-      expect(['CUSTOMER', 'ADMIN']).toContain(resp.data.role);
-    }
+    expect(resp.status).toBe(200);
+    expect(resp.data).toHaveProperty('role');
+    expect(['CUSTOMER', 'ADMIN']).toContain(resp.data.role);
   });
 
   test('PATCH /api/user/:id/role - update user role (admin only)', async () => {
@@ -43,7 +41,9 @@ describe('User Role Contract', () => {
       validateStatus: () => true
     });
 
-    expect([200, 403, 404]).toContain(resp.status);
+    expect(resp.status).toBe(200);
+    expect(resp.data).toHaveProperty('roles');
+    expect(resp.data.roles).toContain('ADMIN');
   });
 
   test('PATCH /api/user/:id/role - reject non-admin role change', async () => {

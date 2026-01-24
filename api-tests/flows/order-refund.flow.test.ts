@@ -21,7 +21,10 @@ describe('Order Refund Processing Flow', () => {
       validateStatus: () => true
     });
 
-    expect([200, 400, 404]).toContain(resp.status);
+    expect([200, 400]).toContain(resp.status);
+    if (resp.status === 200) {
+      expect(resp.data).toHaveProperty('refundId');
+    }
   });
 
   test('Refund validation: reject refund for pending order', async () => {
@@ -35,7 +38,8 @@ describe('Order Refund Processing Flow', () => {
       validateStatus: () => true
     });
 
-    expect([400, 409, 404]).toContain(resp.status);
+    expect([400, 409]).toContain(resp.status);
+    expect(resp.data).toHaveProperty('error');
   });
 
   test('Only admin can process refunds', async () => {

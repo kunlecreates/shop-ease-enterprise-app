@@ -19,18 +19,14 @@ test('User -> Order contract: create cart, add item, place order', async () => {
   const userToken = loginResp.data.token;
 
   // Create cart
-  let respCreate;
-  try {
-    respCreate = await orderHttp.post('/api/cart', {}, {
-      headers: { Authorization: `Bearer ${userToken}` },
-      validateStatus: () => true
-    });
-  } catch (e) {
-    return expect(true).toBe(true); // service not available; skip logically
-  }
-  expect([200,201]).toContain(respCreate.status);
-  const cartId = respCreate.data && (respCreate.data.id || respCreate.data.cart_id);
-  if (!cartId) return expect(true).toBe(true);
+  const respCreate = await orderHttp.post('/api/cart', {}, {
+    headers: { Authorization: `Bearer ${userToken}` }
+  });
+  
+  expect(respCreate.status).toBe(201);
+  expect(respCreate.data).toHaveProperty('id');
+  const cartId = respCreate.data.id;
+  expect(cartId).toBeDefined();
 
   // register cleanup to delete cart when possible
   try {
@@ -40,15 +36,16 @@ test('User -> Order contract: create cart, add item, place order', async () => {
 
   // Add item
   const addItem = await orderHttp.post(`/api/cart/${cartId}/items`, { product_ref: 'prod-1', quantity: 1 }, {
-    headers: { Authorization: `Bearer ${userToken}` },
-    validateStatus: () => true
-  }).catch(() => ({ status: 500 }));
-  expect([200,201,500]).toContain(addItem.status);
+    headers: { Authorization: `Bearer ${userToken}` }
+  });
+  
+  expect(addItem.status).toBe(201);
 
-  // Attempt checkout (API may vary)
+  // Attempt checkout
   const checkout = await orderHttp.post(`/api/cart/${cartId}/checkout`, {}, {
-    headers: { Authorization: `Bearer ${userToken}` },
-    validateStatus: () => true
-  }).catch(() => ({ status: 500 }));
-  expect([200,201,202,500]).toContain(checkout.status);
+    headers: { Authorization: `Bearer ${userToken}` }
+  });
+  
+  expect(checkout.status).toBe(202);
+  expect(checkout.data).toHaveProperty('orderId');
 });

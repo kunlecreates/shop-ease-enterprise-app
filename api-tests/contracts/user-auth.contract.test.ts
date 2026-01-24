@@ -60,8 +60,7 @@ describe('User Authentication Contract', () => {
 
   test('POST /api/user/logout - invalidate JWT token', async () => {
     if (!authToken) {
-      console.warn('Skipping logout test: no auth token available');
-      return;
+      throw new Error('No auth token available for logout test');
     }
 
     const resp = await userHttp.post('/api/user/logout', {}, {

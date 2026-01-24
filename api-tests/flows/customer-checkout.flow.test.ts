@@ -19,18 +19,15 @@ test('Customer checkout flow: create cart, add item, place order, verify order e
   });
   const customerToken = loginResp.data.token;
 
-  let cartResp;
-  try {
-    cartResp = await orderHttp.post('/api/cart', {}, {
-      headers: { Authorization: `Bearer ${customerToken}` },
-      validateStatus: () => true
-    });
-  } catch (e) {
-    return expect(true).toBe(true);
-  }
-  expect([200,201]).toContain(cartResp.status);
-  const cartId = cartResp.data && (cartResp.data.id || cartResp.data.cart_id);
-  if (!cartId) return expect(true).toBe(true);
+  const cartResp = await orderHttp.post('/api/cart', {}, {
+    headers: { Authorization: `Bearer ${customerToken}` },
+    validateStatus: () => true
+  });
+  
+  expect(cartResp.status).toBe(201);
+  expect(cartResp.data).toHaveProperty('id');
+  const cartId = cartResp.data.id;
+  expect(cartId).toBeDefined();
 
   // register cleanup to delete the cart after test
   try {
@@ -39,21 +36,24 @@ test('Customer checkout flow: create cart, add item, place order, verify order e
   } catch (e) {}
 
   const itemResp = await orderHttp.post(`/api/cart/${cartId}/items`, { product_ref: products[0].id, quantity: 1 }, {
-    headers: { Authorization: `Bearer ${customerToken}` },
-    validateStatus: () => true
-  }).catch(() => ({ status: 500 }));
-  expect([200,201,500]).toContain(itemResp.status);
+    headers: { Authorization: `Bearer ${customerToken}` }
+  });
+  
+  expect(itemResp.status).toBe(201);
 
   const checkout = await orderHttp.post(`/api/cart/${cartId}/checkout`, {}, {
-    headers: { Authorization: `Bearer ${customerToken}` },
-    validateStatus: () => true
-  }).catch(() => ({ status: 500 }));
-  expect([200,201,202,500]).toContain(checkout.status);
+    headers: { Authorization: `Bearer ${customerToken}` }
+  });
+  
+  expect(checkout.status).toBe(202);
+  expect(checkout.data).toHaveProperty('orderId');
 
-  // Verify order appears in orders list (best-effort)
+  // Verify order appears in orders list
   const orders = await orderHttp.get('/api/order', {
-    headers: { Authorization: `Bearer ${customerToken}` },
-    validateStatus: () => true
-  }).catch(() => ({ status: 404, data: [] }));
-  expect([200,404]).toContain(orders.status);
+    headers: { Authorization: `Bearer ${customerToken}` }
+  });
+  
+  expect(orders.status).toBe(200);
+  expect(Array.isArray(orders.data)).toBe(true);
+  expect(orders.data.length).toBeGreaterThan(0);
 });
