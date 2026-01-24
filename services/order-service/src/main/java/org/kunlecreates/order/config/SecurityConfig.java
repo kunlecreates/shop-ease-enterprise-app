@@ -61,35 +61,17 @@ public class SecurityConfig {
     /**
      * Configure JWT authentication converter to extract roles from JWT claims
      * and map them to Spring Security authorities.
+     * Adds ROLE_ prefix to match @PreAuthorize expectations.
      */
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
-        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
-        converter.setJwtGrantedAuthoritiesConverter(new JwtGrantedAuthoritiesConverter());
-        return converter;
-    }
+        org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter grantedAuthoritiesConverter =
+                new org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter();
+        grantedAuthoritiesConverter.setAuthoritiesClaimName("roles");
+        grantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
 
-    /**
-     * Custom converter to extract roles from JWT "roles" claim
-     * and convert them to GrantedAuthority objects.
-     * 
-     * Example JWT payload:
-     * {
-     *   "sub": "user123",
-     *   "email": "user@example.com",
-     *   "roles": ["ROLE_USER", "ROLE_ADMIN"]
-     * }
-     */
-    static class JwtGrantedAuthoritiesConverter implements Converter<Jwt, Collection<GrantedAuthority>> {
-        @Override
-        public Collection<GrantedAuthority> convert(Jwt jwt) {
-            List<String> roles = jwt.getClaimAsStringList("roles");
-            if (roles == null || roles.isEmpty()) {
-                return List.of();
-            }
-            return roles.stream()
-                    .map(SimpleGrantedAuthority::new)
-                    .collect(Collectors.toList());
-        }
+        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
+        converter.setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter);
+        return converter;
     }
 }
