@@ -15,7 +15,7 @@ export async function adminLogin() {
   const payload = {
     sub: '1',
     email: 'admin@shopease.test',
-    roles: ['ROLE_ADMIN', 'ROLE_CUSTOMER'],
+    roles: ['ADMIN', 'CUSTOMER'],
     iss: 'shopease',
     iat: Math.floor(Date.now() / 1000),
     exp: Math.floor(Date.now() / 1000) + (60 * 60), // 1 hour
@@ -34,7 +34,7 @@ export async function customerLogin() {
   const payload = {
     sub: '2',
     email: 'customer@shopease.test',
-    roles: ['ROLE_CUSTOMER'],
+    roles: ['CUSTOMER'],
     iss: 'shopease',
     iat: Math.floor(Date.now() / 1000),
     exp: Math.floor(Date.now() / 1000) + (60 * 60),
