@@ -7,7 +7,7 @@ FROM node:20-alpine AS build
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN npm run build
+RUN rm -f tsconfig.tsbuildinfo && npm run build
 
 FROM node:20-alpine AS production
 WORKDIR /app
