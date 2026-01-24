@@ -52,30 +52,17 @@ test('Customer checkout flow: create cart, add item, place order, verify order e
   expect(checkout.status).toBe(202);
   expect(checkout.data).toHaveProperty('success');
   expect(checkout.data.success).toBe(true);
-  // Backend returns cartId, not orderId directly in checkout response
-  expect(checkout.data).toHaveProperty('message');
+  expect(checkout.data).toHaveProperty('orderId');
+  const orderId = checkout.data.orderId;
+  expect(orderId).toBeDefined();
 
-  // Wait for async order creation (retry up to 5 times with 1 second delay)
-  let orders: any;
-  let attempts = 0;
-  const maxAttempts = 5;
-  
-  while (attempts < maxAttempts) {
-    orders = await orderHttp.get('/api/order', {
-      headers: { Authorization: `Bearer ${customerToken}` }
-    });
-    
-    if (orders.status === 200 && Array.isArray(orders.data) && orders.data.length > 0) {
-      break;
-    }
-    
-    attempts++;
-    if (attempts < maxAttempts) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-    }
-  }
+  // Verify order appears in orders list
+  const orders = await orderHttp.get('/api/order', {
+    headers: { Authorization: `Bearer ${customerToken}` }
+  });
   
   expect(orders.status).toBe(200);
   expect(Array.isArray(orders.data)).toBe(true);
   expect(orders.data.length).toBeGreaterThan(0);
+  expect(orders.data.some((order: any) => order.id === orderId)).toBe(true);
 });

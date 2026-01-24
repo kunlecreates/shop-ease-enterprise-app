@@ -47,31 +47,11 @@ describe('Order Cancellation Flow', () => {
       });
 
       if (orderResp.status === 201 || orderResp.status === 200 || orderResp.status === 202) {
-        // Backend may return orderId directly or require fetching from orders list
+        // Backend returns orderId in checkout response
         if (orderResp.data.orderId) {
           orderId = orderResp.data.orderId;
         } else if (orderResp.data.id) {
           orderId = orderResp.data.id;
-        } else {
-          // Checkout initiated but order creation is async - retry fetching from orders list
-          let attempts = 0;
-          const maxAttempts = 5;
-          
-          while (attempts < maxAttempts && !orderId) {
-            const ordersResp = await orderHttp.get('/api/order', {
-              headers: { Authorization: `Bearer ${customerToken}` },
-              validateStatus: () => true
-            });
-            if (ordersResp.status === 200 && Array.isArray(ordersResp.data) && ordersResp.data.length > 0) {
-              orderId = ordersResp.data[0].id;
-              break;
-            }
-            
-            attempts++;
-            if (attempts < maxAttempts) {
-              await new Promise(resolve => setTimeout(resolve, 1000));
-            }
-          }
         }
       }
     }
