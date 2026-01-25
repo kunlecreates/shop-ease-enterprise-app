@@ -60,10 +60,12 @@ public class UserControllerIT {
     private TestRestTemplate restTemplate;
 
     private String baseUrl;
+    private String userBaseUrl;
 
     @BeforeEach
     void setUp() {
         baseUrl = "http://localhost:" + port + "/api/auth";
+        userBaseUrl = "http://localhost:" + port + "/api/user";
     }
 
     @Test
@@ -190,7 +192,7 @@ public class UserControllerIT {
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
         ResponseEntity<Map> profileResponse = restTemplate.exchange(
-                "http://localhost:" + port + "/api/user/profile",
+                userBaseUrl + "/profile",
                 HttpMethod.GET,
                 entity,
                 Map.class
@@ -206,7 +208,7 @@ public class UserControllerIT {
     void getProfile_withoutToken_shouldReturn401() {
         // Act: Get profile without token
         ResponseEntity<Map> response = restTemplate.getForEntity(
-                baseUrl + "/profile",
+                userBaseUrl + "/profile",
                 Map.class
         );
 
