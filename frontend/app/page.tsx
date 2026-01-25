@@ -90,103 +90,35 @@ export default function HomePage() {
           </div>
 
           {/* Feature 2 */}
-          <div style={{
-            backgroundColor: '#ffffff',
-            padding: '3rem',
-            borderRadius: '24px',
-            border: '1px solid #e5e7eb',
-            transition: 'all 0.3s ease',
-            position: 'relative',
-            overflow: 'hidden'
-          }}>
-            <div style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              height: '4px',
-              background: 'linear-gradient(90deg, #ec4899 0%, #f43f5e 100%)'
-            }} />
-            <div style={{
-              width: '64px',
-              height: '64px',
-              borderRadius: '16px',
-              background: 'linear-gradient(135deg, #ec4899 0%, #f43f5e 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginBottom: '1.5rem',
-              boxShadow: '0 8px 24px rgba(236, 72, 153, 0.2)'
-            }}>
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <div className="bg-white p-12 rounded-3xl border border-gray-200 hover:shadow-luxury transition-all duration-300 relative overflow-hidden group">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-pink-500 to-rose-500" />
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center mb-6 shadow-[0_8px_24px_rgba(236,72,153,0.2)] group-hover:scale-110 transition-transform duration-300">
+              <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10"></circle>
                 <polyline points="12 6 12 12 16 14"></polyline>
               </svg>
             </div>
-            <h3 style={{ 
-              fontSize: '1.5rem',
-              fontWeight: '700',
-              marginBottom: '1rem',
-              color: '#111827'
-            }}>
+            <h3 className="text-2xl font-bold mb-4 text-gray-900">
               Express Delivery
             </h3>
-            <p style={{ 
-              color: '#6b7280',
-              fontSize: '1rem',
-              lineHeight: '1.7'
-            }}>
+            <p className="text-gray-600 text-base leading-relaxed">
               Lightning-fast delivery with real-time tracking. Same-day options available in select areas.
             </p>
           </div>
 
           {/* Feature 3 */}
-          <div style={{
-            backgroundColor: '#ffffff',
-            padding: '3rem',
-            borderRadius: '24px',
-            border: '1px solid #e5e7eb',
-            transition: 'all 0.3s ease',
-            position: 'relative',
-            overflow: 'hidden'
-          }}>
-            <div style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              height: '4px',
-              background: 'linear-gradient(90deg, #06b6d4 0%, #3b82f6 100%)'
-            }} />
-            <div style={{
-              width: '64px',
-              height: '64px',
-              borderRadius: '16px',
-              background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginBottom: '1.5rem',
-              boxShadow: '0 8px 24px rgba(6, 182, 212, 0.2)'
-            }}>
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <div className="bg-white p-12 rounded-3xl border border-gray-200 hover:shadow-luxury transition-all duration-300 relative overflow-hidden group">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 to-blue-500" />
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center mb-6 shadow-[0_8px_24px_rgba(6,182,212,0.2)] group-hover:scale-110 transition-transform duration-300">
+              <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                 <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
               </svg>
             </div>
-            <h3 style={{ 
-              fontSize: '1.5rem',
-              fontWeight: '700',
-              marginBottom: '1rem',
-              color: '#111827'
-            }}>
+            <h3 className="text-2xl font-bold mb-4 text-gray-900">
               Secure Payments
             </h3>
-            <p style={{ 
-              color: '#6b7280',
-              fontSize: '1rem',
-              lineHeight: '1.7'
-            }}>
+            <p className="text-gray-600 text-base leading-relaxed">
               Bank-level encryption and multiple payment options ensure your transactions are always protected.
             </p>
           </div>
@@ -194,51 +126,17 @@ export default function HomePage() {
       </section>
 
       {/* CTA Section */}
-      <section style={{
-        background: 'linear-gradient(180deg, #000000 0%, #1a1a1a 100%)',
-        padding: '8rem 2rem',
-        textAlign: 'center',
-        position: 'relative',
-        overflow: 'hidden'
-      }}>
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          background: 'radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.2), transparent 70%)',
-          opacity: 0.5
-        }} />
-        <div style={{ maxWidth: '800px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
-          <h2 style={{
-            fontSize: 'clamp(2.5rem, 5vw, 4rem)',
-            fontWeight: '700',
-            color: '#ffffff',
-            marginBottom: '1.5rem',
-            letterSpacing: '-0.03em'
-          }}>
+      <section className="bg-gradient-to-b from-black to-gray-800 py-32 px-8 text-center relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(99,102,241,0.2),transparent_70%)] opacity-50" />
+        <div className="max-w-3xl mx-auto relative z-10">
+          <h2 className="text-[clamp(2.5rem,5vw,4rem)] font-bold text-white mb-6 tracking-tighter">
             Start Your Journey Today
           </h2>
-          <p style={{
-            fontSize: '1.25rem',
-            color: 'rgba(255,255,255,0.7)',
-            marginBottom: '3rem',
-            lineHeight: '1.6'
-          }}>
+          <p className="text-xl text-white/70 mb-12 leading-relaxed">
             Join our community of discerning shoppers and experience the future of retail.
           </p>
           <Link href="/products">
-            <button style={{
-              backgroundColor: '#ffffff',
-              color: '#000000',
-              padding: '1.25rem 3rem',
-              fontSize: '1.125rem',
-              fontWeight: '600',
-              borderRadius: '12px',
-              border: 'none',
-              cursor: 'pointer',
-              boxShadow: '0 8px 32px rgba(255,255,255,0.25)',
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              letterSpacing: '0.3px'
-            }}>
+            <button className="bg-white text-black px-12 py-5 text-lg font-semibold rounded-xl border-none cursor-pointer shadow-[0_8px_32px_rgba(255,255,255,0.25)] hover:shadow-[0_12px_48px_rgba(255,255,255,0.35)] transition-all duration-300 ease-out tracking-wide hover:scale-105">
               Browse Products
             </button>
           </Link>
