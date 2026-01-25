@@ -6,10 +6,17 @@ import { Navigation } from '@/components/Navigation';
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="min-h-screen font-sans antialiased bg-gray-50">
+      <body style={{
+        minHeight: '100vh',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+        margin: 0,
+        padding: 0,
+        WebkitFontSmoothing: 'antialiased',
+        MozOsxFontSmoothing: 'grayscale'
+      }}>
         <AuthProvider>
           <Navigation />
-          <main className="max-w-7xl mx-auto">{children}</main>
+          {children}
         </AuthProvider>
       </body>
     </html>
