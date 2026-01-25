@@ -298,19 +298,6 @@ export default function HomePage() {
         </div>
       </div>
 
-      <style jsx>{`
-        @keyframes slide {
-          0% { transform: translateX(0) translateY(0); }
-          100% { transform: translateX(40px) translateY(40px); }
-        }
-        button:hover {
-          transform: translateY(-4px) !important;
-          box-shadow: 0 15px 50px rgba(0,0,0,0.3) !important;
-        }
-        div:has(> button):hover {
-          transform: scale(1.02);
-        }
-      `}</style>
     </main>
   );
 }

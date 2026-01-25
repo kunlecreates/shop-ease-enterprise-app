@@ -15,4 +15,13 @@ body { margin: 0; }
   * {
     @apply border-border outline-ring/50; }
   body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Homepage animations */
+@keyframes slide {
+  0% { transform: translateX(0) translateY(0); }
+  100% { transform: translateX(40px) translateY(40px); }
+}
     @apply bg-background text-foreground; } }
