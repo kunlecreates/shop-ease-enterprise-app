@@ -1,4 +1,4 @@
-import { buildTargetUrl, pickHeaders, getAbortSignal } from '../src/app/api/_proxy';
+import { buildTargetUrl, pickHeaders, getAbortSignal } from '../app/api/_proxy';
 
 describe('proxy helpers', () => {
   test('buildTargetUrl assembles URL with path and query', () => {
