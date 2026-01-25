@@ -24,4 +24,3 @@ body { margin: 0; }
   0% { transform: translateX(0) translateY(0); }
   100% { transform: translateX(40px) translateY(40px); }
 }
-    @apply bg-background text-foreground; } }

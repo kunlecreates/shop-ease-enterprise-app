@@ -1,16 +1,15 @@
 import Link from 'next/link';
-import { Button } from '@/components/ui/Button';
 
 export default function HomePage() {
   return (
     <main style={{ minHeight: '100vh', backgroundColor: '#f9fafb' }}>
-      {/* Hero Section with Bold Gradient */}
+      {/* Hero Section */}
       <div style={{ 
         position: 'relative', 
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         overflow: 'hidden'
       }}>
-        {/* Animated Background Pattern */}
+        {/* Animated Background */}
         <div style={{
           position: 'absolute',
           inset: 0,
@@ -27,7 +26,6 @@ export default function HomePage() {
           zIndex: 10
         }}>
           <div style={{ textAlign: 'center', color: 'white' }}>
-            {/* Badge */}
             <div style={{ 
               display: 'inline-block',
               backgroundColor: 'rgba(255,255,255,0.2)',
@@ -46,11 +44,7 @@ export default function HomePage() {
               fontSize: 'clamp(2.5rem, 8vw, 5rem)',
               fontWeight: '900',
               marginBottom: '1.5rem',
-              lineHeight: '1.1',
-              background: 'linear-gradient(to right, #ffffff, #e0e7ff)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text'
+              lineHeight: '1.1'
             }}>
               ShopEase
             </h1>
@@ -62,7 +56,7 @@ export default function HomePage() {
               maxWidth: '42rem',
               margin: '0 auto 3rem'
             }}>
-              Discover amazing products with unbeatable prices and lightning-fast delivery 🚀
+              Discover amazing products with unbeatable prices 🚀
             </p>
             
             <div style={{ 
@@ -82,8 +76,7 @@ export default function HomePage() {
                   border: 'none',
                   cursor: 'pointer',
                   boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
-                  transition: 'all 0.3s ease',
-                  transform: 'translateY(0)',
+                  transition: 'all 0.3s ease'
                 }}>
                   🛍️ Browse Products
                 </button>
@@ -107,24 +100,6 @@ export default function HomePage() {
             </div>
           </div>
         </div>
-
-        {/* Wave Divider */}
-        <div style={{ 
-          position: 'absolute',
-          bottom: '-1px',
-          left: 0,
-          width: '100%',
-          overflow: 'hidden',
-          lineHeight: 0
-        }}>
-          <svg viewBox="0 0 1200 120" preserveAspectRatio="none" style={{ 
-            width: '100%',
-            height: '120px',
-            fill: '#f9fafb'
-          }}>
-            <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z"></path>
-          </svg>
-        </div>
       </div>
 
       {/* Features Section */}
@@ -138,13 +113,11 @@ export default function HomePage() {
           gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
           gap: '2rem'
         }}>
-          {/* Feature Card 1 */}
           <div style={{
             backgroundColor: 'white',
             padding: '2.5rem',
             borderRadius: '20px',
             boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-            transition: 'all 0.3s ease',
             border: '1px solid #e5e7eb'
           }}>
             <div style={{
@@ -173,17 +146,15 @@ export default function HomePage() {
               fontSize: '1rem',
               lineHeight: '1.6'
             }}>
-              Handpicked products from trusted brands. Every item is carefully vetted for quality and authenticity.
+              Handpicked products from trusted brands
             </p>
           </div>
 
-          {/* Feature Card 2 */}
           <div style={{
             backgroundColor: 'white',
             padding: '2.5rem',
             borderRadius: '20px',
             boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-            transition: 'all 0.3s ease',
             border: '1px solid #e5e7eb'
           }}>
             <div style={{
@@ -212,17 +183,15 @@ export default function HomePage() {
               fontSize: '1rem',
               lineHeight: '1.6'
             }}>
-              Get your orders delivered in record time. Same-day delivery available in select cities.
+              Same-day delivery available
             </p>
           </div>
 
-          {/* Feature Card 3 */}
           <div style={{
             backgroundColor: 'white',
             padding: '2.5rem',
             borderRadius: '20px',
             boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-            transition: 'all 0.3s ease',
             border: '1px solid #e5e7eb'
           }}>
             <div style={{
@@ -251,7 +220,7 @@ export default function HomePage() {
               fontSize: '1rem',
               lineHeight: '1.6'
             }}>
-              Bank-level encryption protects your data. Shop with confidence knowing your information is safe.
+              Bank-level encryption
             </p>
           </div>
         </div>
@@ -277,7 +246,7 @@ export default function HomePage() {
             color: 'rgba(255,255,255,0.9)',
             marginBottom: '2.5rem'
           }}>
-            Join thousands of happy customers and experience the future of online shopping today!
+            Join thousands of happy customers today!
           </p>
           <Link href="/products">
             <button style={{
@@ -297,8 +266,6 @@ export default function HomePage() {
           </Link>
         </div>
       </div>
-
     </main>
   );
-}
 }
