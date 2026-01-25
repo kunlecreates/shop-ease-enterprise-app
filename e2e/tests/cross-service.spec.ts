@@ -1,7 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-// Skip cross-service tests until frontend pages are fully implemented
-test.describe.skip('Complete User Journey - Browse to Checkout (FR004, FR007, FR008)', () => {
+test.describe('Complete User Journey - Browse to Checkout (FR004, FR007, FR008)', () => {
   test('customer can browse products and add to cart', async ({ page }) => {
     await test.step('Navigate to products page', async () => {
       await page.goto('/products');

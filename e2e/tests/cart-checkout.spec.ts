@@ -1,7 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-// Skip cart and checkout tests until frontend pages are implemented
-test.describe.skip('Cart and Checkout Flow (FR007, FR008, FR009)', () => {
+test.describe('Cart and Checkout Flow (FR007, FR008, FR009)', () => {
   test('should display cart page with correct structure', async ({ page }) => {
     await test.step('Navigate to cart', async () => {
       await page.goto('/cart');

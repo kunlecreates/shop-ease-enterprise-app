@@ -1,7 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-// Skip these tests until frontend pages are implemented
-test.describe.skip('Customer User Journey (FR001, FR002, FR004)', () => {
+test.describe('Customer User Journey (FR001, FR002, FR004)', () => {
   test.describe('Registration & Authentication', () => {
     test('should display registration page', async ({ page }) => {
       await test.step('Navigate to registration page', async () => {
@@ -109,8 +108,7 @@ test.describe.skip('Customer User Journey (FR001, FR002, FR004)', () => {
   });
 });
 
-// Skip admin tests until frontend admin pages are implemented
-test.describe.skip('Admin User Journey (FR003, FR005, FR006, FR012)', () => {
+test.describe('Admin User Journey (FR003, FR005, FR006, FR012)', () => {
   test.describe('Admin Dashboard Access', () => {
     test('should display admin dashboard when navigating to /admin', async ({ page }) => {
       await test.step('Navigate to admin area', async () => {
@@ -170,8 +168,7 @@ test.describe.skip('Admin User Journey (FR003, FR005, FR006, FR012)', () => {
   });
 });
 
-// Skip navigation tests until frontend pages are fully implemented
-test.describe.skip('Navigation & Page Accessibility', () => {
+test.describe('Navigation & Page Accessibility', () => {
   test('homepage should load successfully', async ({ page }) => {
     await test.step('Navigate to homepage', async () => {
       await page.goto('/');
