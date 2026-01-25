@@ -204,7 +204,8 @@ test.describe('Navigation & Page Accessibility', () => {
     await page.goto('/');
     
     await test.step('Navigate to products from home', async () => {
-      const productsLink = page.getByRole('link', { name: /products|shop|browse/i }).first();
+      // Avoid matching the site brand ("ShopEase") by not matching the generic "shop" token
+      const productsLink = page.getByRole('link', { name: /products|browse|explore/i }).first();
       const linkCount = await productsLink.count();
 
       if (linkCount > 0) {

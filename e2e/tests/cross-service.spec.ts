@@ -49,7 +49,8 @@ test.describe('Complete User Journey - Browse to Checkout (FR004, FR007, FR008)'
     });
 
     await test.step('Navigate to products', async () => {
-      const productsLink = page.getByRole('link', { name: /products|shop|browse/i }).first();
+      // Avoid matching the site brand ("ShopEase") by not matching the generic "shop" token
+      const productsLink = page.getByRole('link', { name: /products|browse|explore/i }).first();
       if (await productsLink.count() > 0) {
         await Promise.all([
           page.waitForURL(/.*products/, { timeout: 15000 }),
