@@ -206,23 +206,69 @@ notification-service/
 - Test: pytest
 - Build: Docker
 
-### Frontend sub-structure (React + TypeScript)
+### Frontend sub-structure (Next.js 15 App Router)
 ```
-frontend/                          # Web Frontend (React + TypeScript)
+frontend/                          # Web Frontend (Next.js + TypeScript)
 ├── package.json
-├── vite.config.ts
-├── src/
-│   ├── components/
-│   ├── pages/
-│   ├── api/
-│   └── styles/
-├── public/
+├── next.config.js
+├── tsconfig.json
+├── app/                           # Next.js App Router (pages & API routes)
+│   ├── page.tsx                   # Homepage (/)
+│   ├── layout.tsx                 # Root layout
+│   ├── globals.css                # Global styles
+│   ├── products/
+│   │   └── page.tsx               # Products page (/products)
+│   ├── login/page.tsx             # Login page (/login)
+│   ├── register/page.tsx          # Register page (/register)
+│   ├── cart/page.tsx              # Cart page (/cart)
+│   ├── checkout/page.tsx          # Checkout page (/checkout)
+│   ├── admin/                     # Admin pages (protected)
+│   │   ├── page.tsx               # Admin dashboard (/admin)
+│   │   ├── products/page.tsx      # Admin products (/admin/products)
+│   │   ├── orders/page.tsx        # Admin orders (/admin/orders)
+│   │   └── users/page.tsx         # Admin users (/admin/users)
+│   └── api/                       # Backend API proxies (server-side)
+│       ├── _proxy.ts              # Shared proxy utility
+│       ├── auth/                  # Auth API routes
+│       │   ├── route.ts           # /api/auth → user-service
+│       │   └── [...path]/route.ts # /api/auth/* → user-service
+│       ├── product/               # Product API routes
+│       │   ├── route.ts           # /api/product → product-service
+│       │   └── [...path]/route.ts # /api/product/* → product-service
+│       ├── order/                 # Order API routes
+│       │   ├── route.ts           # /api/order → order-service
+│       │   └── [...path]/route.ts # /api/order/* → order-service
+│       └── user/                  # User API routes
+│           ├── route.ts           # /api/user → user-service
+│           └── [...path]/route.ts # /api/user/* → user-service
+├── components/                    # Reusable UI components
+│   ├── Navigation.tsx
+│   ├── ProtectedRoute.tsx
+│   └── ui/                        # shadcn/ui components
+│       ├── Button.tsx
+│       ├── Input.tsx
+│       └── ...
+├── contexts/                      # React contexts (AuthContext, etc.)
+├── lib/                           # Utilities (cart-store, api-client, etc.)
+├── types/                         # TypeScript type definitions
+├── public/                        # Static assets
 └── Dockerfile
-
 ```
 #### Stack:
-- Next.js 15 (React 19), Tailwind CSS 4, shadcn/ui, TypeScript 5, Playwright for E2E tests
-- Deployed as: Static containerized service via Helm behind shared ingress
+- **Next.js 15.5+** with App Router (file-system based routing)
+- **React 19**, **TypeScript 5**, **Tailwind CSS 4**, **shadcn/ui**
+- **API Proxies**: All `/api/*` routes proxy to internal ClusterIP services
+- **Testing**: Playwright for E2E tests (in `/e2e` at project root)
+- **Deployment**: Containerized service via Helm behind NGINX ingress
+
+#### Key Concepts:
+- **App Router**: Folder names in `/app` become URL paths
+  - `app/page.tsx` → `/` (homepage)
+  - `app/products/page.tsx` → `/products`
+  - `app/api/product/route.ts` → `/api/product` (server-side API route)
+- **Server Components**: Default in App Router (use `'use client'` for client components)
+- **API Routes**: Server-side proxy handlers that forward requests to backend services
+- **Import Alias**: `@/*` points to project root (configured in tsconfig.json)
 
 ### Helm Charts (Umbrella Deployment)
 ```

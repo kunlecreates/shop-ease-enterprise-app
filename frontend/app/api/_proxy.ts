@@ -33,7 +33,10 @@ export function getAbortSignal(timeoutMs: number): AbortSignal {
 }
 
 export function createProxyHandlers(envVarName: string, upstreamPrefixPath: string) {
-  async function handler(req: NextRequest, ctx?: { params?: { path?: string[] } }) {
+  async function handler(
+    req: NextRequest, 
+    context: { params: Promise<{ path?: string[] }> }
+  ): Promise<NextResponse> {
     // Defer importing NextResponse to runtime to avoid pulling Next's runtime
     // when running unit tests that only exercise helpers in this module.
     // This keeps the helpers testable without Next.js server environment.
@@ -48,7 +51,8 @@ export function createProxyHandlers(envVarName: string, upstreamPrefixPath: stri
         return RuntimeNextResponse.json({ error: 'Method not allowed' }, { status: 405 });
       }
 
-      const extraSegments = ctx?.params?.path ?? [];
+      const params = await context.params;
+      const extraSegments = params?.path ?? [];
       const target = buildTargetUrl(baseUrl, upstreamPrefixPath, extraSegments, req.nextUrl.searchParams);
 
       const init: RequestInit = {

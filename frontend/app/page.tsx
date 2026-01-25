@@ -1,4 +1,10 @@
 import Link from 'next/link';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'ShopEase - Premium Shopping Experience',
+  description: 'Experience luxury shopping with curated collections from the world\'s finest brands',
+};
 
 export default function HomePage() {
   return (

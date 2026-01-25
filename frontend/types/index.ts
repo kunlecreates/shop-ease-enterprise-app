@@ -1,24 +1,28 @@
 export interface User {
-  id: string;
+  id: number;
   username: string;
   email: string;
   role: 'CUSTOMER' | 'ADMIN';
 }
 
 export interface Product {
-  id: string;
+  id: number;
   sku: string;
   name: string;
   description?: string;
   price: number;
   stock: number;
-  category?: string;
+  category?: string | Array<string | { id?: number; name: string }>;
   imageUrl?: string;
+  currency?: string;
+  active?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CartItem {
   id: string;
-  productId: string;
+  productId: number;
   product: Product;
   quantity: number;
   price: number;

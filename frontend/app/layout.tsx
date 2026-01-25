@@ -2,6 +2,15 @@ import './globals.css';
 import React from 'react';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { Navigation } from '@/components/Navigation';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: {
+    template: '%s | ShopEase',
+    default: 'ShopEase - Premium Shopping Experience',
+  },
+  description: 'Experience luxury shopping with curated collections',
+};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

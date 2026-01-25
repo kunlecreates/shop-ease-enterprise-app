@@ -64,13 +64,18 @@ function ProductManagementContent() {
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
     setIsCreating(true);
+    const categoryValue = typeof product.category === 'string' 
+      ? product.category 
+      : Array.isArray(product.category) && product.category.length > 0
+        ? (typeof product.category[0] === 'string' ? product.category[0] : product.category[0].name)
+        : '';
     setFormData({
       sku: product.sku,
       name: product.name,
       description: product.description || '',
       price: product.price,
       stock: product.stock,
-      category: product.category || '',
+      category: categoryValue,
     });
   };
 
@@ -172,7 +177,13 @@ function ProductManagementContent() {
                 <tr key={product.id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{product.sku}</td>
                   <td className="px-6 py-4 text-sm">{product.name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">{product.category || 'N/A'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    {typeof product.category === 'string' 
+                      ? product.category 
+                      : Array.isArray(product.category) && product.category.length > 0
+                        ? (typeof product.category[0] === 'string' ? product.category[0] : product.category[0].name)
+                        : 'N/A'}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">${product.price.toFixed(2)}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <span className={`px-2 py-1 rounded ${product.stock > 10 ? 'bg-green-100 text-green-800' : product.stock > 0 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>

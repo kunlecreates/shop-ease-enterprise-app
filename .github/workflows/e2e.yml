@@ -80,15 +80,6 @@ jobs:
           
           echo "All backend services are Ready!"
 
-      - name: Install e2e deps
-        working-directory: e2e
-        run: |
-          if [ -f package-lock.json ]; then npm ci --include=dev; else npm install --include=dev; fi
-
-      - name: Install Playwright browsers
-        working-directory: e2e
-        run: npx playwright install --with-deps
-
       - name: Verify E2E host reachable (supports optional service token)
         working-directory: e2e
         run: |
@@ -122,6 +113,15 @@ jobs:
             echo "E2E endpoint unreachable via Cloudflare Access (status ${status})"
             exit 1
           fi
+
+      - name: Install e2e deps
+        working-directory: e2e
+        run: |
+          if [ -f package-lock.json ]; then npm ci --include=dev; else npm install --include=dev; fi
+
+      - name: Install Playwright browsers
+        working-directory: e2e
+        run: npx playwright install --with-deps      
 
       - name: Run Playwright E2E
         working-directory: e2e

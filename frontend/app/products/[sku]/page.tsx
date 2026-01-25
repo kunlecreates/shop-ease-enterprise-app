@@ -54,7 +54,15 @@ export default function ProductDetailPage() {
         </div>
         <div>
           <div className="mb-2">
-            {product.category && <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">{product.category}</span>}
+            {product.category && (
+              <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
+                {typeof product.category === 'string' 
+                  ? product.category 
+                  : Array.isArray(product.category) && product.category.length > 0
+                    ? (typeof product.category[0] === 'string' ? product.category[0] : product.category[0].name)
+                    : ''}
+              </span>
+            )}
           </div>
           <h1 className="text-4xl font-bold mb-4">{product.name}</h1>
           <div className="mb-6"><span className="text-3xl font-bold text-blue-600">${product.price.toFixed(2)}</span></div>

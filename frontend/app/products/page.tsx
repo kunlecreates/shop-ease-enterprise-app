@@ -17,11 +17,10 @@ export default function ProductsPage() {
   const [sortBy, setSortBy] = useState('name');
   
   const addItem = useCartStore((state) => state.addItem);
-  const [addedProducts, setAddedProducts] = useState<Set<string>>(new Set());
+  const [addedProducts, setAddedProducts] = useState<Set<number>>(new Set());
 
   useEffect(() => {
-    const apiBase = process.env.NEXT_PUBLIC_PRODUCT_API || '/api';
-    fetch(`${apiBase}/products`)
+    fetch('/api/product')
       .then(async (r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         const data = await r.json();
@@ -44,7 +43,15 @@ export default function ProductsPage() {
     }
 
     if (categoryFilter) {
-      filtered = filtered.filter((p) => p.category === categoryFilter);
+      filtered = filtered.filter((p) => {
+        if (typeof p.category === 'string') {
+          return p.category === categoryFilter;
+        }
+        if (Array.isArray(p.category)) {
+          return p.category.some((c: any) => c.name === categoryFilter || c === categoryFilter);
+        }
+        return false;
+      });
     }
 
     filtered = [...filtered].sort((a, b) => {
@@ -56,7 +63,15 @@ export default function ProductsPage() {
     setFilteredProducts(filtered);
   }, [searchQuery, categoryFilter, sortBy, products]);
 
-  const categories = Array.from(new Set(products.map((p) => p.category).filter(Boolean)));
+  const categories = Array.from(
+    new Set(
+      products.flatMap((p) => {
+        if (typeof p.category === 'string') return [p.category];
+        if (Array.isArray(p.category)) return p.category.map((c: any) => c.name || c);
+        return [];
+      }).filter(Boolean)
+    )
+  );
 
   const handleAddToCart = (product: Product) => {
     addItem(product, 1);
@@ -119,7 +134,11 @@ export default function ProductsPage() {
                 <p className="text-sm text-gray-600 mb-1">SKU: {product.sku}</p>
                 {product.category && (
                   <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mb-3">
-                    {product.category}
+                    {typeof product.category === 'string' 
+                      ? product.category 
+                      : Array.isArray(product.category) && product.category.length > 0
+                        ? (product.category[0] as any).name || product.category[0]
+                        : ''}
                   </span>
                 )}
                 {product.description && (
