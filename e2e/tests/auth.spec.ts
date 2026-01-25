@@ -6,9 +6,11 @@ test.describe('Authentication & Authorization (FR001, FR003)', () => {
       await page.goto('/register');
       
       await test.step('Verify form fields', async () => {
-        await expect(page.getByLabel(/email/i)).toBeVisible();
-        await expect(page.getByLabel(/password/i)).toBeVisible();
-        await expect(page.getByRole('button', { name: /sign up|register|create account/i })).toBeVisible();
+        await expect(page.getByLabel(/username/i)).toBeVisible();
+        await expect(page.getByLabel(/^email$/i)).toBeVisible();
+        await expect(page.getByLabel(/^password$/i)).toBeVisible();
+        await expect(page.getByLabel(/confirm password/i)).toBeVisible();
+        await expect(page.getByRole('button', { name: /register/i })).toBeVisible();
       });
     });
 
@@ -16,7 +18,7 @@ test.describe('Authentication & Authorization (FR001, FR003)', () => {
       await page.goto('/register');
       
       await test.step('Submit without filling fields', async () => {
-        await page.getByRole('button', { name: /sign up|register|create account/i }).click();
+        await page.getByRole('button', { name: /register/i }).click();
       });
 
       await test.step('Verify validation messages appear', async () => {
@@ -30,9 +32,11 @@ test.describe('Authentication & Authorization (FR001, FR003)', () => {
       await page.goto('/register');
       
       await test.step('Enter invalid email', async () => {
-        await page.getByLabel(/email/i).fill('invalid-email');
-        await page.getByLabel(/password/i).fill('ValidPassword123!');
-        await page.getByRole('button', { name: /sign up|register|create account/i }).click();
+        await page.getByLabel(/username/i).fill('testuser');
+        await page.getByLabel(/^email$/i).fill('invalid-email');
+        await page.getByLabel(/^password$/i).fill('ValidPassword123!');
+        await page.getByLabel(/confirm password/i).fill('ValidPassword123!');
+        await page.getByRole('button', { name: /register/i }).click();
       });
 
       await test.step('Verify email validation error', async () => {
@@ -47,10 +51,10 @@ test.describe('Authentication & Authorization (FR001, FR003)', () => {
       await page.goto('/login');
       
       await test.step('Verify form structure', async () => {
-        await expect(page.getByRole('heading', { name: /sign in|login/i })).toBeVisible();
-        await expect(page.getByLabel(/email/i)).toBeVisible();
+        await expect(page.getByRole('heading', { name: /sign in/i })).toBeVisible();
+        await expect(page.getByLabel(/username/i)).toBeVisible();
         await expect(page.getByLabel(/password/i)).toBeVisible();
-        await expect(page.getByRole('button', { name: /sign in|login/i })).toBeVisible();
+        await expect(page.getByRole('button', { name: /sign in/i })).toBeVisible();
       });
     });
 
@@ -58,9 +62,9 @@ test.describe('Authentication & Authorization (FR001, FR003)', () => {
       await page.goto('/login');
       
       await test.step('Enter invalid credentials', async () => {
-        await page.getByLabel(/email/i).fill('nonexistent@example.com');
+        await page.getByLabel(/username/i).fill('nonexistentuser');
         await page.getByLabel(/password/i).fill('WrongPassword123!');
-        await page.getByRole('button', { name: /sign in|login/i }).click();
+        await page.getByRole('button', { name: /sign in/i }).click();
       });
 
       await test.step('Verify error message', async () => {
@@ -78,7 +82,7 @@ test.describe('Authentication & Authorization (FR001, FR003)', () => {
     test('should have link to registration page', async ({ page }) => {
       await page.goto('/login');
       
-      const registerLink = page.getByRole('link', { name: /sign up|register|create account|don't have.*account/i });
+      const registerLink = page.getByRole('link', { name: /register/i }).first();
       await expect(registerLink).toBeVisible();
       
       await registerLink.click();

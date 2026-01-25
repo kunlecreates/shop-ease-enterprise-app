@@ -86,7 +86,7 @@ export default function ProductsPage() {
   };
 
   return (
-    <div className="p-6">
+    <main className="p-6">
       <h1 className="text-3xl font-bold mb-6">Products</h1>
 
       <div className="bg-white p-4 rounded-lg shadow mb-6 space-y-4">
@@ -179,6 +179,6 @@ export default function ProductsPage() {
           )}
         </div>
       )}
-    </div>
+    </main>
   );
 }

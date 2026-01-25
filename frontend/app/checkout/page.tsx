@@ -36,7 +36,7 @@ export default function CheckoutPage() {
   }, [items.length, isAuthenticated, router]);
 
   if (items.length === 0 || !isAuthenticated) {
-    return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
+    return <main className="flex justify-center items-center min-h-screen">Loading...</main>;
   }
 
   const handleSubmitOrder = async () => {
@@ -66,7 +66,7 @@ export default function CheckoutPage() {
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
+    <main className="p-6 max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold mb-6">Checkout</h1>
 
       <div className="flex mb-8">
@@ -209,6 +209,6 @@ export default function CheckoutPage() {
           </div>
         </div>
       )}
-    </div>
+    </main>
   );
 }

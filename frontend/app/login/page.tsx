@@ -32,11 +32,11 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] px-4">
+    <main className="flex items-center justify-center min-h-[calc(100vh-4rem)] px-4">
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow">
         <div>
           <h2 className="text-3xl font-bold text-center text-gray-900">
-            Sign in to your account
+            Sign in
           </h2>
         </div>
         
@@ -79,6 +79,6 @@ export default function LoginPage() {
           </p>
         </form>
       </div>
-    </div>
+    </main>
   );
 }
