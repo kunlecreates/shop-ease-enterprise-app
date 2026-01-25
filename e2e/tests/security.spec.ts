@@ -202,10 +202,16 @@ test.describe('Navigation & Page Accessibility', () => {
     
     await test.step('Navigate to products from home', async () => {
       const productsLink = page.getByRole('link', { name: /products|shop|browse/i }).first();
-      if (await productsLink.count() > 0) {
+      const linkCount = await productsLink.count();
+      
+      if (linkCount > 0) {
         await productsLink.click();
-        await expect(page).toHaveURL(/.*products/);
+        await page.waitForURL(/.*products/, { timeout: 10000 });
+      } else {
+        // If no products link found, navigate directly
+        await page.goto('/products');
       }
+      await expect(page).toHaveURL(/.*products/);
     });
   });
 

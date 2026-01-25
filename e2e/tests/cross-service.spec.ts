@@ -8,12 +8,12 @@ test.describe('Complete User Journey - Browse to Checkout (FR004, FR007, FR008)'
     });
 
     await test.step('Verify products are displayed', async () => {
-      // Wait for products to load
-      await page.waitForLoadState('networkidle');
+      // Wait for main content to be visible
+      await page.getByRole('main').waitFor({ timeout: 10000 });
       
       // Check for product cards or empty state
-      const productCards = page.locator('[data-testid="product-card"]').or(page.getByRole('article'));
-      const emptyState = page.getByText(/no products|coming soon/i);
+      const productCards = page.locator('[data-testid="product-card"]').or(page.getByRole('article')).or(page.locator('.bg-white.rounded-lg.shadow'));
+      const emptyState = page.getByText(/no products found|no products|coming soon/i);
       
       const hasProducts = await productCards.count() > 0;
       const hasEmptyState = await emptyState.count() > 0;
@@ -22,17 +22,18 @@ test.describe('Complete User Journey - Browse to Checkout (FR004, FR007, FR008)'
     });
 
     await test.step('Navigate to cart', async () => {
-      const cartLink = page.getByRole('link', { name: /cart|shopping cart/i }).or(
-        page.locator('[data-testid="cart-link"]')
-      );
+      // The cart link in the navigation doesn't have text, it's an SVG icon
+      const cartLink = page.locator('a[href="/cart"]').first();
       
-      if (await cartLink.count() > 0) {
+      const linkCount = await cartLink.count();
+      if (linkCount > 0) {
         await cartLink.click();
-        await expect(page).toHaveURL(/.*cart/);
+        await page.waitForURL(/.*cart/, { timeout: 10000 });
       } else {
         // Navigate directly if link not found
         await page.goto('/cart');
       }
+      await expect(page).toHaveURL(/.*cart/);
     });
   });
 
@@ -75,7 +76,8 @@ test.describe('Admin Workflow - Product Management (FR005, FR006)', () => {
   test('admin area requires authentication', async ({ page }) => {
     await test.step('Attempt to access admin area', async () => {
       await page.goto('/admin');
-      await page.waitForLoadState('networkidle');
+      // Wait for page to load
+      await page.waitForTimeout(1000);
     });
 
     await test.step('Verify authentication check', async () => {
@@ -95,7 +97,8 @@ test.describe('Admin Workflow - Product Management (FR005, FR006)', () => {
 
   test('admin navigation should show management options', async ({ page }) => {
     await page.goto('/admin');
-    await page.waitForLoadState('networkidle');
+    // Wait for page to load
+    await page.waitForTimeout(1000);
     
     // If we're on an admin page (not redirected to login)
     const hasAdminHeading = await page.getByRole('heading', { name: /admin|dashboard/i }).count() > 0;
