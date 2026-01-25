@@ -120,32 +120,3 @@ test.describe('Admin Workflow - Product Management (FR005, FR006)', () => {
     }
   });
 });
-      userId: Number(userId),
-      status: 'NEW',
-      total: 9.99,
-      items: [{ productRef: sku, quantity: 1, unitPrice: 9.99 }],
-    };
-    const orderResp = await request.post(`${apiBase}/api/order`, { data: orderPayload });
-    expect([201, 200]).toContain(orderResp.status());
-
-    // 4) Verify order is listable via API
-    const orders = await request.get(`${apiBase}/api/order`);
-    expect(orders.ok()).toBeTruthy();
-    const ordersJson = await orders.json().catch(() => []);
-    const created = ordersJson.find((o: any) => (o.userId && String(o.userId) === String(userId)) || (o.items && o.items.find((it:any)=>it.productRef===sku)));
-    expect(created).toBeTruthy();
-
-    // 5) Notification service reachable and test endpoint works
-    const notif = await request.post(`${apiBase}/api/notification/test`, { data: {} });
-    expect([200,201,202]).toContain(notif.status());
-
-    // 6) Frontend proxy routing: ensure /api/product and /api/order reachable via frontend base
-    const frontendBase = process.env.E2E_BASE_URL || '';
-    if (frontendBase) {
-      const p = await request.get(`${frontendBase}/api/product`);
-      expect([200, 404]).toContain(p.status());
-      const o = await request.get(`${frontendBase}/api/order`);
-      expect([200, 401, 403, 404]).toContain(o.status());
-    }
-  });
-});
