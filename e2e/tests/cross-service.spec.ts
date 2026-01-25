@@ -80,12 +80,13 @@ test.describe('Complete User Journey - Browse to Checkout (FR004, FR007, FR008)'
       );
       
       if (await homeLink.count() > 0) {
-        await Promise.all([
-          page.waitForURL(/^.*\/$/, { timeout: 15000 }),
-          homeLink.click()
-        ]);
-        await page.getByRole('main').waitFor({ timeout: 15000 });
+        // Click and wait for network idle / page stabilization instead of racing on URL.
+        await homeLink.click();
+        await page.waitForLoadState('networkidle');
+
+        // Confirm we're back at the root and navigation/menu is visible
         await expect(page).toHaveURL(/^.*\/$/);
+        await expect(page.getByRole('navigation')).toBeVisible({ timeout: 15000 });
       }
     });
   });

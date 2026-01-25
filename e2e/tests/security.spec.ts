@@ -14,7 +14,8 @@ test.describe('Customer User Journey (FR001, FR002, FR004)', () => {
 
         await expect(page.getByRole('heading', { name: /sign up|register|create( your)? account/i })).toBeVisible({ timeout: 15000 });
         await expect(page.getByLabel(/email/i)).toBeVisible({ timeout: 15000 });
-        await expect(page.getByLabel(/password/i)).toBeVisible({ timeout: 15000 });
+        // Match the primary password field only (avoid matching "Confirm Password")
+        await expect(page.getByLabel(/^Password$/i)).toBeVisible({ timeout: 15000 });
         await expect(page.getByRole('button', { name: /sign up|register|create( your)? account/i })).toBeVisible({ timeout: 15000 });
       });
     });
