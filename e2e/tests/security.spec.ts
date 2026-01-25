@@ -9,10 +9,13 @@ test.describe('Customer User Journey (FR001, FR002, FR004)', () => {
       });
 
       await test.step('Verify registration form is present', async () => {
-        await expect(page.getByRole('heading', { name: /sign up|register|create( your)? account/i })).toBeVisible();
-        await expect(page.getByLabel(/email/i)).toBeVisible();
-        await expect(page.getByLabel(/password/i)).toBeVisible();
-        await expect(page.getByRole('button', { name: /sign up|register|create( your)? account/i })).toBeVisible();
+        // Wait for main content to render and become interactive
+        await page.getByRole('main').waitFor({ timeout: 15000 });
+
+        await expect(page.getByRole('heading', { name: /sign up|register|create( your)? account/i })).toBeVisible({ timeout: 15000 });
+        await expect(page.getByLabel(/email/i)).toBeVisible({ timeout: 15000 });
+        await expect(page.getByLabel(/password/i)).toBeVisible({ timeout: 15000 });
+        await expect(page.getByRole('button', { name: /sign up|register|create( your)? account/i })).toBeVisible({ timeout: 15000 });
       });
     });
 

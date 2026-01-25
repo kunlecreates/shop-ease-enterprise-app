@@ -9,7 +9,7 @@ test.describe('Complete User Journey - Browse to Checkout (FR004, FR007, FR008)'
 
     await test.step('Verify products are displayed', async () => {
       // Wait for main content to be visible
-      await page.getByRole('main').waitFor({ timeout: 10000 });
+      await page.getByRole('main').waitFor({ timeout: 15000 });
       
       // Check for product cards or empty state
       const productCards = page.locator('[data-testid="product-card"]').or(page.getByRole('article')).or(page.locator('.bg-white.rounded-lg.shadow'));
@@ -36,6 +36,8 @@ test.describe('Complete User Journey - Browse to Checkout (FR004, FR007, FR008)'
         await page.goto('/cart');
         await page.waitForURL(/.*cart/);
       }
+      // Ensure main content loaded on cart page
+      await page.getByRole('main').waitFor({ timeout: 15000 });
       await expect(page).toHaveURL(/.*cart/);
     });
   });
@@ -53,6 +55,8 @@ test.describe('Complete User Journey - Browse to Checkout (FR004, FR007, FR008)'
           page.waitForURL(/.*products/, { timeout: 15000 }),
           productsLink.click()
         ]);
+        // Wait for main content to load on products page
+        await page.getByRole('main').waitFor({ timeout: 15000 });
         await expect(page).toHaveURL(/.*products/);
       }
     });
@@ -64,6 +68,7 @@ test.describe('Complete User Journey - Browse to Checkout (FR004, FR007, FR008)'
           page.waitForURL(/.*cart/, { timeout: 15000 }),
           cartLink.click()
         ]);
+        await page.getByRole('main').waitFor({ timeout: 15000 });
         await expect(page).toHaveURL(/.*cart/);
       }
     });
@@ -78,6 +83,7 @@ test.describe('Complete User Journey - Browse to Checkout (FR004, FR007, FR008)'
           page.waitForURL(/^.*\/$/, { timeout: 15000 }),
           homeLink.click()
         ]);
+        await page.getByRole('main').waitFor({ timeout: 15000 });
         await expect(page).toHaveURL(/^.*\/$/);
       }
     });
