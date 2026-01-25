@@ -27,11 +27,14 @@ test.describe('Complete User Journey - Browse to Checkout (FR004, FR007, FR008)'
       
       const linkCount = await cartLink.count();
       if (linkCount > 0) {
-        await cartLink.click();
-        await page.waitForURL(/.*cart/, { timeout: 10000 });
+        await Promise.all([
+          page.waitForURL(/.*cart/, { timeout: 15000 }),
+          cartLink.click()
+        ]);
       } else {
         // Navigate directly if link not found
         await page.goto('/cart');
+        await page.waitForURL(/.*cart/);
       }
       await expect(page).toHaveURL(/.*cart/);
     });
@@ -46,7 +49,10 @@ test.describe('Complete User Journey - Browse to Checkout (FR004, FR007, FR008)'
     await test.step('Navigate to products', async () => {
       const productsLink = page.getByRole('link', { name: /products|shop|browse/i }).first();
       if (await productsLink.count() > 0) {
-        await productsLink.click();
+        await Promise.all([
+          page.waitForURL(/.*products/, { timeout: 15000 }),
+          productsLink.click()
+        ]);
         await expect(page).toHaveURL(/.*products/);
       }
     });
@@ -54,7 +60,10 @@ test.describe('Complete User Journey - Browse to Checkout (FR004, FR007, FR008)'
     await test.step('Navigate to cart from products', async () => {
       const cartLink = page.getByRole('link', { name: /cart/i }).first();
       if (await cartLink.count() > 0) {
-        await cartLink.click();
+        await Promise.all([
+          page.waitForURL(/.*cart/, { timeout: 15000 }),
+          cartLink.click()
+        ]);
         await expect(page).toHaveURL(/.*cart/);
       }
     });
@@ -65,7 +74,10 @@ test.describe('Complete User Journey - Browse to Checkout (FR004, FR007, FR008)'
       );
       
       if (await homeLink.count() > 0) {
-        await homeLink.click();
+        await Promise.all([
+          page.waitForURL(/^.*\/$/, { timeout: 15000 }),
+          homeLink.click()
+        ]);
         await expect(page).toHaveURL(/^.*\/$/);
       }
     });

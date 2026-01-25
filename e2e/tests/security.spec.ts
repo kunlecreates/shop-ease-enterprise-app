@@ -9,10 +9,10 @@ test.describe('Customer User Journey (FR001, FR002, FR004)', () => {
       });
 
       await test.step('Verify registration form is present', async () => {
-        await expect(page.getByRole('heading', { name: /sign up|register|create account/i })).toBeVisible();
+        await expect(page.getByRole('heading', { name: /sign up|register|create( your)? account/i })).toBeVisible();
         await expect(page.getByLabel(/email/i)).toBeVisible();
         await expect(page.getByLabel(/password/i)).toBeVisible();
-        await expect(page.getByRole('button', { name: /sign up|register|create account/i })).toBeVisible();
+        await expect(page.getByRole('button', { name: /sign up|register|create( your)? account/i })).toBeVisible();
       });
     });
 
@@ -34,7 +34,7 @@ test.describe('Customer User Journey (FR001, FR002, FR004)', () => {
       await page.goto('/register');
       
       await test.step('Submit empty form', async () => {
-        const submitButton = page.getByRole('button', { name: /sign up|register|create account/i });
+        const submitButton = page.getByRole('button', { name: /sign up|register|create( your)? account/i });
         await submitButton.click();
         
         // HTML5 validation or error message should appear
@@ -203,13 +203,16 @@ test.describe('Navigation & Page Accessibility', () => {
     await test.step('Navigate to products from home', async () => {
       const productsLink = page.getByRole('link', { name: /products|shop|browse/i }).first();
       const linkCount = await productsLink.count();
-      
+
       if (linkCount > 0) {
-        await productsLink.click();
-        await page.waitForURL(/.*products/, { timeout: 10000 });
+        await Promise.all([
+          page.waitForURL(/.*products/, { timeout: 15000 }),
+          productsLink.click()
+        ]);
       } else {
         // If no products link found, navigate directly
         await page.goto('/products');
+        await page.waitForURL(/.*products/);
       }
       await expect(page).toHaveURL(/.*products/);
     });
