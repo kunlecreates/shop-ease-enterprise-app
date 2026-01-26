@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import locators from './helpers/locators';
 
 test.describe('Authentication & Authorization (FR001, FR003)', () => {
   test.describe('Registration Flow', () => {
@@ -10,7 +11,7 @@ test.describe('Authentication & Authorization (FR001, FR003)', () => {
         await expect(page.getByLabel(/^email$/i)).toBeVisible();
         await expect(page.getByLabel(/^password$/i)).toBeVisible();
         await expect(page.getByLabel(/confirm password/i)).toBeVisible();
-        await expect(page.getByRole('button', { name: /create account/i })).toBeVisible();
+          await expect(page.getByRole('button', { name: /^(Create account|Create your account)$/i })).toBeVisible();
       });
     });
 
@@ -18,7 +19,8 @@ test.describe('Authentication & Authorization (FR001, FR003)', () => {
       await page.goto('/register');
       
       await test.step('Submit without filling fields', async () => {
-        await page.getByRole('button', { name: /create account/i }).click();
+        const createBtn = locators.getExactButtonLocator(page, ['Create account', 'Create your account']);
+        await createBtn.click();
       });
 
       await test.step('Verify form prevents submission (HTML5 validation)', async () => {
@@ -36,7 +38,8 @@ test.describe('Authentication & Authorization (FR001, FR003)', () => {
         await page.getByLabel(/^email$/i).fill('invalid-email');
         await page.getByLabel(/^password$/i).fill('ValidPassword123!');
         await page.getByLabel(/confirm password/i).fill('ValidPassword123!');
-        await page.getByRole('button', { name: /create account/i }).click();
+        const createBtn2 = locators.getExactButtonLocator(page, ['Create account', 'Create your account']);
+        await createBtn2.click();
       });
 
       await test.step('Verify email validation prevents submission (HTML5)', async () => {
@@ -52,10 +55,11 @@ test.describe('Authentication & Authorization (FR001, FR003)', () => {
       await page.goto('/login');
       
       await test.step('Verify form structure', async () => {
-        await expect(page.getByRole('heading', { name: /sign in/i })).toBeVisible();
+        await expect(page.getByRole('heading', { name: /^(Sign in|Login)$/i })).toBeVisible();
         await expect(page.getByLabel(/username/i)).toBeVisible();
-        await expect(page.getByLabel(/password/i)).toBeVisible();
-        await expect(page.getByRole('button', { name: /sign in/i })).toBeVisible();
+        await expect(page.getByLabel(/^Password$/i)).toBeVisible();
+        const signinBtn = locators.getExactButtonLocator(page, ['Sign in', 'Login']);
+        await expect(signinBtn).toBeVisible();
       });
     });
 
@@ -64,8 +68,9 @@ test.describe('Authentication & Authorization (FR001, FR003)', () => {
       
       await test.step('Enter invalid credentials', async () => {
         await page.getByLabel(/username/i).fill('nonexistentuser');
-        await page.getByLabel(/password/i).fill('WrongPassword123!');
-        await page.getByRole('button', { name: /sign in/i }).click();
+        await page.getByLabel(/^Password$/i).fill('WrongPassword123!');
+        const signinBtn = locators.getExactButtonLocator(page, ['Sign in', 'Login']);
+        await signinBtn.click();
       });
 
       await test.step('Verify error message', async () => {
@@ -83,11 +88,12 @@ test.describe('Authentication & Authorization (FR001, FR003)', () => {
     test('should have link to registration page', async ({ page }) => {
       await page.goto('/login');
       
-      const registerLink = page.getByRole('link', { name: /register/i }).first();
+      const registerLink = page.getByRole('link', { name: /^(Register|Sign up)$/i }).first();
       await expect(registerLink).toBeVisible();
-      
-      await registerLink.click();
-      await expect(page).toHaveURL(/.*register/);
+      await Promise.all([
+        page.waitForURL(/.*register/, { timeout: 10000 }),
+        registerLink.click(),
+      ]);
     });
   });
 

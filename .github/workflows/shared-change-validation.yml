@@ -127,4 +127,5 @@ jobs:
             services/${{ matrix.service }}/pytest-results.xml
             services/${{ matrix.service }}/pytest.log
             services/${{ matrix.service }}/target/surefire-reports/**
+          retention-days: 30
 

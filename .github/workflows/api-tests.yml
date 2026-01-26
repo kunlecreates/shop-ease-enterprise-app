@@ -119,5 +119,6 @@ jobs:
         with:
           name: api-test-results
           path: api-tests/test-results/**
+          retention-days: 30
 
 

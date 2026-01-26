@@ -1,8 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
-  // Global setup injects a CF_Authorization cookie into a storage state
-  // when `CF_AUTH_COOKIE` is provided by CI (workflow exposes it).
+  // Playwright will include Cloudflare Access client headers when provided by CI.
   testDir: './tests',
   timeout: 30 * 1000,
   expect: { timeout: 5000 },
@@ -37,5 +36,7 @@ export default defineConfig({
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    // Mobile project for responsive/navigation checks
+    { name: 'mobile', use: { ...devices['iPhone 14'] } },
   ],
 });
