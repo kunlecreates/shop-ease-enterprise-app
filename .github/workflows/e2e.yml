@@ -1,9 +1,9 @@
 name: E2E — Playwright tests
 
 on:
-  workflow_run:
-    workflows: ["API Contract Tests — Staging"]
-    types: [completed]
+  #workflow_run:
+  #  workflows: ["API Contract Tests — Staging"]
+  #  types: [completed]
 
   # Allow manual runs for diagnostics or ad-hoc verification
   workflow_dispatch: {}
