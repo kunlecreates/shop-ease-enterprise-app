@@ -1,0 +1,124 @@
+name: API Contract Tests — Staging
+
+on:
+  workflow_run:
+    workflows: ["CD — Kubernetes Deploy (Helm)"]
+    types: [completed]
+  workflow_dispatch: {}
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'api-tests/**'
+
+permissions:
+  contents: read
+
+jobs:
+  run-api-tests:
+    name: Run API contract tests against staging
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request' || github.event.workflow_run.conclusion == 'success' }}
+    # API contract tests should run on self-hosted runner with cluster access
+    # to test backend services directly via Kubernetes service URLs
+    runs-on: arc-runnerset-instance
+    env:
+      ENV_FILE: api-tests/env/ci.env
+      # API tests use internal Kubernetes service URLs, not external ingress
+      PRODUCT_SERVICE_URL: http://product-service.shopease-product.svc.cluster.local
+      USER_SERVICE_URL: http://user-service.shopease-user.svc.cluster.local
+      ORDER_SERVICE_URL: http://order-service.shopease-order.svc.cluster.local
+      NOTIFICATION_SERVICE_URL: http://notification-service.shopease-notification.svc.cluster.local
+      TEST_JWT_SECRET: ${{ secrets.JWT_SECRET }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate required environment
+        run: |
+          missing=false
+          if [ -z "$PRODUCT_SERVICE_URL" ] || [ -z "$ORDER_SERVICE_URL" ]; then
+            echo "ERROR: Service URLs (PRODUCT_SERVICE_URL, ORDER_SERVICE_URL, etc.) are required for API contract tests"
+            missing=true
+          fi
+          if [ -z "$TEST_JWT_SECRET" ]; then
+            echo "WARNING: TEST_JWT_SECRET not set; auth tests may be limited"
+          fi
+          if [ "$missing" = true ]; then
+            exit 1
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: v1.30.0
+          
+      - name: Install deps
+        working-directory: api-tests
+        run: |
+          if [ -f package-lock.json ]; then npm ci --include=dev; else npm install --include=dev; fi
+
+      - name: Wait for services to be Ready
+        run: |
+          set -euo pipefail
+          echo "Waiting for backend services to become Ready (up to 8 minutes)..."
+          
+          # Wait for all backend service pods to be Ready (not just Running)
+          for namespace in shopease-user shopease-product shopease-order shopease-notification; do
+            echo "Checking namespace: $namespace"
+            
+            # Get deployment name in namespace
+            DEPLOY=$(kubectl -n "$namespace" get deploy -o name | head -n1 | cut -d'/' -f2 || true)
+            
+            if [ -n "$DEPLOY" ]; then
+              echo "Waiting for deployment/$DEPLOY in $namespace to have ready pods..."
+              
+              # Wait up to 8 minutes for at least 1 ready replica
+              timeout=480
+              elapsed=0
+              while [ $elapsed -lt $timeout ]; do
+                READY=$(kubectl -n "$namespace" get deploy "$DEPLOY" -o jsonpath='{.status.readyReplicas}' 2>/dev/null || echo "0")
+                DESIRED=$(kubectl -n "$namespace" get deploy "$DEPLOY" -o jsonpath='{.spec.replicas}' 2>/dev/null || echo "1")
+                
+                echo "  $DEPLOY: $READY/$DESIRED ready replicas"
+                
+                if [ "$READY" -ge 1 ] && [ "$READY" -eq "$DESIRED" ]; then
+                  echo "  ✓ $DEPLOY is ready!"
+                  break
+                fi
+                
+                if [ $elapsed -ge $timeout ]; then
+                  echo "  ✗ Timeout waiting for $DEPLOY to be ready"
+                  kubectl -n "$namespace" get pods -l "app.kubernetes.io/name=${DEPLOY}" || true
+                  exit 1
+                fi
+                
+                sleep 10
+                elapsed=$((elapsed + 10))
+              done
+            else
+              echo "  No deployment found in $namespace (skipping)"
+            fi
+          done
+          
+          echo "All backend services are Ready!"
+
+      - name: Run API contract tests
+        working-directory: api-tests
+        env:
+          ENV_FILE: api-tests/env/ci.env
+        run: |
+          npm test -- --runInBand --reporters=default
+
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-test-results
+          path: api-tests/test-results/**
+          retention-days: 30
+
+

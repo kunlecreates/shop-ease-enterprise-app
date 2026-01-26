@@ -1,0 +1,88 @@
+{{- if .Values.enabled.frontend }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "umbrella.fullname" . }}-frontend
+  labels:
+    app.kubernetes.io/name: frontend
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: frontend
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3000
+{{- end }}
+
+---
+{{- if .Values.enabled.product }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: product-service
+  labels:
+    app.kubernetes.io/name: product-service
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: product-service
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3000
+{{- end }}
+
+---
+{{- if .Values.enabled.user }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-service
+  labels:
+    app.kubernetes.io/name: user-service
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: user-service
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8081
+{{- end }}
+
+---
+{{- if .Values.enabled.order }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-service
+  labels:
+    app.kubernetes.io/name: order-service
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: order-service
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8083
+{{- end }}
+
+---
+{{- if .Values.enabled.notification }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: notification-service
+  labels:
+    app.kubernetes.io/name: notification-service
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: notification-service
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8084
+{{- end }}

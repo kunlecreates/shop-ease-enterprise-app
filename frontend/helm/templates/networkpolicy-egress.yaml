@@ -1,0 +1,61 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: frontend-restrict-egress
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: frontend
+  policyTypes:
+    - Egress
+  egress:
+    # Allow DNS queries to kube-dns
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Allow egress to backend namespaces on service port 80
+    - to:
+      {{- if and .Values.networkPolicy .Values.networkPolicy.backendNamespaces }}
+        {{- range $ns := .Values.networkPolicy.backendNamespaces }}
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ $ns | quote }}
+        {{- end }}
+        {{- else }}
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: "shopease-product"
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: "shopease-user"
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: "shopease-order"
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: "shopease-notification"
+        {{- end }}
+      ports:
+        {{- if and .Values.networkPolicy .Values.networkPolicy.backendPorts }}
+        {{- range $p := .Values.networkPolicy.backendPorts }}
+        - protocol: TCP
+          port: {{ $p }}
+        {{- end }}
+        {{- else }}
+        - protocol: TCP
+          port: 80
+        {{- end }}
+    # Allow OTEL export if configured (4317)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.networkPolicy.otelNamespace | default "operators" | quote }}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.networkPolicy.otelPort | default 4317 }}

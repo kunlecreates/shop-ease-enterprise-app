@@ -4,18 +4,39 @@ spring:
   application:
     name: user-service
   datasource:
-    url: jdbc:oracle:thin:@${ORACLE_HOST:oracle}:${ORACLE_PORT:1521}/${ORACLE_PDB:FREEPDB1}
-    username: ${ORACLE_USER:USER_SVC_APP}
-    password: ${ORACLE_PASSWORD:CHANGE_ME}
+    # Use USER_DB_* env vars (canonical names). No legacy fallback.
+    url: jdbc:oracle:thin:@${USER_DB_HOST}:${USER_DB_PORT:1521}/${USER_DB_NAME:FREEPDB1}?oracle.jdbc.timezoneAsRegion=false
+    username: ${USER_DB_USER}
+    password: ${USER_DB_PASSWORD}
     driver-class-name: oracle.jdbc.OracleDriver
+    # Fix ORA-18716: not in any time zone.DATE error when reading TIMESTAMP columns
+    hikari:
+      data-source-properties:
+        oracle.jdbc.timezoneAsRegion: false
+  jpa:
+    database-platform: org.hibernate.dialect.OracleDialect
+    properties:
+      hibernate:
+        # Set default schema only for Oracle (where USER_SVC owns the tables)
+        # For PostgreSQL tests, let Hibernate use the default public schema
+        default_schema: ${HIBERNATE_DEFAULT_SCHEMA:}
+        dialect: org.hibernate.dialect.OracleDialect
+        # Oracle stores unquoted identifiers as uppercase, so we need to match that
+        # This ensures Hibernate generates USERS instead of users in SQL
+        physical_naming_strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
   flyway:
-    enabled: true
-    locations: classpath:db/migration/sql
+    enabled: ${FLYWAY_ENABLED:false}
+jwt:
+  secret: ${JWT_SECRET:test-secret-key-for-development-only-min-256-bits-required-for-hs256-algorithm}
 management:
   endpoints:
     web:
       exposure:
         include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
 otel:
   exporter:
     otlp:
@@ -23,3 +44,10 @@ otel:
 logging:
   level:
     root: INFO
+    org.springframework.security: DEBUG
+    org.springframework.security.web: DEBUG
+    org.springframework.web: TRACE
+    org.springframework.web.servlet: TRACE
+    org.springframework.web.servlet.mvc: TRACE
+    org.springframework.web.servlet.handler: TRACE
+    org.kunlecreates.user: DEBUG

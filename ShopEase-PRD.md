@@ -104,6 +104,7 @@ Administrators require tools to manage users, inventory, and transactions effici
 | **Phase 3** | Admin management tools and dashboards | Jan 2026 |
 | **Phase 4** | Observability stack, CI/CD via Helm and Cloudflare Tunnel | Feb 2026 |
 | **Phase 5** | Testing optimization, Vault integration, scalability review | Mar 2026 |
+| **Phase 6** | Admin Productivity Enhancements (bulk operations, user account management) | Apr 2026 |
 
 ---
 
@@ -115,7 +116,22 @@ Administrators require tools to manage users, inventory, and transactions effici
 - Should mock payments evolve into Stripe sandbox integration?
 
 ---
+## 8. Phase 6 Features (Future Enhancements)
 
+### Admin Productivity & Bulk Operations
+**Target:** April 2026
+
+| Feature ID | Feature | Description | Endpoints |
+|-----------|---------|-------------|-----------|
+| **P6-001** | Bulk Product Import | Import multiple products via CSV/JSON | POST `/api/product/bulk` |
+| **P6-002** | Bulk Price Updates | Update prices for multiple products at once | PATCH `/api/product/bulk/price` |
+| **P6-003** | Bulk Stock Adjustments | Adjust inventory for multiple products | POST `/api/product/bulk/stock` |
+| **P6-004** | Product Export | Export product catalog to CSV/JSON | GET `/api/product/export` |
+| **P6-005** | User Account Status Management | Enable/disable user accounts | PATCH `/api/user/:id/status` |
+
+**Rationale:** These features enhance admin efficiency but are not required for core e-commerce functionality. They will be prioritized based on admin feedback and operational needs after MVP launch.
+
+---
 ## Notes 
 - **Frontend:** Tailwind CSS v4 + shadcn components + next-themes + lucide-react + sonner  
 - **Deployment:** GitHub Actions (self-hosted ARC runner) → Helm → Kubernetes  

@@ -15,18 +15,9 @@
     <properties>
         <java.version>21</java.version>
         <spring.boot.version>3.3.5</spring.boot.version>
+        <flyway.version>10.21.0</flyway.version>
     </properties>
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.testcontainers</groupId>
-                <artifactId>testcontainers-bom</artifactId>
-                <version>1.20.0</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
+    <!-- Removed Testcontainers BOM import to avoid CI resolving issues; using explicit versions below -->
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -48,7 +39,15 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
         </dependency>
         <dependency>
             <groupId>com.microsoft.sqlserver</groupId>
@@ -60,6 +59,15 @@
             <artifactId>flyway-core</artifactId>
             <version>11.17.1</version>
         </dependency>
+        <!-- Flyway SQL Server support so Flyway recognizes Microsoft SQL Server during tests -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-sqlserver</artifactId>
+            <version>11.17.1</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- NOTE: removed flyway-database-mssql which is not available in Maven Central;
+             rely on flyway-core + JDBC driver for MSSQL during tests. -->
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>
@@ -76,6 +84,30 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- JJWT for JWT token generation in integration tests -->
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+            <version>0.12.6</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <version>0.12.6</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+            <version>0.12.6</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <version>5.10.2</version>
@@ -87,40 +119,26 @@
             <scope>test</scope>
         </dependency>
         <!-- Testcontainers for integration tests -->
+        <!-- mssql Testcontainers + JDBC driver for integration tests using MSSQL -->
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>testcontainers</artifactId>
+            <version>1.21.3</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>junit-jupiter</artifactId>
+            <version>1.21.3</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>mssqlserver</artifactId>
+            <version>1.21.3</version>
             <scope>test</scope>
         </dependency>
-        <!-- Postgres Testcontainers + JDBC driver for integration tests using Postgres -->
-        <dependency>
-            <groupId>org.testcontainers</groupId>
-            <artifactId>postgresql</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <version>42.6.0</version>
-            <scope>test</scope>
-        </dependency>
-        <!-- Shared test resources (migrations) -->
-        <dependency>
-            <groupId>org.kunlecreates</groupId>
-            <artifactId>test-utils</artifactId>
-            <version>0.1.0</version>
-            <scope>test</scope>
-        </dependency>
+        <!-- Shared test resources were previously provided by test-utils; helpers are now in-service test sources -->
     </dependencies>
     <build>
         <plugins>
@@ -142,6 +160,27 @@
                     </execution>
                 </executions>
             </plugin>
+                <!-- JaCoCo code coverage plugin -->
+                <plugin>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                    <version>0.8.14</version>
+                    <executions>
+                        <execution>
+                            <id>prepare-agent</id>
+                            <goals>
+                                <goal>prepare-agent</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>report</id>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>report</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
         </plugins>
     </build>
     <profiles>
@@ -170,20 +209,22 @@
                 </property>
             </activation>
             <properties>
-                <!-- Allow tests to pick a specific Postgres image via property -->
-                <testcontainers.postgres.image>postgres:15</testcontainers.postgres.image>
+                <!-- Allow tests to pick a specific MSSQL image and SA password via property -->
+                <testcontainers.mssql.image>mcr.microsoft.com/mssql/server:2019-latest</testcontainers.mssql.image>
+                <testcontainers.mssql.sa.password>YourStrong!Passw0rd</testcontainers.mssql.sa.password>
             </properties>
             <build>
                 <plugins>
                     <!-- Pass useful system properties into test JVM so tests can decide to
-                         start Postgres containers or configure connection strings. -->
+                         start mssql containers or configure connection strings. -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-failsafe-plugin</artifactId>
                         <configuration>
                             <systemPropertyVariables>
                                 <testcontainers.enabled>true</testcontainers.enabled>
-                                <testcontainers.postgres.image>${testcontainers.postgres.image}</testcontainers.postgres.image>
+                                <testcontainers.mssql.image>${testcontainers.mssql.image}</testcontainers.mssql.image>
+                                <testcontainers.mssql.sa.password>${testcontainers.mssql.sa.password}</testcontainers.mssql.sa.password>
                             </systemPropertyVariables>
                         </configuration>
                     </plugin>
@@ -193,7 +234,8 @@
                         <configuration>
                             <systemPropertyVariables>
                                 <testcontainers.enabled>true</testcontainers.enabled>
-                                <testcontainers.postgres.image>${testcontainers.postgres.image}</testcontainers.postgres.image>
+                                <testcontainers.mssql.image>${testcontainers.mssql.image}</testcontainers.mssql.image>
+                                <testcontainers.mssql.sa.password>${testcontainers.mssql.sa.password}</testcontainers.mssql.sa.password>
                             </systemPropertyVariables>
                         </configuration>
                     </plugin>

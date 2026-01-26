@@ -13,9 +13,9 @@ Manages products, categories, inventory, pricing.
 ## API
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/api/products` | List products |
-| POST | `/api/products` | Create product |
-| PATCH | `/api/products/:sku/stock` | Adjust stock |
+| GET | `/api/product` | List products |
+| POST | `/api/product` | Create product |
+| PATCH | `/api/product/:sku/stock` | Adjust stock |
 
 ## Run (Postgres)
 ```bash
@@ -30,7 +30,7 @@ npm test
 ```
 
 ## Env Vars
-`POSTGRES_HOST` `POSTGRES_PORT` `POSTGRES_USER` `POSTGRES_PASSWORD` `POSTGRES_DB` (default product_svc) `TEST_SQLITE`
+`PRODUCT_DB_HOST` `PRODUCT_DB_PORT` `PRODUCT_DB_USER` `PRODUCT_DB_PASSWORD` `PRODUCT_DB_NAME` (default product_svc) `TEST_SQLITE`
 
 ## Migrations
 ```bash
@@ -43,3 +43,6 @@ Sum of all movement quantities for a product. Decrement rejected if result would
 
 ## Roadmap
 Add auth, tracing, metrics, price rules, caching.
+
+## Deployment
+See `helm/README.md` for Helm values and Secrets required in Kubernetes.

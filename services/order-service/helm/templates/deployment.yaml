@@ -1,0 +1,124 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-service
+  labels:
+    app.kubernetes.io/name: order-service
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: order-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: order-service
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      {{- if .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml .Values.imagePullSecrets | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- if .Values.securityContext }}
+        {{- with .Values.securityContext }}
+        {{- if .runAsUser }}
+        runAsUser: {{ .runAsUser }}
+        {{- end }}
+        runAsNonRoot: {{ default true .runAsNonRoot }}
+        {{- end }}
+        {{- else }}
+        runAsNonRoot: true
+        {{- end }}
+      containers:
+        - name: order-service
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+
+          {{/* Render env vars from values.env and always include SPRING_FLYWAY_ENABLED */}}          
+          env:
+            {{- if .Values.db.secretName }}
+            # Order App DB credentials
+            - name: ORDER_DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.db.secretName }}
+                  key: ORDER_DB_HOST
+            - name: ORDER_DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.db.secretName }}
+                  key: ORDER_DB_PORT
+            - name: ORDER_DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.db.secretName }}
+                  key: ORDER_DB_NAME
+            - name: ORDER_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.db.secretName }}
+                  key: ORDER_DB_USER
+            - name: ORDER_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.db.secretName }}
+                  key: ORDER_DB_PASSWORD
+            {{- end }}
+
+            {{- if .Values.jwt.secretName }}
+            # JWT Secret (shared with user-service)
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.jwt.secretName }}
+                  key: JWT_SECRET
+            {{- else if .Values.jwt.dev.JWT_SECRET }}
+            # Dev-only JWT Secret (do NOT use in prod)
+            - name: JWT_SECRET
+              value: {{ .Values.jwt.dev.JWT_SECRET | quote }}
+            {{- end }}
+
+            {{- if .Values.env }}
+            {{- $root := . }}
+            {{- range $key, $val := .Values.env }}
+            - name: {{ $key }}
+              {{- if eq $key "OTEL_EXPORTER_OTLP_ENDPOINT" }}
+              {{- $raw := printf "%v" $val }}
+              {{- if and (hasKey $root.Values "global") (hasKey $root.Values.global "otel") }}
+              value: {{ replace $raw "${global.otel.collectorEndpoint}" $root.Values.global.otel.collectorEndpoint | quote }}
+                {{- else }}
+              value: {{ $raw | quote }}
+                {{- end }}
+              {{- else if or (kindIs "map" $val) (kindIs "slice" $val) }}
+              value: {{ toJson $val | quote }}
+              {{- else }}
+              value: {{ $val | quote }}
+              {{- end }}
+            {{- end }}
+            {{- end }}
+
+            - name: SPRING_FLYWAY_ENABLED
+              value: {{ ternary "true" "false" .Values.flyway.enabled | quote }}
+              
+          ports:
+            - containerPort: 8083
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: {{ default "/actuator/health/liveness" .Values.probes.liveness.path }}
+              port: 8083
+            initialDelaySeconds: {{ default 60 .Values.probes.liveness.initialDelaySeconds }}
+            timeoutSeconds: {{ default 5 .Values.probes.liveness.timeoutSeconds }}
+            periodSeconds: {{ default 10 .Values.probes.liveness.periodSeconds }}
+            failureThreshold: {{ default 6 .Values.probes.liveness.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: {{ default "/actuator/health/readiness" .Values.probes.readiness.path }}
+              port: 8083
+            initialDelaySeconds: {{ default 20 .Values.probes.readiness.initialDelaySeconds }}
+            timeoutSeconds: {{ default 3 .Values.probes.readiness.timeoutSeconds }}
+            periodSeconds: {{ default 5 .Values.probes.readiness.periodSeconds }}
+            failureThreshold: {{ default 5 .Values.probes.readiness.failureThreshold }}

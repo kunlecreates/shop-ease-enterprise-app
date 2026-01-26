@@ -1,0 +1,15 @@
+spring:
+  flyway:
+    enabled: true
+    locations: classpath:db/test-migration
+    baseline-on-migrate: true
+  jpa:
+    hibernate:
+      ddl-auto: none
+
+jwt:
+  secret: test-secret-key-for-development-only-min-256-bits-required-for-hs256-algorithm
+
+notification:
+  service:
+    enabled: false

@@ -1,0 +1,85 @@
+image:
+  repository: ghcr.io/kunlecreates/frontend
+  tag: latest
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+env:
+  NEXT_PUBLIC_PRODUCT_API: "/api/product"
+  NEXT_PUBLIC_USER_API: "/api/user"
+  NEXT_PUBLIC_ORDER_API: "/api/order"
+  NEXT_PUBLIC_NOTIFICATION_API: "/api/notification"
+  PRODUCT_SERVICE_INTERNAL_URL: "http://product-service.shopease-product.svc.cluster.local:80"
+  USER_SERVICE_INTERNAL_URL: "http://user-service.shopease-user.svc.cluster.local:80"
+  ORDER_SERVICE_INTERNAL_URL: "http://order-service.shopease-order.svc.cluster.local:80"
+  NOTIFICATION_SERVICE_INTERNAL_URL: "http://notification-service.shopease-notification.svc.cluster.local:80"
+
+  # Ensure frontend process binds to container port used by probes
+  PORT: "3000"
+
+service:
+  port: 80
+  # Port on the container the frontend process listens on; used as Service targetPort
+  # and by probes. Defaults to 3000.
+  targetPort: 3000
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 256Mi
+  limits:
+    cpu: 250m
+    memory: 1Gi
+
+probes:
+  liveness:
+    port: 3000
+    initialDelaySeconds: 60
+    timeoutSeconds: 5
+    periodSeconds: 10
+    failureThreshold: 6
+  readiness:
+    # HTTP path used by readiness probe. Default is /health which we add as an app route.
+    path: /api/health
+    # Port used by probes; by default probes should match service.targetPort (container port)
+    port: 3000
+    initialDelaySeconds: 20
+    timeoutSeconds: 3
+    periodSeconds: 5
+    failureThreshold: 5
+
+# NetworkPolicy configuration for frontend egress rules. Configure backend namespaces
+# and allowed backend ports from values to avoid hardcoding in templates.
+networkPolicy:
+  # List of backend namespaces the frontend will talk to. If empty, templates may
+  # fall back to sensible defaults.
+  backendNamespaces:
+    - shopease-product
+    - shopease-user
+    - shopease-order
+    - shopease-notification
+  # Ports on backend services the frontend needs to access (service target ports).
+  backendPorts:
+    - 80
+  # OTEL exporter namespace and port (optional)
+  otelNamespace: operators
+  otelPort: 4317
+
+ingress:
+  enabled: true
+  className: nginx
+  host: shop.kunlecreates.org
+
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 70
+
+# Pod-level security context. Set a numeric runAsUser to avoid issues when
+# images declare a non-numeric USER (e.g. 'app') which prevents kubelet from
+# verifying runAsNonRoot. Default `runAsUser` is a non-root UID (1000).
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000

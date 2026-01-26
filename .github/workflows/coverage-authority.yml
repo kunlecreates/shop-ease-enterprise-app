@@ -1,0 +1,124 @@
+name: Coverage Authority (PR)
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  aggregate:
+    name: Aggregate and enforce coverage policy
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all raw coverage artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: coverage
+
+      # ---- Normalize each service ----
+
+      - name: Normalize all services
+        run: |
+          set -e
+          declare -A services=( \
+            ["frontend"]="jest:coverage/raw-coverage-frontend/coverage-summary.json" \
+            ["notification-service"]="pytest:coverage/raw-coverage-notification-service/coverage.json" \
+            ["order-service"]="jacoco:coverage/raw-coverage-order-service/target/site/jacoco/jacoco.xml" \
+            ["product-service"]="jest:coverage/raw-coverage-product-service/coverage-summary.json" \
+            ["user-service"]="jacoco:coverage/raw-coverage-user-service/target/site/jacoco/jacoco.xml" \
+          )
+          for svc in "${!services[@]}"; do
+            IFS=':' read -r fmt path <<< "${services[$svc]}"
+            mkdir -p coverage/$svc
+            bash scripts/normalize.sh "$fmt" "$svc" "$path" "coverage/$svc"
+          done
+
+      - name: Validate normalized JSON
+        run: |
+          set -euo pipefail
+          for f in coverage/*/coverage.json; do
+            jq -e '
+              has("service") and
+              has("language") and
+              has("lines") and
+              (.lines | has("total") and has("covered") and has("missed") and has("coverage_pct"))
+            ' "$f" || { echo "❌ $f failed validation"; exit 1; }
+            echo "✓ $f passed validation"
+          done
+
+      - name: Aggregate coverage
+        run: |
+          set -euo pipefail
+
+          jq -s '
+            def sum(field): map(.lines[field]) | add;
+
+            {
+              services: .,
+              overall: {
+                total:   sum("total"),
+                covered: sum("covered"),
+                missed:  sum("missed"),
+                coverage_pct:
+                  if sum("total") > 0
+                  then ((sum("covered") / sum("total")) * 100 | round )
+                else 0
+                end
+              }
+            }
+          ' coverage/*/coverage.json > coverage/aggregate.json
+
+      - name: Validate aggregate schema
+        run: |
+          set -euo pipefail
+
+          jq -e '
+            .overall.total >= 0 and
+            .overall.covered >= 0 and
+            .overall.missed >= 0 and
+            .overall.covered + .overall.missed == .overall.total and
+            (.overall.coverage_pct | type == "number")
+          ' coverage/aggregate.json > /dev/null
+
+          echo "✓ Aggregate coverage passed validation"
+
+      - name: Enforce policy
+        run: |
+          set -euo pipefail
+          
+          MIN=$(jq -r '.minCoverage' coverage/contract.json)
+          ACTUAL=$(jq -r '.overall.coverage_pct' coverage/aggregate.json)
+
+          echo "Coverage: $ACTUAL%, Minimum: $MIN%"
+
+          if [ "$ACTUAL" -lt "$MIN" ]; then
+            echo "❌ Coverage policy violation"
+            exit 1
+          fi
+
+      - name: Generate badge
+        run: |
+          set -euo pipefail
+          
+          jq '
+            .overall.coverage_pct as $c |
+            {
+              schemaVersion: 1,
+              label: "coverage",
+              message: (($c | tostring) + "%"),
+              color:
+                if $c >= 80 then "brightgreen"
+                elif $c >= 65 then "yellow"
+                else "red"
+                end
+            }
+          ' coverage/aggregate.json > coverage/badge.json
+
+      - name: Publish badge
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          publish_branch: coverage-badge
+          publish_dir: coverage
+        continue-on-error: false

@@ -1,0 +1,62 @@
+{{- if .Values.migration.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: product-service-migration
+  labels:
+    app.kubernetes.io/name: product-service
+    app.kubernetes.io/component: migration
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-10"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 1
+  ttlSecondsAfterFinished: {{ .Values.migration.ttlSecondsAfterFinished | default 300 }}
+  template:
+    spec:
+      restartPolicy: Never
+      {{- if .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml .Values.imagePullSecrets | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: flyway-migrate
+          image: "{{ .Values.migration.image }}"
+          imagePullPolicy: {{ .Values.migration.imagePullPolicy | default "IfNotPresent" }}
+          
+          env:
+            - name: MIG_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "migration.secretName must be set (infra-owned)" .Values.migration.secretName | quote }}
+                  key: PRODUCT_MIG_DB_USER
+            - name: MIG_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "migration.secretName must be set (infra-owned)" .Values.migration.secretName | quote }}
+                  key: PRODUCT_MIG_DB_PASSWORD
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "migration.secretName must be set (infra-owned)" .Values.migration.secretName | quote }}
+                  key: PRODUCT_DB_HOST
+            - name: DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "migration.secretName must be set (infra-owned)" .Values.migration.secretName | quote }}
+                  key: PRODUCT_DB_PORT
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "migration.secretName must be set (infra-owned)" .Values.migration.secretName | quote }}
+                  key: PRODUCT_DB_NAME
+          args:
+            - "-url=jdbc:postgresql://$(DB_HOST):$(DB_PORT)/$(DB_NAME)"
+            - "-user=$(MIG_DB_USER)"
+            - "-password=$(MIG_DB_PASSWORD)"
+            - "-schemas=$(DB_NAME)"
+            - "-defaultSchema=$(DB_NAME)"
+            - "-baselineOnMigrate=true"
+            - "migrate"
+{{- end }}

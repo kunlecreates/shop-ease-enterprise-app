@@ -1,0 +1,111 @@
+image:
+  repository: ghcr.io/kunlecreates/product-service
+  tag: latest
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+env:
+  OTEL_EXPORTER_OTLP_ENDPOINT: "${global.otel.collectorEndpoint}"
+  NODE_ENV: "staging"
+  FEATURE_FLAGS:
+    ENABLE_INVENTORY_CACHE: true
+    ENABLE_PRICE_RULES: false
+  # Ensure the app listens on the containerPort (3000)
+  PORT: "3000"
+
+db:
+  # Name of a pre-created Secret containing DB connection envs.
+  # The deploy workflow can create this as `shopease-product-db` from GitHub Secrets
+  # (PRODUCT_DB_HOST, PRODUCT_DB_PORT, PRODUCT_DB_NAME, PRODUCT_DB_USER, PRODUCT_DB_PASSWORD, PRODUCT_DATABASE_URL).
+  # Leave empty to disable.
+  secretName: ""
+  # Dev-only: when true, create a Secret from the map below (do NOT use in prod).
+  createDevSecret: false
+  # Keys are written as-is; values here are examples/placeholders only.
+  dev: {}
+  #  DB_HOST: postgresql.postgres-system.svc.cluster.local
+  #  DB_PORT: "5432"
+  #  DB_NAME: productdb
+  #  DB_USER: devuser
+  #  DB_PASSWORD: devpass
+  #  DATABASE_URL: postgresql://devuser:devpass@postgresql.postgres-system.svc.cluster.local:5432/productdb
+
+jwt:
+  # Name of a pre-created Secret containing JWT_SECRET (shared with user-service)
+  secretName: ""
+  # Dev-only: inline secret (do NOT use in prod)
+  dev:
+    JWT_SECRET: "dev-secret-changeme-at-least-256-bits"
+
+service:
+  port: 80
+  # Port on the container the application listens on; used as Service targetPort and
+  # by NetworkPolicy to allow correct ingress to the pod.
+  targetPort: 3000
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 256Mi
+  limits:
+    cpu: 250m
+    memory: 1Gi
+probes:
+  liveness:
+    path: /api/health
+    initialDelaySeconds: 60
+    timeoutSeconds: 5
+    periodSeconds: 10
+    failureThreshold: 6
+  readiness:
+    path: /api/health
+    initialDelaySeconds: 20
+    timeoutSeconds: 3
+    periodSeconds: 5
+    failureThreshold: 5
+
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 70
+
+# Pod-level security context. Set a numeric runAsUser to avoid issues when
+# images declare a non-numeric USER (e.g. 'app') which prevents kubelet from
+# verifying runAsNonRoot. Default `runAsUser` is a non-root UID (1000).
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+
+# Flyway control: disable in-app Flyway by setting this to false for staging
+flyway:
+  enabled: false
+
+# Migration Job configuration (optional)
+migration:
+  enabled: false
+  image: ghcr.io/kunlecreates/product-service-flyway
+  tag: latest
+  imagePullPolicy: IfNotPresent
+  # Kubernetes Secret containing migration credentials (MIG_DB_USER, MIG_DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME)
+   # Leave empty to disable.
+  secretName: ""
+  # Optional: create a dev-only secret from values below (do NOT use in production).
+  # CI and production should create migration secrets from secure stores (GitHub Secrets,
+  # Vault, SealedSecrets, etc.). Setting `createSecret=true` will render a Secret from
+  # `migration.secretData` in the target namespace (convenient for local development).
+  createSecret: false
+  # Example placeholder keys for `migration.secretData`. If `createSecret=true` these
+  # values will be written into the Secret as stringData. Do NOT commit production
+  # credentials here.
+  secretData: {}
+  # secretData example (uncomment to use in dev):
+  # secretData:
+  #   MIG_DB_USER: migration
+  #   MIG_DB_PASSWORD: change-me
+  #   DB_HOST: postgresql.postgres-system.svc.cluster.local
+  #   DB_PORT: "5432"
+  #   DB_NAME: productdb
+  # Time in seconds after which completed Jobs are garbage-collected by the TTL controller
+  ttlSecondsAfterFinished: 300

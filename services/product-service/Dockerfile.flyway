@@ -1,0 +1,16 @@
+# Base image with Flyway CLI for product-service (latest version with better PostgreSQL support)
+FROM flyway/flyway:11.1.0
+
+# Note: Flyway 11.1.0 includes PostgreSQL JDBC driver 42.7.4 by default
+# which is fully compatible with PostgreSQL 15+
+
+# Copy SQL migration scripts into /flyway/sql
+# Build arg SERVICE_NAME is provided by build pipeline (set to product-service)
+ARG SERVICE_NAME
+
+COPY services/${SERVICE_NAME}/src/main/resources/db/migration /flyway/sql
+RUN if [ ! -d /flyway/sql ] || [ "$(ls -A /flyway/sql | wc -l)" -eq 0 ]; then echo "ERROR: Migration directory missing or empty!"; exit 1; fi
+
+# Run as root to avoid Kubernetes user resolution issues
+# Default entrypoint is the flyway CLI from the base image
+ENTRYPOINT ["flyway"]

@@ -1,0 +1,105 @@
+image:
+  repository: ghcr.io/kunlecreates/user-service
+  tag: latest
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+env:
+  OTEL_EXPORTER_OTLP_ENDPOINT: "${global.otel.collectorEndpoint}"
+  SPRING_PROFILES_ACTIVE: "staging"
+  # Oracle-specific: Set default schema for Hibernate to access tables owned by USER_SVC
+  # This allows USER_SVC_APP to query tables via granted permissions
+  HIBERNATE_DEFAULT_SCHEMA: "USER_SVC"
+  SECURITY:
+    CORS:
+      ALLOWED_ORIGINS:
+        - "https://staging.shopease.local"
+        - "http://staging.shopease.local"
+  # Ensure Spring Boot binds to the container port used by probes (8081)
+  SERVER_PORT: "8081"
+
+db:
+  # Name of a pre-created Secret containing DB connection envs.
+  # The deploy workflow can create this as `shopease-user-db` from GitHub Secrets
+  # (USER_DB_HOST, USER_DB_PORT, USER_DB_NAME, USER_DB_USER, USER_DB_PASSWORD, USER_DATABASE_URL).
+  # Leave empty to disable.
+  secretName: ""
+  # Dev-only: when true, create a Secret from the map below (do NOT use in prod).
+  createDevSecret: false
+  # Keys are written as-is; values here are examples/placeholders only.
+  dev: {}
+  #  DB_HOST: oracledb.oracle-system.svc.cluster.local
+  #  DB_PORT: "1521"
+  #  DB_NAME: XE
+  #  DB_USER: devuser
+  #  DB_PASSWORD: devpass
+  #  DATABASE_URL: oracle+thin:@oracledb.oracle-system.svc.cluster.local:1521/XE
+
+jwt:
+  # Name of a pre-created Secret containing JWT_SECRET
+  # The deploy workflow creates this as `shopease-jwt` from GitHub Secrets
+  secretName: ""
+  # Dev-only: inline secret (do NOT use in prod)
+  dev:
+    JWT_SECRET: "dev-secret-changeme-at-least-256-bits"
+
+service:
+  port: 80
+  # Port on the container the application listens on; used as Service targetPort and
+  # by NetworkPolicy to allow correct ingress to the pod.
+  targetPort: 8081
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: 500m
+    memory: 1Gi
+
+probes:
+  liveness:
+    path: /actuator/health/liveness
+    initialDelaySeconds: 300
+    timeoutSeconds: 5
+    periodSeconds: 10
+    failureThreshold: 6
+  readiness:
+    path: /actuator/health/readiness
+    initialDelaySeconds: 300
+    timeoutSeconds: 5
+    periodSeconds: 10
+    failureThreshold: 6
+
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 70
+
+# Pod-level security context. Set a numeric runAsUser to avoid issues when
+# images declare a non-numeric USER (e.g. 'app') which prevents kubelet from
+# verifying runAsNonRoot. Default `runAsUser` is a non-root UID (1000).
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+
+# Flyway control: disable in-app Flyway by setting this to false for staging
+flyway:
+  enabled: false
+
+# Migration Job configuration (Helm will create a pre-deploy Job when enabled)
+migration:
+  enabled: false
+  image: ghcr.io/kunlecreates/user-service-flyway
+  tag: latest
+  imagePullPolicy: IfNotPresent
+  # Kubernetes Secret containing migration credentials (MIG_DB_USER, MIG_DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME)
+  # If empty, the Job will be skipped. You can create this secret via Helm values or externally.
+  secretName: ""
+  # Optional: create a dev-only secret from values below (do NOT use in production)
+  createSecret: false
+  secretData: {}
+  # Time in seconds after which completed Jobs are garbage-collected by the TTL controller
+  ttlSecondsAfterFinished: 300

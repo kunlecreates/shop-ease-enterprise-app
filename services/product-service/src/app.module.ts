@@ -1,13 +1,24 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { PassportModule } from '@nestjs/passport';
+import { JwtModule } from '@nestjs/jwt';
 import { Product } from './domain/product.entity';
 import { Category } from './domain/category.entity';
 import { StockMovement } from './domain/stock-movement.entity';
 import { ProductService } from './application/product.service';
+import { CategoryService } from './application/category.service';
 import { ProductController } from './presentation/product.controller';
+import { CategoryController } from './presentation/category.controller';
+import { HealthController } from './presentation/health.controller';
+import { JwtStrategy } from './config/jwt.config';
 
 @Module({
   imports: [
+    PassportModule,
+    JwtModule.register({
+      secret: process.env.JWT_SECRET || 'dev-secret-changeme',
+      signOptions: { expiresIn: '60m' },
+    }),
     TypeOrmModule.forRootAsync({
       useFactory: () => {
         const entities = [Product, Category, StockMovement];
@@ -15,23 +26,27 @@ import { ProductController } from './presentation/product.controller';
           return { type: 'sqlite', database: ':memory:', dropSchema: true, entities, synchronize: true };
         }
         return {
+          // Note: schema migrations are managed by Flyway (out-of-band).
+          // TypeORM must not run or manage migrations in staging/production.
           type: 'postgres',
-          host: process.env.POSTGRES_HOST || 'postgres',
-          port: +(process.env.POSTGRES_PORT || 5432),
-          username: process.env.POSTGRES_USER || 'product_app',
-          password: process.env.POSTGRES_PASSWORD || 'CHANGE_ME',
-          database: process.env.POSTGRES_DB || 'product_svc',
+          host: process.env.PRODUCT_DB_HOST || process.env.POSTGRES_HOST || 'postgres',
+          port: +(process.env.PRODUCT_DB_PORT || process.env.POSTGRES_PORT || 5432),
+          username: process.env.PRODUCT_DB_USER || process.env.POSTGRES_USER || 'product_app',
+          password: process.env.PRODUCT_DB_PASSWORD || process.env.POSTGRES_PASSWORD || 'CHANGE_ME',
+          database: process.env.PRODUCT_DB_NAME || process.env.POSTGRES_DB || 'product_svc',
+          schema: 'product_svc',
           entities,
-            synchronize: false,
-            migrationsRun: process.env.MIGRATIONS_RUN === 'true',
-          migrations: ['dist/migrations/*.js'],
+          // Ensure TypeORM does not auto-run migrations or synchronize schema
+          synchronize: false,
+          migrationsRun: false,
+          migrations: [],
           logging: false
         };
       }
     }),
     TypeOrmModule.forFeature([Product, Category, StockMovement])
   ],
-  controllers: [ProductController],
-  providers: [ProductService],
+  controllers: [ProductController, CategoryController, HealthController],
+  providers: [ProductService, CategoryService, JwtStrategy],
 })
 export class AppModule {}

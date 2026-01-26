@@ -1,0 +1,8 @@
+paths:
+  ".github/workflows/ci-notification-service.yml":
+    ignore:
+      - 'the runner of ".+" action is too old to run on GitHub Actions.*'
+self-hosted-runner:
+  labels:
+    - arc-runnerset-instance
+    - arc-runner-instance

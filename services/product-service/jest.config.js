@@ -1,9 +1,29 @@
-export default {
-  roots: ['<rootDir>/src'],
+module.exports = {
+  roots: ['<rootDir>/src', '<rootDir>/test'],
   testMatch: ['**/*.spec.ts'],
   transform: {
-    '^.+\\.(t|j)s$': 'ts-jest'
+    '^.+\\.ts$': 'ts-jest'
+  },
+  coverageReporters: ["json-summary", "text", "lcov", "html"],
+  coverageDirectory: 'coverage',
+  collectCoverageFrom: [
+    'src/**/*.ts',
+    '!src/**/*.spec.ts',
+    '!src/main.ts',
+    '!src/**/*.entity.ts',
+    '!src/migrations/**'
+  ],
+  coverageThreshold: {
+    global: {
+      branches: 40,
+      functions: 75,
+      lines: 75,
+      statements: 75
+    }
   },
   moduleFileExtensions: ['ts', 'js', 'json'],
-  testEnvironment: 'node'
+  testEnvironment: 'node',
+  globalSetup: '<rootDir>/test/global-setup.js',
+  globalTeardown: '<rootDir>/test/global-teardown.js',
+  setupFiles: ['<rootDir>/test/jest.setup.js']
 };

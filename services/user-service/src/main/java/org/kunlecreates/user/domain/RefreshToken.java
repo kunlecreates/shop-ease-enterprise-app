@@ -9,21 +9,36 @@ public class RefreshToken {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     @ManyToOne(optional = false)
     @JoinColumn(name = "USER_ID")
     private User user;
-    @Column(name = "TOKEN", nullable = false, unique = true)
-    private String token;
+
+    @Column(name = "TOKEN_HASH", nullable = false, length = 255, unique = true)
+    private String tokenHash;
+
     @Column(name = "EXPIRES_AT", nullable = false)
     private Instant expiresAt;
-    @Column(name = "REVOKED", nullable = false)
-    private boolean revoked = false;
+
+    @Column(name = "CREATED_AT", nullable = false)
+    private Instant createdAt = Instant.now();
+
+    @Column(name = "REVOKED_AT")
+    private Instant revokedAt;
+
     protected RefreshToken() {}
-    public RefreshToken(User user, String token, Instant expiresAt) { this.user = user; this.token = token; this.expiresAt = expiresAt; }
+
+    public RefreshToken(User user, String tokenHash, Instant expiresAt) {
+        this.user = user;
+        this.tokenHash = tokenHash;
+        this.expiresAt = expiresAt;
+    }
+
     public Long getId() { return id; }
     public User getUser() { return user; }
-    public String getToken() { return token; }
+    public String getTokenHash() { return tokenHash; }
     public Instant getExpiresAt() { return expiresAt; }
-    public boolean isRevoked() { return revoked; }
-    public void revoke() { this.revoked = true; }
+    public Instant getCreatedAt() { return createdAt; }
+    public Instant getRevokedAt() { return revokedAt; }
+    public void revoke(Instant when) { this.revokedAt = when; }
 }

@@ -1,0 +1,21 @@
+ORDER CONFIRMATION
+
+Hi {{ customer_name }},
+
+Thank you for your order! We're excited to get your items to you.
+
+Order #{{ order_id }}
+Order Date: {{ order_date }}
+
+ITEMS:
+{% for item in items %}
+- {{ item.name }} ({{ item.sku }})
+  Quantity: {{ item.quantity }} × ${{ "%.2f"|format(item.price) }}
+{% endfor %}
+
+TOTAL: ${{ "%.2f"|format(order_total) }}
+
+We'll send you a shipping notification as soon as your order ships.
+
+---
+© 2026 ShopEase. All rights reserved.

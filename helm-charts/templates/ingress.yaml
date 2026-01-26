@@ -1,0 +1,25 @@
+{{- if and .Values.global .Values.global.ingress .Values.global.ingress.enabled }}
+{{- $root := . -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "umbrella.fullname" $root }}-frontend
+  annotations:
+    kubernetes.io/ingress.class: {{ $root.Values.global.ingress.className | default "nginx" }}
+spec:
+  rules:
+    {{- range $idx, $host := $root.Values.global.ingress.hosts }}
+    - host: {{ $host.host }}
+      http:
+        paths:
+        {{- range $host.paths }}
+          - path: {{ .path | quote }}
+            pathType: {{ .pathType | default "Prefix" }}
+            backend:
+              service:
+                name: {{ include "umbrella.fullname" $root }}-frontend
+                port:
+                  number: {{- if and (hasKey . "backend") (hasKey .backend "service") (hasKey .backend.service "port") (hasKey .backend.service.port "number") -}}{{ .backend.service.port.number }}{{- else -}}80{{- end }}
+        {{- end }}
+    {{- end }}
+{{- end }}

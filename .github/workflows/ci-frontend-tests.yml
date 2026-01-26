@@ -1,0 +1,54 @@
+name: CI — Frontend Component Tests
+
+on:
+  push:
+    paths:
+      - 'frontend/**'
+  pull_request:
+    paths:
+      - 'frontend/**'
+
+jobs:
+  test:
+    name: Frontend unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: |
+          if [ -f package-lock.json ] ; then
+            echo "package-lock.json found — running 'npm ci'"
+            npm ci
+          else
+            echo "package-lock.json not found — running 'npm install'"
+            npm install --no-audit --no-fund
+          fi
+
+      - name: Typecheck
+        working-directory: frontend
+        run: |
+          if [ -f tsconfig.json ] ; then
+            echo "tsconfig.json found — running 'npx tsc --noEmit'"
+            npx tsc --noEmit
+          else
+            echo "tsconfig.json not found — skipping TypeScript check"
+          fi
+
+      - name: Run Jest tests with coverage
+        working-directory: frontend
+        run: |
+          npm test -- --coverage --coverageDirectory=coverage --coverageReporters=json-summary
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: raw-coverage-frontend
+          path: frontend/coverage/coverage-summary.json

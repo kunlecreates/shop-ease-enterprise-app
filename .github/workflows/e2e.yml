@@ -1,0 +1,152 @@
+name: E2E — Playwright tests
+
+on:
+  #workflow_run:
+  #  workflows: ["API Contract Tests — Staging"]
+  #  types: [completed]
+
+  # Allow manual runs for diagnostics or ad-hoc verification
+  workflow_dispatch: {}
+
+jobs:
+  run-e2e:
+    name: Run E2E Tests After Deploy (self-hosted)
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    # Use a self-hosted runner that has network access to your Cloudflared tunnel
+    # Replace the labels below with your runner's labels if different.
+    runs-on: arc-runnerset-instance
+    env:
+      # Default staging URL; override if your deploy emits a specific host
+      E2E_BASE_URL: https://shop.kunlecreates.org
+      CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+      CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
+      TEST_JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      # E2E test configuration (set these as repository or environment secrets)
+      # Admin credentials used by the auth helper/fixtures
+      ADMIN_EMAIL: ${{ secrets.E2E_ADMIN_EMAIL }}
+      ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }}
+      # Test runtime flags for deterministic seeding and health checks
+      E2E_REQUIRE_PRODUCTS: 'true'
+      E2E_SEED: 'true'
+      E2E_HEALTH_TIMEOUT_MS: '30000'
+      # Gate admin-scoped tests; set to 'true' to run admin flows (ensure secrets are present)
+      E2E_RUN_ADMIN_TESTS: 'false'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: v1.30.0      
+
+      - name: Wait for backend services to be ready
+        run: |
+          set -euo pipefail
+          echo "Waiting for backend services to become Ready (up to 8 minutes)..."
+          
+          # Wait for all backend service pods to be Ready (not just Running)
+          for namespace in shopease-user shopease-product shopease-order shopease-notification frontend; do
+            echo "Checking namespace: $namespace"
+            
+            # Get deployment name in namespace
+            DEPLOY=$(kubectl -n "$namespace" get deploy -o name | head -n1 | cut -d'/' -f2 || true)
+            
+            if [ -n "$DEPLOY" ]; then
+              echo "Waiting for deployment/$DEPLOY in $namespace to have ready pods..."
+              
+              # Wait up to 8 minutes for at least 1 ready replica
+              timeout=480
+              elapsed=0
+              while [ $elapsed -lt $timeout ]; do
+                READY=$(kubectl -n "$namespace" get deploy "$DEPLOY" -o jsonpath='{.status.readyReplicas}' 2>/dev/null || echo "0")
+                DESIRED=$(kubectl -n "$namespace" get deploy "$DEPLOY" -o jsonpath='{.spec.replicas}' 2>/dev/null || echo "1")
+                
+                echo "  $DEPLOY: $READY/$DESIRED ready replicas"
+                
+                if [ "$READY" -ge 1 ] && [ "$READY" -eq "$DESIRED" ]; then
+                  echo "  ✓ $DEPLOY is ready!"
+                  break
+                fi
+                
+                if [ $elapsed -ge $timeout ]; then
+                  echo "  ✗ Timeout waiting for $DEPLOY to be ready"
+                  kubectl -n "$namespace" get pods -l "app.kubernetes.io/name=${DEPLOY}" || true
+                  exit 1
+                fi
+                
+                sleep 10
+                elapsed=$((elapsed + 10))
+              done
+            else
+              echo "  No deployment found in $namespace (skipping)"
+            fi
+          done
+          
+          echo "All backend services are Ready!"
+
+      - name: Verify E2E host reachable (supports optional service token)
+        working-directory: e2e
+        run: |
+          set -euo pipefail
+          echo "Checking E2E host: ${E2E_BASE_URL}"
+
+          # First, try an unauthenticated request
+          unauth_status=$(curl -sS -o /dev/null -w "%{http_code}" "${E2E_BASE_URL}" || echo "000")
+          echo "Unauthenticated HTTP status: ${unauth_status}"
+          if [[ "${unauth_status}" =~ ^[23] ]]; then
+            echo "E2E host reachable (unauthenticated, status ${unauth_status})"
+            exit 0
+          fi
+
+          # If unauthenticated access fails, ensure CF secrets are set before attempting authenticated request
+          if [ -z "${CF_ACCESS_CLIENT_ID:-}" ] || [ -z "${CF_ACCESS_CLIENT_SECRET:-}" ]; then
+            echo "CF_ACCESS_CLIENT_ID or CF_ACCESS_CLIENT_SECRET is not set; cannot perform authenticated check."
+            echo "Please set the repository secrets or make the E2E_BASE_URL accessible without Cloudflare Access."
+            exit 1
+          fi
+
+          # Try authenticated request using Cloudflare Access service token headers
+          status=$(curl -sS -o /dev/null -w "%{http_code}" \
+            -H "CF-Access-Client-Id: ${CF_ACCESS_CLIENT_ID}" \
+            -H "CF-Access-Client-Secret: ${CF_ACCESS_CLIENT_SECRET}" \
+            "${E2E_BASE_URL}" || echo "000")
+
+          echo "Authenticated HTTP status: ${status}"
+
+          if [[ ! "${status}" =~ ^[23] ]]; then
+            echo "E2E endpoint unreachable via Cloudflare Access (status ${status})"
+            exit 1
+          fi
+
+      - name: Install e2e deps
+        working-directory: e2e
+        run: |
+          if [ -f package-lock.json ]; then npm ci --include=dev; else npm install --include=dev; fi
+
+      - name: Install Playwright browsers
+        working-directory: e2e
+        run: npx playwright install --with-deps      
+
+      - name: Run Playwright E2E
+        working-directory: e2e
+        env:
+          CI: true
+        run: |
+          npx playwright test --config=playwright.config.ts --project=chromium
+
+      - name: Upload Playwright artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-playwright-report
+          path: |
+            e2e/test-results/playwright-report/**
+            e2e/playwright-report/**
+            e2e/test-results/**
+          retention-days: 30

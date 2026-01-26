@@ -1,0 +1,440 @@
+name: CD — Kubernetes Deploy (Helm)
+
+on:
+  workflow_dispatch:
+    inputs:
+      services:
+        description: "Comma-separated services to deploy (user,product,order,notification,frontend or 'all')"
+        required: true
+        default: "all"
+      image_tag:
+        description: "Container image tag (immutable, e.g. staging-<commit-sha> or full digest). Required for manual deploys."
+        required: true
+      ensure_infra:
+        description: "If true, call the infra provisioning workflow before deploying"
+        required: false
+        default: "false"
+      values_file:
+        description: "Path to Helm values file (defaults to helm-charts/values-staging.yaml)"
+        required: false
+      allow_latest:
+        description: "Allow deploying the 'latest' image tag (dangerous)."
+        required: false
+        default: "false"
+
+
+jobs:
+  prepare:
+    runs-on: arc-runnerset-instance
+    outputs:
+      kubeconfig: ${{ steps.configure.outputs.kubeconfig }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.15.3
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: v1.30.0
+
+      - name: Configure kubeconfig (ARC in-cluster only)
+        id: configure
+        run: |
+          set -euo pipefail
+          if [ -z "${KUBERNETES_SERVICE_HOST:-}" ]; then
+            echo "ERROR: This job requires running inside the cluster on an ARC runner (KUBERNETES_SERVICE_HOST not set)."
+            exit 1
+          fi
+          echo "Configuring in-cluster kubeconfig (ARC runner)"
+          APISERVER="https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT}"
+          SA_TOKEN_FILE="/var/run/secrets/kubernetes.io/serviceaccount/token"
+          CA_CERT_FILE="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+          KUBECONFIG_PATH="$PWD/kubeconfig"
+          kubectl config set-cluster arc --server="$APISERVER" --certificate-authority="$CA_CERT_FILE" --embed-certs=true --kubeconfig="$KUBECONFIG_PATH"
+          kubectl config set-credentials runner --token="$(cat "$SA_TOKEN_FILE")" --kubeconfig="$KUBECONFIG_PATH"
+          kubectl config set-context arc --cluster=arc --user=runner --kubeconfig="$KUBECONFIG_PATH"
+          kubectl config use-context arc --kubeconfig="$KUBECONFIG_PATH"
+          echo "KUBECONFIG=$KUBECONFIG_PATH" >> $GITHUB_ENV
+          echo "kubeconfig=$KUBECONFIG_PATH" >> $GITHUB_OUTPUT
+
+  ensure-infra:
+    needs: prepare
+    if: ${{ github.event.inputs.ensure_infra == 'true' }}
+    uses: ./.github/workflows/infra-provisioning.yml
+    with:
+      services: "all"
+    secrets:
+      GHCR_READ_USERNAME: ${{ secrets.GHCR_READ_USERNAME }}
+      GHCR_READ_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
+      PRODUCT_DB_HOST: ${{ secrets.PRODUCT_DB_HOST }}
+      PRODUCT_DB_PORT: ${{ secrets.PRODUCT_DB_PORT }}
+      PRODUCT_DB_NAME: ${{ secrets.PRODUCT_DB_NAME }}
+      PRODUCT_DB_USER: ${{ secrets.PRODUCT_DB_USER }}
+      PRODUCT_DB_PASSWORD: ${{ secrets.PRODUCT_DB_PASSWORD }}
+      PRODUCT_MIG_DB_USER: ${{ secrets.PRODUCT_MIG_DB_USER }}
+      PRODUCT_MIG_DB_PASSWORD: ${{ secrets.PRODUCT_MIG_DB_PASSWORD }}
+      USER_DB_HOST: ${{ secrets.USER_DB_HOST }}
+      USER_DB_PORT: ${{ secrets.USER_DB_PORT }}
+      USER_DB_NAME: ${{ secrets.USER_DB_NAME }}
+      USER_DB_USER: ${{ secrets.USER_DB_USER }}
+      USER_DB_PASSWORD: ${{ secrets.USER_DB_PASSWORD }}
+      USER_MIG_DB_USER: ${{ secrets.USER_MIG_DB_USER }}
+      USER_MIG_DB_PASSWORD: ${{ secrets.USER_MIG_DB_PASSWORD }}
+      ORDER_DB_HOST: ${{ secrets.ORDER_DB_HOST }}
+      ORDER_DB_PORT: ${{ secrets.ORDER_DB_PORT }}
+      ORDER_DB_NAME: ${{ secrets.ORDER_DB_NAME }}
+      ORDER_DB_USER: ${{ secrets.ORDER_DB_USER }}
+      ORDER_DB_PASSWORD: ${{ secrets.ORDER_DB_PASSWORD }}
+      ORDER_MIG_DB_USER: ${{ secrets.ORDER_MIG_DB_USER }}
+      ORDER_MIG_DB_PASSWORD: ${{ secrets.ORDER_MIG_DB_PASSWORD }}
+      NOTIFICATION_MAIL_HOST: ${{ secrets.NOTIFICATION_MAIL_HOST }}
+      NOTIFICATION_MAIL_PORT: ${{ secrets.NOTIFICATION_MAIL_PORT }}
+      NOTIFICATION_MAIL_USER: ${{ secrets.NOTIFICATION_MAIL_USER }}
+      NOTIFICATION_MAIL_PASSWORD: ${{ secrets.NOTIFICATION_MAIL_PASSWORD }}
+      NOTIFICATION_MAIL_FROM: ${{ secrets.NOTIFICATION_MAIL_FROM }}
+  
+  set-matrix:
+    name: Set deployment matrix
+    runs-on: arc-runnerset-instance
+    needs: prepare
+    outputs:
+      matrix: ${{ steps.set.outputs.matrix }}
+    steps:
+      - name: Determine requested services and emit matrix
+        id: set
+        run: |
+          set -euo pipefail
+          INPUT='${{ github.event.inputs.services }}'
+          if [ -z "$INPUT" ] || [ "$INPUT" = "all" ]; then
+            echo 'matrix=["user","product","order","notification","frontend"]' >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          IFS=',' read -r -a items <<< "$INPUT"
+          arr=()
+          for s in "${items[@]}"; do
+            s_trim=$(echo "$s" | xargs)
+            case "$s_trim" in
+              user|product|order|notification|frontend)
+                arr+=("\"$s_trim\"")
+                ;;
+              *)
+                echo "Ignoring unknown service '$s_trim'"
+                ;;
+            esac
+          done
+          if [ ${#arr[@]} -eq 0 ]; then
+            echo 'matrix=[]' >> $GITHUB_OUTPUT
+          else
+            printf 'matrix=[%s]\n' "$(IFS=,; echo "${arr[*]}")" >> $GITHUB_OUTPUT
+          fi
+        shell: bash
+
+  deploy-helm:
+    #concurrency:
+      #group: deploy-staging-${{ github.repository }}-${{ github.event.inputs.services }}
+      #cancel-in-progress: false
+    runs-on: arc-runnerset-instance
+    needs: [prepare, set-matrix]
+    env:
+      KUBECONFIG: ${{ needs.prepare.outputs.kubeconfig }}
+    strategy:
+      matrix:
+        service: ${{ fromJSON(needs.set-matrix.outputs.matrix) }}
+      # Limit concurrent matrix jobs to reduce runner/builder/registry contention
+      max-parallel: 2
+      fail-fast: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.15.3
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: v1.30.0
+
+      - name: Compute parameters (per service)
+        run: |
+          # Map service to release/namespace and enable flags
+          SERVICE="${{ matrix.service }}"
+          RELEASE_NAME="shopease-${SERVICE}"
+          NAMESPACE="shopease-${SERVICE}"
+          VALUES_FILE="${{ inputs.values_file }}"
+          if [ -z "$VALUES_FILE" ]; then VALUES_FILE="helm-charts/values-staging.yaml"; fi
+          IMAGE_TAG_INPUT="${{ inputs.image_tag }}"
+          # If no explicit tag supplied, use a short commit SHA for immutable staging tags
+          if [ -z "$IMAGE_TAG_INPUT" ]; then
+            # GITHUB_SHA is provided by Actions; take first 7 chars for short SHA
+            SHORT_SHA="${GITHUB_SHA:0:7}"
+            IMAGE_TAG_INPUT="staging-${SHORT_SHA}"
+          fi
+          echo "RELEASE_NAME=$RELEASE_NAME" >> $GITHUB_ENV
+          echo "NAMESPACE=$NAMESPACE" >> $GITHUB_ENV
+          echo "VALUES_FILE=$VALUES_FILE" >> $GITHUB_ENV
+          echo "IMAGE_TAG_INPUT=$IMAGE_TAG_INPUT" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Validate image tag (prevent accidental 'latest' deploys)
+        run: |
+          set -euo pipefail
+          # Allow override via repo secret or environment if explicitly intended
+          if [ "${IMAGE_TAG_INPUT:-}" = "latest" ] && [ "${ALLOW_LATEST:-false}" != "true" ]; then
+            echo "ERROR: IMAGE_TAG_INPUT resolved to 'latest'. Deploys must use an immutable tag."
+            echo "To allow 'latest' set ALLOW_LATEST=true in the workflow environment (not recommended)."
+            exit 1
+          fi
+        env:
+          ALLOW_LATEST: ${{ github.event.inputs.allow_latest }}
+
+      - name: Verify namespace exists
+        run: |
+          if ! kubectl get namespace "$NAMESPACE" >/dev/null 2>&1; then
+            echo "❌ Namespace '$NAMESPACE' does not exist. Infra workflow must provision it first."
+            exit 1
+          fi          
+        env:
+          KUBECONFIG: ${{ needs.prepare.outputs.kubeconfig }}
+
+      - name: Secrets are managed externally (skipping in-workflow secret creation)
+        run: |
+          echo "Skipping DB and migration secret creation; ensure secrets are provisioned externally."
+
+      - name: Notification credentials are managed externally
+        if: ${{ matrix.service == 'notification' }}
+        run: |
+          echo "Skipping notification credential secret creation; ensure credentials are provisioned externally."
+
+      # imagePullSecret creation moved to infra provisioning (ensure_infra)
+      
+      - name: Pre-deploy readiness checks
+        env:
+          KUBECONFIG: ${{ needs.prepare.outputs.kubeconfig }}
+        run: |
+          set -euo pipefail
+          echo "Running pre-deploy readiness checks in namespace $NAMESPACE"
+
+          # For aggressive delegation we do not provision secrets here.
+          # Ensure optional imagePullSecret presence and warn if missing.
+          if kubectl -n "$NAMESPACE" get secret ghcr-pull-secret >/dev/null 2>&1; then
+            echo "imagePullSecret ghcr-pull-secret present in $NAMESPACE"
+          else
+            echo "imagePullSecret ghcr-pull-secret not present; helm may still succeed if images are public"
+          fi
+
+          echo "Pre-deploy readiness checks passed."
+
+      - name: Deploy selected service via helm (per-service chart)
+        env:
+          KUBECONFIG: ${{ needs.prepare.outputs.kubeconfig }}
+          GHCR_READ_USERNAME: ${{ secrets.GHCR_READ_USERNAME }}
+          GHCR_READ_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
+        run: |
+          set -euo pipefail
+          OWNER="${{ github.repository_owner }}"
+
+          case "${{ matrix.service }}" in
+            user)
+              CHART_DIR="services/user-service/helm";
+              IMAGE_REPO="ghcr.io/${OWNER}/user-service";
+              SECRET_BASE="shopease-user-db"
+              SET_SECRET_NAME="db.secretName=${SECRET_BASE},jwt.secretName=user-jwt"
+              MIGRATION_ENABLED="true"
+              MIGRATION_DB_SEC="${SECRET_BASE}-migration"
+              ;;
+            product)
+              CHART_DIR="services/product-service/helm";
+              IMAGE_REPO="ghcr.io/${OWNER}/product-service";
+              SECRET_BASE="shopease-product-db"
+              SET_SECRET_NAME="db.secretName=${SECRET_BASE}"
+              MIGRATION_ENABLED="true"
+              MIGRATION_DB_SEC="${SECRET_BASE}-migration"
+              ;;
+            order)
+              CHART_DIR="services/order-service/helm";
+              IMAGE_REPO="ghcr.io/${OWNER}/order-service";
+              SECRET_BASE="shopease-order-db"
+              SET_SECRET_NAME="db.secretName=${SECRET_BASE},jwt.secretName=order-jwt"
+              MIGRATION_ENABLED="true"
+              MIGRATION_DB_SEC="${SECRET_BASE}-migration"
+              ;;
+            notification)
+              CHART_DIR="services/notification-service/helm";
+              IMAGE_REPO="ghcr.io/${OWNER}/notification-service";
+              SET_SECRET_NAME="credentials.secretName=shopease-notification-credentials"
+              ;;
+            frontend)
+              CHART_DIR="frontend/helm";
+              IMAGE_REPO="ghcr.io/${OWNER}/shopease-frontend";
+              HELM_SET_DB=""
+              ;;
+          esac
+          
+          # Optional: imagePullSecrets from umbrella values (use ghcr-pull-secret if present)
+          HELM_SET_PULLSECRET_VAL="imagePullSecrets[0].name=ghcr-pull-secret"
+          helm lint "$CHART_DIR"
+          # templates validated with `helm lint` above
+
+          # Build helm args safely into an array to avoid word-splitting and malformed invocations
+          HELM_ARGS=( --namespace "$NAMESPACE" --set "image.repository=$IMAGE_REPO" --set "image.tag=$IMAGE_TAG_INPUT" )
+          # For staging, disable in-app Flyway for services that run migrations out-of-band
+          case "${{ matrix.service }}" in
+            user|order|product)
+              HELM_ARGS+=( --set "flyway.enabled=false" ) ;;
+          esac
+
+          # Add network policy configuration for arc-runners namespace (test automation)
+          case "${{ matrix.service }}" in
+            user|product|order)
+              HELM_ARGS+=( --set "networkPolicy.allowedNamespaces[0]=shopease-frontend" )
+              HELM_ARGS+=( --set "networkPolicy.allowedNamespaces[1]=arc-system" )
+              HELM_ARGS+=( --set "networkPolicy.allowedNamespaces[2]=arc-runners" )
+              ;;
+            notification)
+              HELM_ARGS+=( --set "networkPolicy.allowedNamespaces[0]=shopease-frontend" )
+              HELM_ARGS+=( --set "networkPolicy.allowedNamespaces[1]=shopease-order" )
+              HELM_ARGS+=( --set "networkPolicy.allowedNamespaces[2]=arc-system" )
+              HELM_ARGS+=( --set "networkPolicy.allowedNamespaces[3]=arc-runners" )
+              ;;
+          esac
+
+          # --- Handle optional values/migration/imagePullSecret args ---
+          if [ -n "${MIGRATION_ENABLED:-}" ]; then
+            HELM_ARGS+=( --set "migration.enabled=$MIGRATION_ENABLED" )
+            # Set migration image to use the flyway-specific image with same tag as service
+            case "${{ matrix.service }}" in
+              user)
+                HELM_ARGS+=( --set "migration.image=ghcr.io/${OWNER}/user-service-flyway:${IMAGE_TAG_INPUT}" )
+                ;;
+              product)
+                HELM_ARGS+=( --set "migration.image=ghcr.io/${OWNER}/product-service-flyway:${IMAGE_TAG_INPUT}" )
+                ;;
+              order)
+                HELM_ARGS+=( --set "migration.image=ghcr.io/${OWNER}/order-service-flyway:${IMAGE_TAG_INPUT}" )
+                ;;
+            esac
+          fi
+          if [ -n "${MIGRATION_DB_SEC:-}" ]; then
+            HELM_ARGS+=( --set "migration.secretName=$MIGRATION_DB_SEC" )
+          fi
+          # If an umbrella or custom values file was provided, pass it directly to Helm.
+          if [ -n "${VALUES_FILE:-}" ] && [ -f "$VALUES_FILE" ]; then
+            HELM_ARGS+=( -f "$VALUES_FILE" )
+          fi
+          if [ -n "${SET_SECRET_NAME:-}" ]; then
+            HELM_ARGS+=( --set "$SET_SECRET_NAME" )
+          fi
+          if [ -n "${HELM_SET_PULLSECRET_VAL:-}" ]; then
+            HELM_ARGS+=( --set "$HELM_SET_PULLSECRET_VAL" )
+          fi
+
+          # Debug: show resolved values for troubleshooting
+          echo "Helm release: $RELEASE_NAME"
+          echo "Chart dir: $CHART_DIR"
+          echo "Helm args: ${HELM_ARGS[*]}"
+
+          # --- Pre-deploy validations ---
+          # 1) Registry manifest exists (authenticated to GHCR when possible)
+          repo_name="${IMAGE_REPO##*/}"
+          manifest_url="https://ghcr.io/v2/${OWNER}/${repo_name}/manifests/${IMAGE_TAG_INPUT}"
+          if [ -n "${GHCR_READ_USERNAME:-}" ] && [ -n "${GHCR_READ_TOKEN:-}" ]; then
+            echo "Authenticating to GHCR with provided credentials"
+            # Use docker client to perform the token exchange and manifest inspection
+            echo "${GHCR_READ_TOKEN}" | docker login ghcr.io -u "${GHCR_READ_USERNAME}" --password-stdin >/dev/null 2>&1 || {
+              echo "ERROR: docker login to ghcr.io failed with provided credentials"; exit 1; }
+
+            echo "Inspecting manifest using docker manifest inspect ${IMAGE_REPO}:${IMAGE_TAG_INPUT}"
+            if ! docker manifest inspect "${IMAGE_REPO}:${IMAGE_TAG_INPUT}" >/dev/null 2>&1; then
+              echo "ERROR: docker manifest inspect failed for ${IMAGE_REPO}:${IMAGE_TAG_INPUT} (missing tag or access denied)."
+              docker logout ghcr.io >/dev/null 2>&1 || true
+              exit 1
+            fi
+
+            # cleanup docker login
+            docker logout ghcr.io >/dev/null 2>&1 || true
+          else
+            echo "GHCR credentials not provided; attempting unauthenticated manifest check for $manifest_url"
+            if ! curl -sfI -H "Accept: application/vnd.oci.image.manifest.v1+json" "$manifest_url"; then
+              echo "Warning: unauthenticated manifest check failed; image may be private or tag missing. Helm may fail with ImagePull errors."
+            fi
+          fi
+
+          # 2) Run helm upgrade/install and surface helpful diagnostics on concurrency lock
+          # Migrations are delegated out-of-band; this deploy workflow will not render/apply migration Jobs.
+
+          tmphelmout=$(mktemp)
+          if helm upgrade --install "$RELEASE_NAME" "$CHART_DIR" \
+              "${HELM_ARGS[@]}" \
+              --atomic --wait --timeout 10m 2>&1 | tee "$tmphelmout"; then
+            echo "Helm upgrade/install succeeded"
+          else
+            helm_out=$(cat "$tmphelmout" || true)
+            if printf '%s' "$helm_out" | grep -q "another operation (install/upgrade/rollback) is in progress"; then
+              echo "ERROR: Helm reported a concurrent operation lock for release $RELEASE_NAME"
+              echo "---Pod Descriptions---"
+              kubectl -n "$NAMESPACE" describe pods -l app.kubernetes.io/instance="$RELEASE_NAME" --show-events || true
+              echo "--- Helm status ---"
+              helm -n "$NAMESPACE" status "$RELEASE_NAME" || true
+              echo "--- Helm history ---"
+              helm -n "$NAMESPACE" history "$RELEASE_NAME" || true
+              echo "--- Helm output ---"
+              printf '%s' "$helm_out"
+              rm -f "$tmphelmout" || true
+              exit 1
+            else
+              echo "ERROR: Helm upgrade/install failed with unexpected error:"; printf '%s' "$helm_out"
+              rm -f "$tmphelmout" || true
+              exit 1
+            fi
+          fi
+          rm -f "$tmphelmout" || true
+
+          # No temporary env values files are created here (per-service charts own env values).
+
+      - name: Wait for rollout
+        run: |
+          set -euo pipefail
+          # Safely resolve the deployment name for the Helm release. Avoid jsonpath array access which
+          # errors when no deployments are found; instead use -o name and handle empty output.
+          DEPLOY_NAME=$(kubectl -n "$NAMESPACE" get deploy -l app.kubernetes.io/instance="$RELEASE_NAME" -o name | head -n1 | cut -d'/' -f2 || true)
+          
+          echo "Waiting for rollout of deployment/$DEPLOY_NAME in namespace $NAMESPACE"
+          kubectl -n "$NAMESPACE" rollout status deployment/$DEPLOY_NAME --timeout=600s
+        env:
+          KUBECONFIG: ${{ needs.prepare.outputs.kubeconfig }}
+
+      # Playwright E2E moved to a dedicated `/e2e` workflow that runs after
+      # successful staging deploys. See .github/workflows/e2e.yml for the
+      # post-deploy verification job.
+
+      - name: Smoke test (per service)
+        run: |
+          case "${{ matrix.service }}" in
+            frontend)
+              SERVICE_NAME="frontend"; PORT=80; HEALTH_PATH="/api/health" ;;
+            product)
+              SERVICE_NAME="product-service"; PORT=80; HEALTH_PATH="/api/health" ;;
+            user)
+              SERVICE_NAME="user-service"; PORT=80; HEALTH_PATH="/actuator/health/readiness" ;;
+            order)
+              SERVICE_NAME="order-service"; PORT=80; HEALTH_PATH="/actuator/health/readiness" ;;
+            notification)
+              SERVICE_NAME="notification-service"; PORT=80; HEALTH_PATH="/health" ;;
+          esac
+          echo "Detected Service: $SERVICE_NAME"
+          
+          kubectl -n "$NAMESPACE" run curl-test --restart=Never --rm -i \
+            --image=curlimages/curl:8.8.0 --labels=run=curl-test --command -- \
+            curl -fsS --connect-timeout 5 --max-time 10 http://$SERVICE_NAME.$NAMESPACE.svc.cluster.local:$PORT$HEALTH_PATH
+
+          echo "Smoke test succeeded for $SERVICE_NAME"
+        env:
+          KUBECONFIG: ${{ needs.prepare.outputs.kubeconfig }}

@@ -1,0 +1,120 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification-service
+  labels:
+    app.kubernetes.io/name: notification-service
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: notification-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: notification-service
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      {{- if .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml .Values.imagePullSecrets | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- if .Values.securityContext }}
+        {{- with .Values.securityContext }}
+        {{- if .runAsUser }}
+        runAsUser: {{ .runAsUser }}
+        {{- end }}
+        runAsNonRoot: {{ default true .runAsNonRoot }}
+        {{- end }}
+        {{- else }}
+        runAsNonRoot: true
+        {{- end }}
+      containers:
+        - name: notification-service
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          
+          env:
+            {{- if .Values.jwt.secretName }}
+            # JWT Secret (shared with user-service)
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.jwt.secretName }}
+                  key: JWT_SECRET
+            {{- else if .Values.jwt.dev.JWT_SECRET }}
+            # Dev-only JWT Secret (do NOT use in prod)
+            - name: JWT_SECRET
+              value: {{ .Values.jwt.dev.JWT_SECRET | quote }}
+            {{- end }}
+
+            {{- if .Values.env }}
+            {{- $root := . }}
+            {{- range $key, $val := .Values.env }}
+            - name: {{ $key }}
+              {{- if eq $key "OTEL_EXPORTER_OTLP_ENDPOINT" }}
+              {{- $raw := printf "%v" $val }}
+              {{- if and (hasKey $root.Values "global") (hasKey $root.Values.global "otel") }}
+              value: {{ replace $raw "${global.otel.collectorEndpoint}" $root.Values.global.otel.collectorEndpoint | quote }}
+                {{- else }}
+              value: {{ $raw | quote }}
+              {{- end }}
+              {{- else if or (kindIs "map" $val) (kindIs "slice" $val) }}
+              value: {{ toJson $val | quote }}
+              {{- else }}
+              value: {{ $val | quote }}
+              {{- end }}
+            {{- end }}
+            {{- end }}
+
+            {{- if .Values.credentials.secretName }}
+            # Notification credentials
+            - name: MAIL_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.credentials.secretName }}
+                  key: NOTIFICATION_MAIL_HOST
+            - name: MAIL_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.credentials.secretName }}
+                  key: NOTIFICATION_MAIL_PORT
+            - name: MAIL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.credentials.secretName }}
+                  key: NOTIFICATION_MAIL_USER
+            - name: MAIL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.credentials.secretName }}
+                  key: NOTIFICATION_MAIL_PASSWORD
+            - name: MAIL_FROM
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.credentials.secretName }}
+                  key: NOTIFICATION_MAIL_FROM
+            {{- end }}
+
+          ports:
+            - containerPort: 8084
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: {{ default "/health" .Values.probes.liveness.path }}
+              port: 8084
+            initialDelaySeconds: {{ default 60 .Values.probes.liveness.initialDelaySeconds }}
+            timeoutSeconds: {{ default 5 .Values.probes.liveness.timeoutSeconds }}
+            periodSeconds: {{ default 10 .Values.probes.liveness.periodSeconds }}
+            failureThreshold: {{ default 6 .Values.probes.liveness.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: {{ default "/health" .Values.probes.readiness.path }}
+              port: 8084
+            initialDelaySeconds: {{ default 20 .Values.probes.readiness.initialDelaySeconds }}
+            timeoutSeconds: {{ default 3 .Values.probes.readiness.timeoutSeconds }}
+            periodSeconds: {{ default 5 .Values.probes.readiness.periodSeconds }}
+            failureThreshold: {{ default 5 .Values.probes.readiness.failureThreshold }}

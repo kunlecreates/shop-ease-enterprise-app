@@ -1,0 +1,50 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: notification-default-deny-ingress
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: notification-service
+  policyTypes:
+    - Ingress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: notification-allow-from-frontend-and-curl
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: notification-service
+  policyTypes:
+    - Ingress
+  ingress:
+    # Allow kubelet health checks (from same namespace) on both service port and target port
+    - ports:
+        - protocol: TCP
+          port: {{ .Values.service.port | default 80 }}
+        - protocol: TCP
+          port: {{ .Values.service.targetPort | default 8084 }}
+    # Allow traffic from specified namespaces
+    - from:
+      {{- $global := (default (dict) .Values.global) }}
+      {{- if and .Values.networkPolicy .Values.networkPolicy.allowedNamespaces }}
+      {{- range $ns := .Values.networkPolicy.allowedNamespaces }}
+      - namespaceSelector:
+          matchLabels:
+            kubernetes.io/metadata.name: {{ $ns | quote }}
+      {{- end }}
+      {{- else }}
+      - namespaceSelector:
+          matchLabels:
+            kubernetes.io/metadata.name: {{ ($global.frontendNamespace | default "shopease-frontend") | quote }}
+      {{- end }}
+      - podSelector:
+          matchLabels:
+            run: curl-test
+      ports:
+        - protocol: TCP
+          port: {{ .Values.service.port | default 80 }}
+        - protocol: TCP
+          port: {{ .Values.service.targetPort | default 8084 }}

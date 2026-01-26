@@ -13,9 +13,19 @@ export class CreateProductDto {
   @IsString()
   description?: string;
 
+  @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
-  price!: number;
+  price?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  priceCents?: number;
+
+  @IsOptional()
+  @IsString()
+  currency?: string;
 
   @IsOptional()
   @IsArray()

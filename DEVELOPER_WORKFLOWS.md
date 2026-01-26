@@ -58,16 +58,14 @@ python -m pip install -r requirements.txt
 pytest
 ```
 
-3) Testcontainers and shared test migrations
--------------------------------------------
-- Shared, test-only Flyway migrations and a small `TestContainersConfig` module live in `services/test-utils`.
-- When running integration tests locally for Java services, first install `test-utils`:
+3) Testcontainers and test migrations
+-------------------------------------
+Testcontainers helpers and test-only Flyway migrations must live inside each service so per-service CI and local runs are self-contained.
 
-```bash
-mvn -B -f services/test-utils/pom.xml install
-```
+- Ensure each Java service contains any test helpers under `services/<service>/src/test/java/org/kunlecreates/testutils`.
+- Place Flyway test SQL into `services/<service>/src/test/resources/db/test-migration/` so Flyway can pick them up on the test classpath.
 
-- Testcontainers requires Docker; ensure Docker is running and accessible. If Testcontainers cannot find the daemon, configure your environment accordingly.
+Testcontainers requires Docker; ensure Docker is running and accessible. If Testcontainers cannot find the daemon, configure your environment accordingly.
 
 4) CI Structure (what runs where)
 ---------------------------------

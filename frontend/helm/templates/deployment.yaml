@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  labels:
+    app.kubernetes.io/name: frontend
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: frontend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: frontend
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      {{- if .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml .Values.imagePullSecrets | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- if .Values.securityContext }}
+        {{- with .Values.securityContext }}
+        {{- if .runAsUser }}
+        runAsUser: {{ .runAsUser }}
+        {{- end }}
+        runAsNonRoot: {{ default true .runAsNonRoot }}
+        {{- end }}
+        {{- else }}
+        runAsNonRoot: true
+        {{- end }}
+      containers:
+        - name: frontend
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          
+          env:
+            {{- if .Values.env }}
+            {{- $root := . }}
+            {{- range $key, $val := .Values.env }}
+            - name: {{ $key }}
+              {{- if eq $key "OTEL_EXPORTER_OTLP_ENDPOINT" }}
+              {{- $raw := printf "%v" $val }}
+              {{- with $root.Values.global.otel }}
+              value: {{ replace $raw "${global.otel.collectorEndpoint}" .collectorEndpoint | quote }}
+                {{- else }}
+              value: {{ $raw | quote }}
+                {{- end }}
+              {{- else if or (kindIs "map" $val) (kindIs "slice" $val) }}
+              value: {{ toJson $val | quote }}
+              {{- else }}
+              value: {{ $val | quote }}
+              {{- end }}
+          {{- end }}
+          {{- end }}
+          ports:
+            - containerPort: 3000
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          livenessProbe:
+            tcpSocket:
+              port: {{ default 3000 .Values.probes.liveness.port }}
+            initialDelaySeconds: {{ default 60 .Values.probes.liveness.initialDelaySeconds }}
+            timeoutSeconds: {{ default 5 .Values.probes.liveness.timeoutSeconds }}
+            periodSeconds: {{ default 10 .Values.probes.liveness.periodSeconds }}
+            failureThreshold: {{ default 6 .Values.probes.liveness.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: {{ default "/api/health" .Values.probes.readiness.path | quote }}
+              port: {{ .Values.service.targetPort | default 3000 }}
+              scheme: HTTP
+            initialDelaySeconds: {{ default 20 .Values.probes.readiness.initialDelaySeconds }}
+            timeoutSeconds: {{ default 3 .Values.probes.readiness.timeoutSeconds }}
+            periodSeconds: {{ default 5 .Values.probes.readiness.periodSeconds }}
+            failureThreshold: {{ default 5 .Values.probes.readiness.failureThreshold }}

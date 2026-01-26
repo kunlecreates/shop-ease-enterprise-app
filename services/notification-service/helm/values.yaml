@@ -1,0 +1,82 @@
+image:
+  repository: ghcr.io/kunlecreates/notification-service
+  tag: latest
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+env:
+  OTEL_EXPORTER_OTLP_ENDPOINT: "${global.otel.collectorEndpoint}"
+  LOG_LEVEL: "info"
+
+  # Ensure app listens on container port used by probes
+  PORT: "8084"
+
+credentials:
+  # Name of a pre-created Secret containing mail/SMS credentials.
+  # The deploy workflow can create this as `shopease-notification-credentials` from GitHub Secrets
+  # (NOTIFICATION_MAIL_HOST, NOTIFICATION_MAIL_PORT, NOTIFICATION_MAIL_USER, NOTIFICATION_MAIL_PASSWORD, NOTIFICATION_MAIL_FROM,
+  #  NOTIFICATION_MAIL_API_KEY, NOTIFICATION_MAIL_API_URL, NOTIFICATION_SMS_API_KEY, NOTIFICATION_SMS_API_URL).
+  # Leave empty to disable.
+  secretName: ""
+  # Dev-only: when true, create a Secret from the map below (do NOT use in prod).
+  createDevSecret: false
+  # Keys are written as-is; values here are examples/placeholders only.
+  dev: {}
+  #  NOTIFICATION_MAIL_HOST: smtp.example.com
+  #  NOTIFICATION_MAIL_PORT: "587"
+  #  NOTIFICATION_MAIL_USER: username
+  #  NOTIFICATION_MAIL_PASSWORD: password
+  #  NOTIFICATION_MAIL_FROM: no-reply@example.com
+  #  NOTIFICATION_MAIL_API_KEY: ""
+  #  NOTIFICATION_MAIL_API_URL: https://api.mailprovider.example
+  #  NOTIFICATION_SMS_API_KEY: ""
+  #  NOTIFICATION_SMS_API_URL: https://api.smsprovider.example
+
+jwt:
+  # Name of a pre-created Secret containing JWT_SECRET (shared with user-service)
+  secretName: ""
+  # Dev-only: inline secret (do NOT use in prod)
+  dev:
+    JWT_SECRET: "dev-secret-changeme-at-least-256-bits"
+
+service:
+  port: 80
+  # Port on the container the application listens on; used as Service targetPort and
+  # by NetworkPolicy to allow correct ingress to the pod.
+  targetPort: 8084
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 250m
+    memory: 512Mi
+
+probes:
+  liveness:
+    path: /health
+    initialDelaySeconds: 60
+    timeoutSeconds: 5
+    periodSeconds: 10
+    failureThreshold: 6
+  readiness:
+    path: /health
+    initialDelaySeconds: 20
+    timeoutSeconds: 3
+    periodSeconds: 5
+    failureThreshold: 5
+
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 2
+  targetCPUUtilizationPercentage: 70
+
+# Pod-level security context. Set a numeric runAsUser to avoid issues when
+# images declare a non-numeric USER (e.g. 'app') which prevents kubelet from
+# verifying runAsNonRoot. Default `runAsUser` is a non-root UID (1000).
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
