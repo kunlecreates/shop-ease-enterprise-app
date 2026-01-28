@@ -82,8 +82,17 @@ describe('ProductController (Integration)', () => {
   });
 
   beforeEach(async () => {
-    // Clean up products between tests
-    await dataSource.query('TRUNCATE TABLE product_svc.products CASCADE');
+    // Clean up product-service schema tables between tests to ensure a clean state
+    // Truncate all known tables in the canonical schema and restart identities
+    try {
+      await dataSource.query(
+        'TRUNCATE TABLE product_svc.stock_movements, product_svc.product_inventory, product_svc.product_categories, product_svc.products, product_svc.categories RESTART IDENTITY CASCADE'
+      );
+    } catch (err) {
+      // Fallback: if schema or some tables don't exist yet, attempt a safe single-table truncate
+      // This keeps tests resilient while migrations run in CI/local
+      await dataSource.query("TRUNCATE TABLE IF EXISTS product_svc.products RESTART IDENTITY CASCADE");
+    }
   });
 
   describe('POST /api/product', () => {

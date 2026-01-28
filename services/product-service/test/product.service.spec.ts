@@ -26,8 +26,8 @@ describe('ProductService', () => {
 
   it('listProducts without pagination returns all', async () => {
     const spy = jest.spyOn(productRepo, 'find').mockResolvedValue([
-      { id: '11111111-1111-1111-1111-111111111111' } as any,
-      { id: '22222222-2222-2222-2222-222222222222' } as any,
+      { id: 1 } as any,
+      { id: 2 } as any,
     ]);
     const res = await service.listProducts();
     expect(spy).toHaveBeenCalledWith({ relations: ['movements'] });
@@ -41,7 +41,7 @@ describe('ProductService', () => {
       take: jest.fn().mockReturnThis(),
       orderBy: jest.fn().mockReturnThis(),
       getMany: jest.fn().mockResolvedValue([
-        { id: '33333333-3333-3333-3333-333333333333' } as any,
+        { id: 3 } as any,
       ]),
     };
     jest.spyOn(productRepo, 'createQueryBuilder').mockReturnValue(mockQueryBuilder as any);
