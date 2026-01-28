@@ -4,9 +4,9 @@ import { StockMovement } from './stock-movement.entity';
 
 @Entity('products')
 export class Product {
-  @PrimaryGeneratedColumn('increment') id!: number;
-  @Column({ type: 'varchar', length: 64, unique: true }) sku!: string;
-  @Column({ type: 'varchar', length: 200 }) name!: string;
+  @PrimaryGeneratedColumn('increment', { type: 'bigint' }) id!: number;
+  @Column({ type: 'varchar', length: 64, unique: true, nullable: false }) sku!: string;
+  @Column({ type: 'varchar', length: 200, nullable: false }) name!: string;
   @Column({ type: 'text', nullable: true }) description?: string;
   // Store price as cents in DB (bigint). Provide a `price` virtual getter/setter for convenience.
   private static centsTransformer: ValueTransformer = {
@@ -30,10 +30,10 @@ export class Product {
   // Use JSONB in production per Flyway migration.
   @Column({ type: 'jsonb', nullable: true }) attributes?: Record<string, any>;
   @Column({ type: 'char', length: 3, default: 'USD' }) currency!: string;
-  @CreateDateColumn({ name: 'created_at' }) createdAt!: Date;
-  @UpdateDateColumn({ name: 'updated_at' }) updatedAt!: Date;
-  @Column({ name: 'is_active', default: true }) active!: boolean;
-  @ManyToMany(() => Category, c => c.products, { cascade: true })
+  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' }) createdAt!: Date;
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' }) updatedAt!: Date;
+  @Column({ name: 'is_active', type: 'boolean', default: true }) active!: boolean;
+  @ManyToMany(() => Category, c => c.products)
   @JoinTable({
     name: 'product_categories',
     joinColumn: { name: 'product_id', referencedColumnName: 'id' },

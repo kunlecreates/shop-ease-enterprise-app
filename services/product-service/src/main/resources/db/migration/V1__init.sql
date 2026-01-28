@@ -1,117 +1,126 @@
 -- V1__init.sql
--- Flyway baseline for product-service (UUID-based schema matching TypeORM entities)
--- Creates pgcrypto extension, product/category/stock tables, inventory, audit timestamps, and search index
+-- Flyway baseline for product-service (BIGSERIAL ids, canonical schema)
 
 -- Create product_svc schema if it doesn't exist
-CREATE SCHEMA IF NOT EXISTS product_svc;
+CREATE SCHEMA IF NOT EXISTS product_svc AUTHORIZATION postgres;
 
--- Extension required for gen_random_uuid()
-CREATE EXTENSION IF NOT EXISTS pgcrypto SCHEMA product_svc;
+-- Recommended: explicit schema
+SET search_path TO product_svc, public;
 
--- Products table
-CREATE TABLE IF NOT EXISTS products (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  sku varchar(64) NOT NULL UNIQUE,
-  name varchar(200) NOT NULL,
-  description text,
-  price_cents bigint NOT NULL DEFAULT 0,
-  currency CHAR(3) NOT NULL DEFAULT 'USD',
-  is_active boolean NOT NULL DEFAULT true,
-  attributes jsonb DEFAULT '{}'::jsonb,
-  created_at timestamptz(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at timestamptz(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  search_vector tsvector
-);
+-- ---- ID sequences (BIGSERIAL safety) -----------------------------
 
--- Categories table
-CREATE TABLE IF NOT EXISTS categories (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  code varchar(64) NOT NULL UNIQUE,
-  name varchar(200) NOT NULL,
-  description text,
-  is_active boolean NOT NULL DEFAULT true,
-  created_at timestamptz(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at timestamptz(6) NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
+ALTER SEQUENCE IF EXISTS product_svc.categories_id_seq OWNED BY product_svc.categories.id;
+ALTER SEQUENCE IF EXISTS product_svc.products_id_seq OWNED BY product_svc.products.id;
+ALTER SEQUENCE IF EXISTS product_svc.stock_movements_id_seq OWNED BY product_svc.stock_movements.id;
 
--- Join table for many-to-many products <-> categories
-CREATE TABLE IF NOT EXISTS product_categories (
-  productsid uuid NOT NULL,
-  categoriesid uuid NOT NULL,
-  PRIMARY KEY (productsid, categoriesid)
-);
+-- ---- Defaults (safe if already present) ---------------------------
 
-ALTER TABLE IF EXISTS product_categories
-  ADD CONSTRAINT fk_product_categories_products FOREIGN KEY (productsid)
-    REFERENCES products(id) ON DELETE CASCADE;
+ALTER TABLE product_svc.categories
+  ALTER COLUMN is_active SET DEFAULT TRUE,
+  ALTER COLUMN created_at SET DEFAULT CURRENT_TIMESTAMP,
+  ALTER COLUMN updated_at SET DEFAULT CURRENT_TIMESTAMP;
 
-ALTER TABLE IF EXISTS product_categories
-  ADD CONSTRAINT fk_product_categories_categories FOREIGN KEY (categoriesid)
-    REFERENCES categories(id) ON DELETE CASCADE;
+ALTER TABLE product_svc.products
+  ALTER COLUMN currency SET DEFAULT 'USD',
+  ALTER COLUMN is_active SET DEFAULT TRUE,
+  ALTER COLUMN created_at SET DEFAULT CURRENT_TIMESTAMP,
+  ALTER COLUMN updated_at SET DEFAULT CURRENT_TIMESTAMP;
 
--- Inventory table to track stock per product (separate from movements)
-CREATE TABLE IF NOT EXISTS product_inventory (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  productid uuid NOT NULL,
-  location text,
-  quantity bigint NOT NULL DEFAULT 0,
-  reserved bigint NOT NULL DEFAULT 0,
-  created_at timestamptz(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at timestamptz(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT fk_inventory_product FOREIGN KEY (productid) REFERENCES products(id) ON DELETE CASCADE
-);
+ALTER TABLE product_svc.product_inventory
+  ALTER COLUMN quantity SET DEFAULT 0,
+  ALTER COLUMN reserved SET DEFAULT 0,
+  ALTER COLUMN created_at SET DEFAULT CURRENT_TIMESTAMP,
+  ALTER COLUMN updated_at SET DEFAULT CURRENT_TIMESTAMP;
 
--- Stock movements (audit log)
-CREATE TABLE IF NOT EXISTS stock_movements (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  productid uuid NOT NULL,
-  quantity integer NOT NULL,
-  reason varchar(64) NOT NULL,
-  context JSONB NULL,
-  occurredat timestamptz(6) NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
+ALTER TABLE product_svc.stock_movements
+  ALTER COLUMN created_at SET DEFAULT CURRENT_TIMESTAMP;
 
-ALTER TABLE IF EXISTS stock_movements
-  ADD CONSTRAINT fk_stock_movements_product FOREIGN KEY (productid)
-    REFERENCES products(id) ON DELETE CASCADE;
+-- ---- Constraints (only add if missing) ----------------------------
 
--- Indexes
-CREATE INDEX IF NOT EXISTS idx_products_name ON products USING btree (lower(name));
-CREATE INDEX IF NOT EXISTS idx_products_sku ON products USING btree (sku);
-CREATE INDEX IF NOT EXISTS idx_products_price_cents ON products USING btree (price_cents);
-CREATE INDEX IF NOT EXISTS idx_categories_code ON categories USING btree (code);
-
--- Full-text search index
-UPDATE products SET search_vector = to_tsvector('english', coalesce(name,'') || ' ' || coalesce(description,''));
-CREATE INDEX IF NOT EXISTS idx_products_search ON products USING gin (search_vector);
-
--- Triggers to maintain updated_at and search_vector
-CREATE OR REPLACE FUNCTION update_updated_at_column() RETURNS trigger AS $$
+DO $$
 BEGIN
-  NEW.updated_at := now();
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'chk_products_price'
+  ) THEN
+    ALTER TABLE product_svc.products
+      ADD CONSTRAINT chk_products_price CHECK (price_cents >= 0);
+  END IF;
+END$$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'chk_inventory_qty'
+  ) THEN
+    ALTER TABLE product_svc.product_inventory
+      ADD CONSTRAINT chk_inventory_qty CHECK (quantity >= 0);
+  END IF;
+END$$;
+
+-- ---- Triggers (idempotent) ----------------------------------------
+
+CREATE OR REPLACE FUNCTION set_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = CURRENT_TIMESTAMP;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION products_search_vector_trigger() RETURNS trigger AS $$
+DO $$
 BEGIN
-  NEW.search_vector := to_tsvector('english', coalesce(NEW.name,'') || ' ' || coalesce(NEW.description,''));
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger WHERE tgname = 'trg_categories_updated'
+  ) THEN
+    CREATE TRIGGER trg_categories_updated
+    BEFORE UPDATE ON product_svc.categories
+    FOR EACH ROW
+    EXECUTE FUNCTION set_updated_at();
+  END IF;
+END$$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger WHERE tgname = 'trg_products_updated'
+  ) THEN
+    CREATE TRIGGER trg_products_updated
+    BEFORE UPDATE ON product_svc.products
+    FOR EACH ROW
+    EXECUTE FUNCTION set_updated_at();
+  END IF;
+END$$;
+
+-- ---- Full-text search ---------------------------------------------
+
+CREATE OR REPLACE FUNCTION products_search_vector_trigger()
+RETURNS trigger AS $$
+BEGIN
+  NEW.search_vector :=
+    to_tsvector('english',
+      coalesce(NEW.name,'') || ' ' || coalesce(NEW.description,'')
+    );
   RETURN NEW;
-END
+END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trg_products_updated_at
-BEFORE INSERT OR UPDATE ON products
-FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger WHERE tgname = 'trg_products_search_vector'
+  ) THEN
+    CREATE TRIGGER trg_products_search_vector
+    BEFORE INSERT OR UPDATE ON product_svc.products
+    FOR EACH ROW
+    EXECUTE FUNCTION products_search_vector_trigger();
+  END IF;
+END$$;
 
-CREATE TRIGGER trg_categories_updated_at
-BEFORE INSERT OR UPDATE ON categories
-FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
+-- ---- Indexes ------------------------------------------------------
 
-CREATE TRIGGER trg_products_search_vector
-BEFORE INSERT OR UPDATE ON products
-FOR EACH ROW EXECUTE PROCEDURE products_search_vector_trigger();
-
-CREATE TRIGGER trg_inventory_updated_at
-BEFORE INSERT OR UPDATE ON product_inventory
-FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
+CREATE INDEX IF NOT EXISTS ix_products_active ON product_svc.products(is_active);
+CREATE INDEX IF NOT EXISTS ix_products_price ON product_svc.products(price_cents);
+CREATE INDEX IF NOT EXISTS gin_products_search ON product_svc.products USING GIN (search_vector);
+CREATE INDEX IF NOT EXISTS idx_products_name ON product_svc.products USING btree (lower(name));
+CREATE INDEX IF NOT EXISTS idx_products_sku ON product_svc.products USING btree (sku);
+CREATE INDEX IF NOT EXISTS idx_categories_code ON product_svc.categories USING btree (code);
