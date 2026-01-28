@@ -70,11 +70,13 @@ describe('ProductController (Integration)', () => {
   });
 
   afterAll(async () => {
-    if (dataSource && dataSource.isInitialized) {
-      await dataSource.destroy();
-    }
+    // Close the Nest application first to ensure it releases any DB connections
+    // and server listeners before destroying the DataSource and stopping the container.
     if (app) {
       await app.close();
+    }
+    if (dataSource && dataSource.isInitialized) {
+      await dataSource.destroy();
     }
     if (container) {
       await container.stop();
