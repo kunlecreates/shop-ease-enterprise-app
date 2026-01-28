@@ -40,6 +40,14 @@ module.exports = async () => {
     const client = new Client({ host, port, user: 'postgres', password: 'postgres', database: 'test' });
     await client.connect();
     try {
+      // Ensure the canonical schema exists in the test DB so migrations that perform ALTERs don't fail.
+      // This is safe for tests only and does not create application tables — it only ensures the schema namespace exists.
+      try {
+        await client.query("CREATE SCHEMA IF NOT EXISTS product_svc AUTHORIZATION postgres;");
+      } catch (e) {
+        console.warn('global-setup: create schema product_svc failed:', e.message || e);
+      }
+
       const files = fs.readdirSync(migDir).filter(f => f.endsWith('.sql')).sort();
       for (const f of files) {
         const sql = fs.readFileSync(path.join(migDir, f), 'utf8');
