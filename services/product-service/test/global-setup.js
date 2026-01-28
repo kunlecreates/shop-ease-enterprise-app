@@ -34,27 +34,44 @@ module.exports = async () => {
   const outPath = path.resolve(__dirname, '.pg_container.json');
   fs.writeFileSync(outPath, JSON.stringify(info));
 
-  // Run migrations (simple SQL runner) if migration directory exists
+  // Run test-only seed migrations first (if present), then production migrations.
+  const testMigDir = path.resolve(__dirname, 'test-migration');
   const migDir = path.resolve(__dirname, '..', 'src', 'main', 'resources', 'db', 'migration');
-  if (fs.existsSync(migDir)) {
+  if (fs.existsSync(testMigDir) || fs.existsSync(migDir)) {
     const client = new Client({ host, port, user: 'postgres', password: 'postgres', database: 'test' });
     await client.connect();
     try {
+      // Apply test-only migrations first. These are intended to create minimal schema and tables
+      // required so production migrations (which may assume objects exist) can run in a fresh DB.
+      if (fs.existsSync(testMigDir)) {
+        const testFiles = fs.readdirSync(testMigDir).filter(f => f.endsWith('.sql')).sort();
+        for (const f of testFiles) {
+          const sql = fs.readFileSync(path.join(testMigDir, f), 'utf8');
+          try {
+            await client.query(sql);
+          } catch (e) {
+            console.warn('test-migration', f, 'failed:', e.message || e);
+          }
+        }
+      }
+
       // Ensure the canonical schema exists in the test DB so migrations that perform ALTERs don't fail.
-      // This is safe for tests only and does not create application tables — it only ensures the schema namespace exists.
+      // This is safe for tests only and does not modify production migrations.
       try {
         await client.query("CREATE SCHEMA IF NOT EXISTS product_svc AUTHORIZATION postgres;");
       } catch (e) {
         console.warn('global-setup: create schema product_svc failed:', e.message || e);
       }
 
-      const files = fs.readdirSync(migDir).filter(f => f.endsWith('.sql')).sort();
-      for (const f of files) {
-        const sql = fs.readFileSync(path.join(migDir, f), 'utf8');
-        try {
-          await client.query(sql);
-        } catch (e) {
-          console.warn('migration', f, 'failed:', e.message || e);
+      if (fs.existsSync(migDir)) {
+        const files = fs.readdirSync(migDir).filter(f => f.endsWith('.sql')).sort();
+        for (const f of files) {
+          const sql = fs.readFileSync(path.join(migDir, f), 'utf8');
+          try {
+            await client.query(sql);
+          } catch (e) {
+            console.warn('migration', f, 'failed:', e.message || e);
+          }
         }
       }
     } finally {
