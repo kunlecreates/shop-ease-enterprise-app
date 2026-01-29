@@ -24,7 +24,7 @@ export class ProductService {
     @InjectRepository(StockMovement) private readonly movements: Repository<StockMovement>
   ) {}
 
-  async createProduct(data: { sku: string; name: string; description?: string; price?: number; priceCents?: number; currency?: string; categoryCodes?: string[] }) {
+  async createProduct(data: { sku: string; name: string; description?: string; price?: number; priceCents?: number; currency?: string; categoryCodes?: string[]; initialStock?: number }) {
     const cats: Category[] = [];
     if (data.categoryCodes) {
       for (const code of data.categoryCodes) {
@@ -56,7 +56,17 @@ export class ProductService {
       prod.priceCents = 0;
     }
     
-    return this.products.save(prod);
+    const saved = await this.products.save(prod);
+
+    // If initialStock is provided, create an initial stock movement
+    if (data.initialStock !== undefined && Number.isInteger(data.initialStock) && data.initialStock !== 0) {
+      const qty = data.initialStock;
+      const movement = this.movements.create({ product: saved, quantity: qty, reason: 'Initial stock' });
+      await this.movements.save(movement);
+    }
+
+    // Return product with relations (categories and movements) so callers can see stock
+    return this.products.findOne({ where: { id: saved.id }, relations: ['categories', 'movements'] });
   }
 
   async listProducts(options?: ProductSearchOptions): Promise<Product[]> {
