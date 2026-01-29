@@ -1,0 +1,23 @@
+{"version":8,"type":"context-options","origin":"library","browserName":"","playwrightVersion":"1.58.0","options":{},"platform":"linux","wallTime":1769671472061,"monotonicTime":86354.253,"sdkLanguage":"javascript","contextId":"request-context@c59c6f5e8646cba5b125aebdaecc1579","title":"security.spec.ts:84 › Customer User Journey (FR001, FR002, FR004) › Product Catalog Browsing (FR004) › should display product catalog page"}
+{"type":"before","callId":"call@19","startTime":86783.234,"class":"APIRequestContext","method":"fetch","params":{"url":"https://shop.kunlecreates.org/api/product","method":"POST","jsonData":"{\"title\":\"Playwright Test Product\",\"description\":\"Seeded by Playwright E2E for deterministic test\",\"price\":1.23,\"sku\":\"pw-1769671472484\",\"stock\":10}","timeout":0},"stepId":"pw:api@41"}
+{"type":"log","callId":"call@19","time":86806.225,"message":"→ POST https://shop.kunlecreates.org/api/product"}
+{"type":"log","callId":"call@19","time":86806.278,"message":"  user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.7632.6 Safari/537.36"}
+{"type":"log","callId":"call@19","time":86806.308,"message":"  accept: */*"}
+{"type":"log","callId":"call@19","time":86806.329,"message":"  accept-encoding: gzip,deflate,br"}
+{"type":"log","callId":"call@19","time":86806.351,"message":"  CF-Access-Client-Id: 8784e7b62a50d835dfa349a367af7291.access"}
+{"type":"log","callId":"call@19","time":86806.37,"message":"  CF-Access-Client-Secret: 716cd3e7824b11f993da3b3ab7afdbdbec7666602afb10a64460df30160a73df"}
+{"type":"log","callId":"call@19","time":86806.392,"message":"  content-type: application/json"}
+{"type":"log","callId":"call@19","time":86806.442,"message":"  content-length: 148"}
+{"type":"log","callId":"call@19","time":86979.3,"message":"← 502 Bad Gateway"}
+{"type":"log","callId":"call@19","time":86979.343,"message":"  date: Thu, 29 Jan 2026 07:24:32 GMT"}
+{"type":"log","callId":"call@19","time":86979.361,"message":"  content-type: text/html; charset=UTF-8"}
+{"type":"log","callId":"call@19","time":86979.375,"message":"  content-length: 6442"}
+{"type":"log","callId":"call@19","time":86979.388,"message":"  connection: keep-alive"}
+{"type":"log","callId":"call@19","time":86979.399,"message":"  cache-control: private, max-age=0, no-store, no-cache, must-revalidate, post-check=0, pre-check=0"}
+{"type":"log","callId":"call@19","time":86979.411,"message":"  expires: Thu, 01 Jan 1970 00:00:01 GMT"}
+{"type":"log","callId":"call@19","time":86979.423,"message":"  referrer-policy: same-origin"}
+{"type":"log","callId":"call@19","time":86979.434,"message":"  x-frame-options: SAMEORIGIN"}
+{"type":"log","callId":"call@19","time":86979.446,"message":"  server: cloudflare"}
+{"type":"log","callId":"call@19","time":86979.457,"message":"  cf-ray: 9c56fd8fea9abec7-YYC"}
+{"type":"log","callId":"call@19","time":86979.468,"message":"  alt-svc: h3=\":443\"; ma=86400"}
+{"type":"after","callId":"call@19","endTime":86984.756,"result":{"response":{"url":"https://shop.kunlecreates.org/api/product","status":502,"statusText":"Bad Gateway","headers":[{"name":"Date","value":"Thu, 29 Jan 2026 07:24:32 GMT"},{"name":"Content-Type","value":"text/html; charset=UTF-8"},{"name":"Content-Length","value":"6442"},{"name":"Connection","value":"keep-alive"},{"name":"Cache-Control","value":"private, max-age=0, no-store, no-cache, must-revalidate, post-check=0, pre-check=0"},{"name":"Expires","value":"Thu, 01 Jan 1970 00:00:01 GMT"},{"name":"Referrer-Policy","value":"same-origin"},{"name":"X-Frame-Options","value":"SAMEORIGIN"},{"name":"Server","value":"cloudflare"},{"name":"CF-RAY","value":"9c56fd8fea9abec7-YYC"},{"name":"alt-svc","value":"h3=\":443\"; ma=86400"}],"fetchUid":"40794e11d83c729eb16a276bbc557e23"}}}

@@ -55,11 +55,12 @@ export function createProxyHandlers(envVarName: string, upstreamPrefixPath: stri
       const extraSegments = params?.path ?? [];
       const target = buildTargetUrl(baseUrl, upstreamPrefixPath, extraSegments, req.nextUrl.searchParams);
 
+      const timeoutMs = Number(process.env.PROXY_UPSTREAM_TIMEOUT_MS) || 30000;
       const init: RequestInit = {
         method,
         headers: pickHeaders(req),
         redirect: 'manual',
-        signal: getAbortSignal(10000),
+        signal: getAbortSignal(timeoutMs),
       };
       if (method !== 'GET' && method !== 'HEAD') {
         // Stream or clone body
