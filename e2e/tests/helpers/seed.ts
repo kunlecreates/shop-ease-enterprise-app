@@ -9,7 +9,7 @@ export async function seedProductIfRequired(request: APIRequestContext) {
 
   try {
     const product = {
-      title: 'Playwright Test Product',
+      name: 'Playwright Test Product',
       description: 'Seeded by Playwright E2E for deterministic test',
       price: 1.23,
       sku: `pw-${Date.now()}`,
