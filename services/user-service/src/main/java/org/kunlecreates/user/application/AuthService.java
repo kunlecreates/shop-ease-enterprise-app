@@ -1,8 +1,12 @@
 package org.kunlecreates.user.application;
 
 import org.kunlecreates.user.domain.User;
+import org.kunlecreates.user.domain.PasswordResetToken;
 import org.kunlecreates.user.domain.exception.DuplicateUserException;
+import org.kunlecreates.user.domain.exception.PasswordResetRequiredException;
+import org.kunlecreates.user.domain.exception.PasswordResetTokenException;
 import org.kunlecreates.user.repository.UserRepository;
+import org.kunlecreates.user.repository.PasswordResetTokenRepository;
 import org.kunlecreates.user.repository.RoleRepository;
 import org.kunlecreates.user.infrastructure.security.JwtService;
 import org.kunlecreates.user.interfaces.dto.AuthResponse;
@@ -12,10 +16,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -26,30 +29,20 @@ public class AuthService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
-    
-    // Simple in-memory token store (for production, use Redis or database)
-    private final Map<String, PasswordResetToken> resetTokens = new HashMap<>();
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
 
     public AuthService(
         UserRepository userRepository,
         RoleRepository roleRepository,
         PasswordEncoder passwordEncoder,
-        JwtService jwtService
+        JwtService jwtService,
+        PasswordResetTokenRepository passwordResetTokenRepository
     ) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
-    }
-
-    private static class PasswordResetToken {
-        String email;
-        LocalDateTime expiresAt;
-        
-        PasswordResetToken(String email, LocalDateTime expiresAt) {
-            this.email = email;
-            this.expiresAt = expiresAt;
-        }
+        this.passwordResetTokenRepository = passwordResetTokenRepository;
     }
 
     @Transactional
@@ -84,9 +77,14 @@ public class AuthService {
     public AuthResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid credentials"));
-
+        
         if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
             throw new IllegalArgumentException("Invalid credentials");
+        }
+
+        // Enforce password reset if there exists an unused, unexpired password reset token
+        if (passwordResetTokenRepository.existsByUserAndUsedAtIsNullAndExpiresAtAfter(user, Instant.now())) {
+            throw new PasswordResetRequiredException("Password reset required");
         }
 
         List<String> roles = user.getRoles().stream()
@@ -103,40 +101,49 @@ public class AuthService {
     }
 
     @Transactional
-    public String initiatePasswordReset(String email) {
+    public String initiatePasswordReset(String email) {        
+
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
+        if (passwordResetTokenRepository
+                .existsByUserAndUsedAtIsNullAndExpiresAtAfter(user, Instant.now())) {
+            throw new PasswordResetTokenException("Active reset token already exists");
+        }
+
         String token = UUID.randomUUID().toString();
-        LocalDateTime expiresAt = LocalDateTime.now().plusHours(24);
-        
-        resetTokens.put(token, new PasswordResetToken(email, expiresAt));
-        
+        Instant expiresAt = Instant.now().plusSeconds(24 * 3600);
+
+        // Store a bcrypt hash of the token in DB for lookup (matches seed format)
+        String tokenHash = passwordEncoder.encode(token);
+        PasswordResetToken prt = new PasswordResetToken(user, tokenHash, expiresAt);
+        passwordResetTokenRepository.save(prt);
         return token;
     }
 
     @Transactional
     public boolean confirmPasswordReset(String token, String newPassword) {
-        PasswordResetToken resetToken = resetTokens.get(token);
+        Instant now = Instant.now();
+        // Look up all unused tokens and compare using BCrypt matches
+        List<PasswordResetToken> candidates = 
+                passwordResetTokenRepository.findByUsedAtIsNullAndExpiresAtAfter(now);
+
+        PasswordResetToken matched = null;
         
-        if (resetToken == null) {
-            throw new IllegalArgumentException("Invalid or expired token");
+        for (PasswordResetToken prt : candidates) {
+            if (passwordEncoder.matches(token, prt.getTokenHash())) {
+                matched = prt;
+                break;
+            }
         }
-        
-        if (LocalDateTime.now().isAfter(resetToken.expiresAt)) {
-            resetTokens.remove(token);
-            throw new IllegalArgumentException("Token has expired");
-        }
-        
-        User user = userRepository.findByEmail(resetToken.email)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-        
-        String hashedPassword = passwordEncoder.encode(newPassword);
-        user.setPasswordHash(hashedPassword);
+
+        if (matched == null) throw new IllegalArgumentException("Invalid or expired token");
+
+        User user = matched.getUser();
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
         userRepository.save(user);
-        
-        resetTokens.remove(token);
-        
+        matched.markUsed(now);
+        passwordResetTokenRepository.save(matched);
         return true;
     }
 }
