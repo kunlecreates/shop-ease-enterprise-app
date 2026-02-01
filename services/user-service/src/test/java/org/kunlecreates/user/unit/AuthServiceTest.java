@@ -23,7 +23,7 @@ import org.kunlecreates.user.interfaces.dto.LoginRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.List;
 import java.util.Collections;
@@ -179,7 +179,7 @@ class AuthServiceTest {
         when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(testUser));
         when(passwordEncoder.matches("correctPassword", "hashedPassword")).thenReturn(true);
         when(passwordResetTokenRepository.existsByUserAndUsedAtIsNullAndExpiresAtAfter(
-                eq(testUser), any(Instant.class))).thenReturn(true);
+                eq(testUser), any(LocalDateTime.class))).thenReturn(true);
 
         assertThatThrownBy(() -> authService.login(request))
                 .isInstanceOf(PasswordResetRequiredException.class)
@@ -194,7 +194,7 @@ class AuthServiceTest {
         when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(testUser));
         when(passwordEncoder.matches("correctPassword", "hashedPassword")).thenReturn(true);
         when(passwordResetTokenRepository.existsByUserAndUsedAtIsNullAndExpiresAtAfter(
-                eq(testUser), any(Instant.class))).thenReturn(false);
+                eq(testUser), any(LocalDateTime.class))).thenReturn(false);
         when(jwtService.generateToken("1", "test@example.com", List.of("CUSTOMER")))
                 .thenReturn("login-token");
 
@@ -218,7 +218,7 @@ class AuthServiceTest {
     void initiatePasswordReset_whenActiveTokenExists_shouldThrowPasswordResetTokenException() {
         when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(testUser));
         when(passwordResetTokenRepository.existsByUserAndUsedAtIsNullAndExpiresAtAfter(
-                eq(testUser), any(Instant.class))).thenReturn(true);
+                eq(testUser), any(LocalDateTime.class))).thenReturn(true);
 
         assertThatThrownBy(() -> authService.initiatePasswordReset("test@example.com"))
                 .isInstanceOf(PasswordResetTokenException.class)
@@ -229,7 +229,7 @@ class AuthServiceTest {
     void initiatePasswordReset_shouldGenerateUuidTokenAndStoreBcryptHash() {
         when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(testUser));
         when(passwordResetTokenRepository.existsByUserAndUsedAtIsNullAndExpiresAtAfter(
-                eq(testUser), any(Instant.class))).thenReturn(false);
+                eq(testUser), any(LocalDateTime.class))).thenReturn(false);
         when(passwordEncoder.encode(anyString())).thenReturn("bcrypt-hash-of-token");
 
         String token = authService.initiatePasswordReset("test@example.com");
@@ -242,7 +242,7 @@ class AuthServiceTest {
 
     @Test
     void confirmPasswordReset_whenNoMatchingToken_shouldThrowException() {
-        when(passwordResetTokenRepository.findByUsedAtIsNullAndExpiresAtAfter(any(Instant.class)))
+        when(passwordResetTokenRepository.findByUsedAtIsNullAndExpiresAtAfter(any(LocalDateTime.class)))
                 .thenReturn(Collections.emptyList());
 
         assertThatThrownBy(() -> authService.confirmPasswordReset("invalid-token", "newPassword"))
@@ -253,9 +253,9 @@ class AuthServiceTest {
     @Test
     void confirmPasswordReset_withValidToken_shouldUpdatePasswordAndMarkTokenUsed() {
         PasswordResetToken resetToken = new PasswordResetToken(
-                testUser, "bcrypt-hash", Instant.now().plusSeconds(3600));
+                testUser, "bcrypt-hash", LocalDateTime.now().plusSeconds(3600));
         
-        when(passwordResetTokenRepository.findByUsedAtIsNullAndExpiresAtAfter(any(Instant.class)))
+        when(passwordResetTokenRepository.findByUsedAtIsNullAndExpiresAtAfter(any(LocalDateTime.class)))
                 .thenReturn(List.of(resetToken));
         when(passwordEncoder.matches("plain-token", "bcrypt-hash")).thenReturn(true);
         when(passwordEncoder.encode("newPassword123")).thenReturn("new-hashed-password");
