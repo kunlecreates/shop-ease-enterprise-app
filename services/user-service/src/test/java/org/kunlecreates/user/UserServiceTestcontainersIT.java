@@ -26,7 +26,6 @@ public class UserServiceTestcontainersIT {
 
     @Container
     static OracleContainer oracle = new OracleContainer("gvenzl/oracle-free:slim-faststart")
-            .withDatabaseName("FREEPDB1")
             .withUsername("USER_SVC")
             .withPassword("test")
             .withStartupTimeout(java.time.Duration.ofMinutes(5));
