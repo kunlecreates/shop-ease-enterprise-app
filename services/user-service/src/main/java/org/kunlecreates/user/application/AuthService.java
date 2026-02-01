@@ -107,12 +107,12 @@ public class AuthService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         if (passwordResetTokenRepository
-                .existsByUserAndUsedAtIsNullAndExpiresAtAfter(user, Instant.now())) {
+                .existsByUserAndUsedAtIsNullAndExpiresAtAfter(user, LocalDateTime.now())) {
             throw new PasswordResetTokenException("Active reset token already exists");
         }
 
         String token = UUID.randomUUID().toString();
-        Instant expiresAt = Instant.now().plusSeconds(24 * 3600);
+        LocalDateTime expiresAt = LocalDateTime.now().plusSeconds(24 * 3600);
 
         // Store a bcrypt hash of the token in DB for lookup (matches seed format)
         String tokenHash = passwordEncoder.encode(token);
@@ -123,7 +123,7 @@ public class AuthService {
 
     @Transactional
     public boolean confirmPasswordReset(String token, String newPassword) {
-        Instant now = Instant.now();
+        LocalDateTime now = LocalDateTime.now();
         // Look up all unused tokens and compare using BCrypt matches
         List<PasswordResetToken> candidates = 
                 passwordResetTokenRepository.findByUsedAtIsNullAndExpiresAtAfter(now);

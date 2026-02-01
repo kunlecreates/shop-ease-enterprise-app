@@ -1,7 +1,7 @@
 package org.kunlecreates.user.domain;
 
 import jakarta.persistence.*;
-import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "PASSWORD_RESET_TOKENS")
@@ -18,17 +18,17 @@ public class PasswordResetToken {
     private String tokenHash;
 
     @Column(name = "EXPIRES_AT", nullable = false)
-    private Instant expiresAt;
+    private LocalDateTime expiresAt;
 
     @Column(name = "USED_AT")
-    private Instant usedAt;
+    private LocalDateTime usedAt;
 
     @Column(name = "CREATED_AT", nullable = false)
-    private Instant createdAt = Instant.now();
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     protected PasswordResetToken() {}
 
-    public PasswordResetToken(User user, String tokenHash, Instant expiresAt) {
+    public PasswordResetToken(User user, String tokenHash, LocalDateTime expiresAt) {
         this.user = user;
         this.tokenHash = tokenHash;
         this.expiresAt = expiresAt;
@@ -37,8 +37,8 @@ public class PasswordResetToken {
     public Long getId() { return id; }
     public User getUser() { return user; }
     public String getTokenHash() { return tokenHash; }
-    public Instant getExpiresAt() { return expiresAt; }
-    public Instant getUsedAt() { return usedAt; }
-    public Instant getCreatedAt() { return createdAt; }
-    public void markUsed(Instant when) { this.usedAt = when; }
+    public LocalDateTime getExpiresAt() { return expiresAt; }
+    public LocalDateTime getUsedAt() { return usedAt; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void markUsed(LocalDateTime when) { this.usedAt = when; }
 }
