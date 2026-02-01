@@ -117,27 +117,27 @@
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>testcontainers</artifactId>
-            <version>1.19.3</version>
+            <version>1.21.4</version>
             <scope>test</scope>
         </dependency>
         <!-- JUnit Jupiter integration for Testcontainers (provides org.testcontainers.junit.jupiter package) -->
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>1.19.3</version>
+            <version>1.21.4</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>postgresql</artifactId>
-            <version>1.19.3</version>
+            <version>1.21.4</version>
             <scope>test</scope>
         </dependency>
         <!-- Oracle Free for integration tests with production-like database -->
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>oracle-free</artifactId>
-            <version>1.19.3</version>
+            <version>1.21.4</version>
             <scope>test</scope>
         </dependency>
         <dependency>
