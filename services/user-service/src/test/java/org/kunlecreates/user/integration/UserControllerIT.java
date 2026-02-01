@@ -14,7 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.ContextConfiguration;
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.containers.OracleContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.kunlecreates.user.test.FlywayTestInitializer;
@@ -25,11 +25,10 @@ import java.util.HashMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Integration test for UserController REST API with real PostgreSQL database.
+ * Integration test for UserController REST API with real Oracle Free database.
  * Tests full stack: Controller → Service → Repository → Database (Testcontainers).
  * 
- * Note: Using PostgreSQL for testing instead of Oracle for CI compatibility.
- * Testcontainers oracle-free requires Docker with specific Oracle licensing.
+ * Uses Oracle Free Testcontainer to match production database dialect.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
@@ -37,20 +36,23 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class UserControllerIT {
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:14-alpine")
-            .withDatabaseName("usersdb_it")
-            .withUsername("test")
+    static OracleContainer oracle = new OracleContainer("gvenzl/oracle-free:slim-faststart")
+            .withDatabaseName("FREEPDB1")
+            .withUsername("USER_SVC")
             .withPassword("test")
-            .withStartupTimeout(java.time.Duration.ofMinutes(3));
+            .withStartupTimeout(java.time.Duration.ofMinutes(5));
 
     @DynamicPropertySource
     static void overrideProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-        registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
+        registry.add("spring.datasource.url", oracle::getJdbcUrl);
+        registry.add("spring.datasource.username", oracle::getUsername);
+        registry.add("spring.datasource.password", oracle::getPassword);
+        registry.add("spring.datasource.driver-class-name", () -> "oracle.jdbc.OracleDriver");
+        registry.add("spring.jpa.database-platform", () -> "org.hibernate.dialect.OracleDialect");
+        registry.add("spring.jpa.hibernate.ddl-auto", () -> "validate");
         registry.add("spring.flyway.enabled", () -> "true");
-        registry.add("spring.flyway.locations", () -> "classpath:db/test-migration");
+        registry.add("spring.flyway.locations", () -> "classpath:db/oracle-test-migration");
+        registry.add("spring.flyway.clean-on-validation-error", () -> "true");
     }
 
     @LocalServerPort
