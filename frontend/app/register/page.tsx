@@ -99,7 +99,7 @@ export default function RegisterPage() {
           </div>
 
           <Button type="submit" className="w-full" isLoading={isLoading}>
-            Register
+            Create account
           </Button>
           
           <p className="text-center text-sm text-gray-600">
