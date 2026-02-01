@@ -25,7 +25,7 @@ public final class FlywayTestInitializer implements ApplicationContextInitialize
     private static void runMigrations(DataSource dataSource) {
         Flyway.configure()
             .dataSource(dataSource)
-            .locations("classpath:db/test-migration")
+            .locations("classpath:db/oracle-test-migration")
             .load()
             .migrate();
     }
