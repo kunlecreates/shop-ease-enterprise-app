@@ -24,6 +24,9 @@ spring:
         # Oracle stores unquoted identifiers as uppercase, so we need to match that
         # This ensures Hibernate generates USERS instead of users in SQL
         physical_naming_strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+        # Fix ORA-18716 timezone error when querying TIMESTAMP columns with Instant
+        jdbc:
+          time_zone: UTC
   flyway:
     enabled: ${FLYWAY_ENABLED:false}
 jwt:

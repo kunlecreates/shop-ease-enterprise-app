@@ -55,7 +55,7 @@ describe('Order Cancellation Flow', () => {
         }
       }
     }
-  });
+  }, 30000); // Increase timeout for async setup
 
   test('Customer cancels pending order', async () => {
     if (!orderId) {
