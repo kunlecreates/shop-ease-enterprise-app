@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -16,6 +17,7 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.testcontainers.oracle.OracleContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.kunlecreates.user.test.TestContainersConfig;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -23,15 +25,23 @@ import java.util.HashMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Integration test for UserController REST API with real Oracle Free database.
+ * Integration test for User Authentication and Profile Management REST API with real Oracle Free database.
  * Tests full stack: Controller → Service → Repository → Database (Testcontainers).
+ * 
+ * Covers:
+ * - User registration with JWT token generation
+ * - User login with credential validation
+ * - Profile retrieval with authentication
+ * - Duplicate email handling
+ * - Authorization checks
  * 
  * Uses Oracle Free Testcontainer to match production database dialect.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
+@Import(TestContainersConfig.class)
 @org.springframework.test.context.ActiveProfiles("test")
-public class UserControllerIT {
+public class UserAuthenticationIT {
 
     @Container
     static OracleContainer oracle = new OracleContainer("gvenzl/oracle-free:slim-faststart")

@@ -53,11 +53,6 @@
         </dependency>
         <dependency>
             <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-database-postgresql</artifactId>
-            <version>10.21.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.flywaydb</groupId>
             <artifactId>flyway-database-oracle</artifactId>
             <version>10.21.0</version>
         </dependency>
@@ -102,34 +97,23 @@
             <version>5.10.2</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <scope>test</scope>
-        </dependency>
         <!-- Byte Buddy - required by Hibernate at runtime for entity enhancement -->
         <dependency>
             <groupId>net.bytebuddy</groupId>
             <artifactId>byte-buddy</artifactId>
             <version>1.15.11</version>
         </dependency>
-        <!-- Testcontainers + PostgreSQL (used for mock testing instead of real Oracle) -->
+        <!-- Testcontainers for integration tests -->
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>testcontainers</artifactId>
             <version>1.21.4</version>
             <scope>test</scope>
         </dependency>
-        <!-- JUnit Jupiter integration for Testcontainers (provides org.testcontainers.junit.jupiter package) -->
+        <!-- JUnit Jupiter integration for Testcontainers -->
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>1.21.4</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.testcontainers</groupId>
-            <artifactId>postgresql</artifactId>
             <version>1.21.4</version>
             <scope>test</scope>
         </dependency>
@@ -138,12 +122,6 @@
             <groupId>org.testcontainers</groupId>
             <artifactId>oracle-free</artifactId>
             <version>1.21.4</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <version>42.7.2</version>
             <scope>test</scope>
         </dependency>
         <!-- Shared test utilities have been moved into each service's test sources. -->

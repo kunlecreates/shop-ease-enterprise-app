@@ -25,13 +25,21 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Integration test for OrderController REST API endpoints.
- * Tests full stack: Controller → Service → Repository → MSSQL Database (Testcontainers)
+ * Integration test for Order Management REST API.
+ * Tests full stack: Controller → Service → Repository → MSSQL Database (Testcontainers).
+ * 
+ * Covers:
+ * - Order creation with JWT authentication and database persistence
+ * - Order retrieval with ownership validation
+ * - Order status updates and lifecycle management
+ * - Authorization checks for order operations
+ * 
+ * Uses MS SQL Server Testcontainer to match production database.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
 @ActiveProfiles("test")
-public class OrderControllerIT {
+public class OrderManagementIT {
 
     @Container
     static MSSQLServerContainer<?> mssql = new MSSQLServerContainer<>(

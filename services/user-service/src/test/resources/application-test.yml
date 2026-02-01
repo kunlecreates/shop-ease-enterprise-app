@@ -1,12 +1,7 @@
 spring:
   flyway:
     enabled: true
-    clean-on-validation-error: true
     schemas: USER_SVC
   jpa:
     hibernate:
       ddl-auto: validate
-
-logging:
-  level:
-    org.flywaydb: DEBUG

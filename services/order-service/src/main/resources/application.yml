@@ -39,4 +39,5 @@ otel:
       endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://otel-collector:4317}
 logging:
   level:
-    root: DEBUG
+    root: INFO
+    org.kunlecreates.order: INFO

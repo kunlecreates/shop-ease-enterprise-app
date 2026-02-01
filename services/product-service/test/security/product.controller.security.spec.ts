@@ -3,11 +3,11 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { JwtService, JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
-import { ProductController } from '../src/presentation/product.controller';
-import { HealthController } from '../src/presentation/health.controller';
-import { ProductService } from '../src/application/product.service';
-import { JwtAuthGuard } from '../src/config/jwt-auth.guard';
-import { JwtStrategy } from '../src/config/jwt.config';
+import { ProductController } from '../../src/presentation/product.controller';
+import { HealthController } from '../../src/presentation/health.controller';
+import { ProductService } from '../../src/application/product.service';
+import { JwtAuthGuard } from '../../src/config/jwt-auth.guard';
+import { JwtStrategy } from '../../src/config/jwt.config';
 
 describe('Product Controller Security (e2e)', () => {
   let app: INestApplication;
