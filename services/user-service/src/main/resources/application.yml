@@ -28,6 +28,9 @@ spring:
         # Fix ORA-18716 timezone error when querying TIMESTAMP columns with Instant
         jdbc:
           time_zone: UTC
+        # Force Hibernate to use TIMESTAMP (not TIMESTAMP WITH TIME ZONE) for Instant/ZonedDateTime
+        timezone:
+          default_storage: NORMALIZE
   flyway:
     enabled: ${FLYWAY_ENABLED:false}
 jwt:
