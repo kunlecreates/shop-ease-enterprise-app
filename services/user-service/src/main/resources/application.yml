@@ -11,6 +11,7 @@ spring:
     driver-class-name: oracle.jdbc.OracleDriver
     # Fix ORA-18716: not in any time zone.DATE error when reading TIMESTAMP columns
     hikari:
+      connection-init-sql: "ALTER SESSION SET TIME_ZONE = 'UTC'"
       data-source-properties:
         oracle.jdbc.timezoneAsRegion: false
   jpa:
