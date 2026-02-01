@@ -38,6 +38,7 @@ public class UserServiceTestcontainersIT {
         registry.add("spring.datasource.driver-class-name", () -> "oracle.jdbc.OracleDriver");
         registry.add("spring.jpa.database-platform", () -> "org.hibernate.dialect.OracleDialect");
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "validate");
+        registry.add("spring.jpa.properties.hibernate.default_schema", oracle::getUsername);
         registry.add("spring.flyway.enabled", () -> "true");
         registry.add("spring.flyway.locations", () -> "classpath:db/oracle-test-migration");
         registry.add("spring.flyway.clean-on-validation-error", () -> "true");

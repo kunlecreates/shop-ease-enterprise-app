@@ -12,6 +12,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,6 +40,14 @@ class UserControllerSecurityTest {
 
     @MockBean
     private UserService userService;
+
+    private User createUserWithId(Long id, String email, String password) throws Exception {
+        User user = new User(email, password);
+        Field idField = User.class.getDeclaredField("id");
+        idField.setAccessible(true);
+        idField.set(user, id);
+        return user;
+    }
 
     @Test
     void shouldRejectListUsersWithoutAuthentication() throws Exception {
@@ -71,7 +80,7 @@ class UserControllerSecurityTest {
     @Test
     @WithMockUser(username = "1", authorities = {"ROLE_USER"})
     void shouldAllowUserToViewOwnProfile() throws Exception {
-        User user = new User("test@example.com", "hashedpwd");
+        User user = createUserWithId(1L, "test@example.com", "hashedpwd");
         when(userService.findById(1L)).thenReturn(Optional.of(user));
         
         mockMvc.perform(get("/api/user/1"))
@@ -88,7 +97,7 @@ class UserControllerSecurityTest {
     @Test
     @WithMockUser(username = "1", authorities = {"ROLE_ADMIN"})
     void shouldAllowAdminToViewAnyUserProfile() throws Exception {
-        User user = new User("test@example.com", "hashedpwd");
+        User user = createUserWithId(999L, "test@example.com", "hashedpwd");
         when(userService.findById(anyLong())).thenReturn(Optional.of(user));
         
         mockMvc.perform(get("/api/user/999"))
@@ -98,7 +107,7 @@ class UserControllerSecurityTest {
     @Test
     @WithMockUser(username = "100", authorities = {"ROLE_USER"})
     void shouldAllowUserToGetOwnProfileViaProfileEndpoint() throws Exception {
-        User user = new User("test@example.com", "hashedpwd");
+        User user = createUserWithId(100L, "test@example.com", "hashedpwd");
         when(userService.findById(100L)).thenReturn(Optional.of(user));
         
         mockMvc.perform(get("/api/user/profile"))

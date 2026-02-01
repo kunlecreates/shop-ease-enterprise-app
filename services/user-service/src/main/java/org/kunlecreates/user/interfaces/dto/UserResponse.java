@@ -33,7 +33,7 @@ public record UserResponse(
         }
         
         return new UserResponse(
-            user.getId().toString(),
+            user.getId() != null ? user.getId().toString() : null,
             user.getEmail(),
             firstName,
             lastName,
