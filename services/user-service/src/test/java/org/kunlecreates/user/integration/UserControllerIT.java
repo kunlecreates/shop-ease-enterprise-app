@@ -13,11 +13,9 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.ContextConfiguration;
 import org.testcontainers.oracle.OracleContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.kunlecreates.user.test.FlywayTestInitializer;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -32,7 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
-@ContextConfiguration(initializers = FlywayTestInitializer.class)
+@org.springframework.test.context.ActiveProfiles("test")
 public class UserControllerIT {
 
     @Container
@@ -48,11 +46,7 @@ public class UserControllerIT {
         registry.add("spring.datasource.password", oracle::getPassword);
         registry.add("spring.datasource.driver-class-name", () -> "oracle.jdbc.OracleDriver");
         registry.add("spring.jpa.database-platform", () -> "org.hibernate.dialect.OracleDialect");
-        registry.add("spring.jpa.hibernate.ddl-auto", () -> "validate");
         registry.add("spring.jpa.properties.hibernate.default_schema", oracle::getUsername);
-        registry.add("spring.flyway.enabled", () -> "true");
-        registry.add("spring.flyway.locations", () -> "classpath:db/oracle-test-migration");
-        registry.add("spring.flyway.clean-on-validation-error", () -> "true");
     }
 
     @LocalServerPort

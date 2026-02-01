@@ -12,7 +12,7 @@ public class TestContainersConfig {
     @Bean
     public FlywayMigrationStrategy flywayMigrationStrategy(DataSource dataSource) {
         return flyway -> {
-            String sharedLocation = "classpath:db/test-migration";
+            String sharedLocation = "classpath:db/migration";
             Flyway shared = Flyway.configure()
                 .dataSource(dataSource)
                 .locations(sharedLocation)

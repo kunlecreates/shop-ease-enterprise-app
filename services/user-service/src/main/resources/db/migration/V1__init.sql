@@ -1,5 +1,0 @@
--- V1__baseline.sql
--- Baseline existing USER_SVC schema.
--- Intentionally empty. This migration sets the baseline version for Flyway migrations.
--- It assumes the existing database schema matches the expected state as defined in the original migration scripts.
--- No changes are made to the database schema in this migration.

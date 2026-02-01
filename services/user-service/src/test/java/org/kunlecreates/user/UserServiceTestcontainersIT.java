@@ -11,8 +11,6 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.kunlecreates.user.application.UserService;
 import org.kunlecreates.user.test.TestContainersConfig;
-import org.kunlecreates.user.test.FlywayTestInitializer;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -20,8 +18,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @Testcontainers
 @SpringBootTest
-@ContextConfiguration(initializers = FlywayTestInitializer.class)
 @Import(TestContainersConfig.class)
+@org.springframework.test.context.ActiveProfiles("test")
 public class UserServiceTestcontainersIT {
 
     @Container
@@ -37,11 +35,7 @@ public class UserServiceTestcontainersIT {
         registry.add("spring.datasource.password", oracle::getPassword);
         registry.add("spring.datasource.driver-class-name", () -> "oracle.jdbc.OracleDriver");
         registry.add("spring.jpa.database-platform", () -> "org.hibernate.dialect.OracleDialect");
-        registry.add("spring.jpa.hibernate.ddl-auto", () -> "validate");
         registry.add("spring.jpa.properties.hibernate.default_schema", oracle::getUsername);
-        registry.add("spring.flyway.enabled", () -> "true");
-        registry.add("spring.flyway.locations", () -> "classpath:db/oracle-test-migration");
-        registry.add("spring.flyway.clean-on-validation-error", () -> "true");
     }
 
     @Autowired
