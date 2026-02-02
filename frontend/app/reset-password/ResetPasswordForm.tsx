@@ -1,22 +1,16 @@
-import ResetPasswordForm from './ResetPasswordForm';
+'use client';
 
-interface ResetPasswordPageProps {
-  searchParams?: {
-    token?: string;
-  };
-}
-
-export default function ResetPasswordPage({ searchParams }: ResetPasswordPageProps) {
-  return <ResetPasswordForm presetToken={searchParams?.token ?? ''} />;
-}
+import { FormEvent, useEffect, useState } from 'react';
+import Link from 'next/link';
+import { ApiClient } from '@/lib/api-client';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { ApiClient } from '@/lib/api-client';
 
-export default function ResetPasswordPage() {
-  const searchParams = useSearchParams();
-  const presetToken = searchParams.get('token') ?? '';
+interface ResetPasswordFormProps {
+  presetToken?: string;
+}
 
+export default function ResetPasswordForm({ presetToken = '' }: ResetPasswordFormProps) {
   const [token, setToken] = useState(presetToken);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
