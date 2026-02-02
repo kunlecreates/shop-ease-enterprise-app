@@ -22,7 +22,7 @@ export default function ResetPasswordPage() {
     setToken(presetToken);
   }, [presetToken]);
 
-  const handleSubmit = async (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError('');
     setMessage('');
