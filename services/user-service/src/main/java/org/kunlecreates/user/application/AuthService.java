@@ -69,7 +69,15 @@ public class AuthService {
             roles
         );
 
-        return new AuthResponse(token, String.valueOf(user.getId()), user.getEmail());
+        String primaryRole = roles.isEmpty() ? "CUSTOMER" : roles.get(0);
+        AuthResponse.UserInfo userInfo = new AuthResponse.UserInfo(
+            String.valueOf(user.getId()),
+            user.getEmail().split("@")[0],
+            user.getEmail(),
+            primaryRole
+        );
+
+        return new AuthResponse(token, String.valueOf(user.getId()), user.getEmail(), userInfo);
     }
 
     @Transactional(readOnly = true)
@@ -96,7 +104,15 @@ public class AuthService {
             roles
         );
 
-        return new AuthResponse(token, String.valueOf(user.getId()), user.getEmail());
+        String primaryRole = roles.isEmpty() ? "CUSTOMER" : roles.get(0);
+        AuthResponse.UserInfo userInfo = new AuthResponse.UserInfo(
+            String.valueOf(user.getId()),
+            user.getEmail().split("@")[0],
+            user.getEmail(),
+            primaryRole
+        );
+
+        return new AuthResponse(token, String.valueOf(user.getId()), user.getEmail(), userInfo);
     }
 
     @Transactional

@@ -26,12 +26,13 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@Valid @RequestBody CreateUserRequest request) {
+    public ResponseEntity<?> register(@Valid @RequestBody CreateUserRequest request) {
         try {
             AuthResponse response = authService.register(request);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("message", e.getMessage() != null ? e.getMessage() : "Invalid registration data"));
         }
     }
 
@@ -44,7 +45,8 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(Map.of("message", "password_reset_required"));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("message", "Invalid email or password"));
         }
     }
 
@@ -58,7 +60,8 @@ public class AuthController {
             response.put("message", "Password reset token generated");
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("message", "User not found"));
         }
     }
 
@@ -71,7 +74,8 @@ public class AuthController {
             response.put("message", "Password reset successful");
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("message", e.getMessage() != null ? e.getMessage() : "Invalid or expired reset token"));
         }
     }
 }

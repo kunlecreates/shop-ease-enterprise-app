@@ -57,13 +57,15 @@ public class UserController {
         
         // Users can only access their own profile unless they are admin
         if (!currentUserId.equals(id) && !isAdmin) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(null);
         }
         
         return userService.findById(id)
                 .map(UserResponse::from)
                 .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(null));
     }
 
     /**
@@ -76,7 +78,8 @@ public class UserController {
         return userService.findById(userId)
                 .map(UserResponse::from)
                 .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(null));
     }
 
     /**
@@ -92,12 +95,13 @@ public class UserController {
      * This allows tests to use /api/user/register
      */
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@Valid @RequestBody CreateUserRequest request) {
+    public ResponseEntity<?> register(@Valid @RequestBody CreateUserRequest request) {
         try {
             AuthResponse response = authService.register(request);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("message", e.getMessage() != null ? e.getMessage() : "Invalid registration data"));
         }
     }
 
@@ -106,12 +110,13 @@ public class UserController {
      * This allows tests to use /api/user/login
      */
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
         try {
             AuthResponse response = authService.login(request);
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("message", "Invalid email or password"));
         }
     }
 
@@ -153,9 +158,11 @@ public class UserController {
                                            request.email())
                     .map(UserResponse::from)
                     .map(ResponseEntity::ok)
-                    .orElse(ResponseEntity.notFound().build());
+                    .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(null));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(null);
         }
     }
 
@@ -170,11 +177,13 @@ public class UserController {
         
         // Users can only delete their own account unless they are admin
         if (!currentUserId.equals(id) && !isAdmin) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(null);
         }
         
         boolean deleted = userService.deleteUser(id);
-        return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+        return deleted ? ResponseEntity.noContent().build() : ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body(null);
     }
 
     /**
@@ -189,9 +198,9 @@ public class UserController {
             return userService.updateUserRole(id, request.role())
                     .map(UserResponse::from)
                     .map(ResponseEntity::ok)
-                    .orElse(ResponseEntity.notFound().build());
+                    .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body(null));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
     }
 
@@ -207,7 +216,8 @@ public class UserController {
         
         // Users can view their own role, admins can view any role
         if (!currentUserId.equals(id) && !isAdmin) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(Map.of("message", "Access forbidden"));
         }
         
         return userService.findById(id)
@@ -220,7 +230,8 @@ public class UserController {
                     }
                     return ResponseEntity.ok(response);
                 })
-                .orElse(ResponseEntity.notFound().build());
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", "User not found")));
     }
 
     /**

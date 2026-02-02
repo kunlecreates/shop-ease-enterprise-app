@@ -60,11 +60,11 @@ public class OrderController {
                 .map(order -> {
                     // Check ownership: user must own the order OR be an admin
                     if (!currentUserId.equals(order.getUserRef()) && !isAdmin) {
-                        return ResponseEntity.status(HttpStatus.FORBIDDEN).<Order>build();
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).<Order>body(null);
                     }
                     return ResponseEntity.ok(order);
                 })
-                .orElse(ResponseEntity.notFound().build());
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).<Order>body(null));
     }
 
     /**
@@ -136,7 +136,8 @@ public class OrderController {
             Authentication authentication) {
         
         if (!hasRole(authentication, "ADMIN")) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(null);
         }
         
         try {
@@ -149,7 +150,8 @@ public class OrderController {
             Order updated = orderService.updateStatus(id, newStatus, jwtToken);
             return ResponseEntity.ok(updated);
         } catch (IllegalArgumentException | IllegalStateException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(null);
         }
     }
     
@@ -175,7 +177,8 @@ public class OrderController {
                 return ResponseEntity.ok(cancelled);
             }
         } catch (IllegalArgumentException | IllegalStateException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(null);
         }
     }
     

@@ -23,7 +23,16 @@ export default function LoginPage() {
 
     try {
       await login(email, password);
-      router.push('/products');
+      
+      // Check user role from localStorage after successful login
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        const user = JSON.parse(storedUser);
+        // Redirect admin users to admin dashboard, customers to profile
+        router.push(user.role === 'ADMIN' ? '/admin' : '/profile');
+      } else {
+        router.push('/profile');
+      }
     } catch (err: any) {
       setError(err.message || 'Login failed. Please check your credentials.');
     } finally {
