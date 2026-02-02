@@ -18,6 +18,15 @@ env:
   # Ensure frontend process binds to container port used by probes
   PORT: "3000"
 
+# Cloudflare Access Service Token Secret
+# The infra-provisioning workflow creates a secret named 'cf-access-token' with:
+#   CF_ACCESS_CLIENT_ID
+#   CF_ACCESS_CLIENT_SECRET
+# Enable this to inject those values as environment variables
+cloudflareAccess:
+  enabled: true
+  secretName: cf-access-token
+
 service:
   port: 80
   # Port on the container the frontend process listens on; used as Service targetPort

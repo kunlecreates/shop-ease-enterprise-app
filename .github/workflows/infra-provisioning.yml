@@ -71,6 +71,10 @@ on:
         required: false
       NOTIFICATION_MAIL_FROM:
         required: false
+      CF_ACCESS_CLIENT_ID:
+        required: false
+      CF_ACCESS_CLIENT_SECRET:
+        required: false
 
 jobs:
   provision:
@@ -143,6 +147,8 @@ jobs:
           NOTIFICATION_MAIL_USER: ${{ secrets.NOTIFICATION_MAIL_USER }}
           NOTIFICATION_MAIL_PASSWORD: ${{ secrets.NOTIFICATION_MAIL_PASSWORD }}
           NOTIFICATION_MAIL_FROM: ${{ secrets.NOTIFICATION_MAIL_FROM }}
+          CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+          CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
         uses: actions/github-script@v7
         with:
           script: |
@@ -226,6 +232,18 @@ jobs:
                   const v = env[k]; if (v) args.push(`--from-literal=${k}=${v}`);
                 }
                 if (args.length) run(`kubectl -n ${NS} create secret generic ${SECRET_NAME} ${args.join(' ')} --dry-run=client -o yaml | kubectl apply -f -`);
+              }
+
+              // Create CF Access secret for frontend
+              if (svc === 'frontend') {
+                const cfClientId = env.CF_ACCESS_CLIENT_ID;
+                const cfClientSecret = env.CF_ACCESS_CLIENT_SECRET;
+                if (cfClientId && cfClientSecret) {
+                  console.log(`Creating Cloudflare Access secret for frontend in ${NS}`);
+                  run(`kubectl -n ${NS} create secret generic cf-access-token --from-literal=CF_ACCESS_CLIENT_ID='${cfClientId}' --from-literal=CF_ACCESS_CLIENT_SECRET='${cfClientSecret}' --dry-run=client -o yaml | kubectl apply -f -`);
+                } else {
+                  console.log('CF Access credentials not provided; skipping cf-access-token creation in', NS);
+                }
               }
 
               if (svc !== 'frontend' && svc !== 'notification') {

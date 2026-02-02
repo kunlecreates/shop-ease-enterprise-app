@@ -23,6 +23,16 @@ export function pickHeaders(req: NextRequest): Headers {
     const v = req.headers.get(key);
     if (v) headers.set(key, v);
   }
+  
+  // Add Cloudflare Access service token headers if configured
+  // This authenticates the frontend service with Cloudflare Access
+  const cfClientId = process.env.CF_ACCESS_CLIENT_ID;
+  const cfClientSecret = process.env.CF_ACCESS_CLIENT_SECRET;
+  if (cfClientId && cfClientSecret) {
+    headers.set('CF-Access-Client-Id', cfClientId);
+    headers.set('CF-Access-Client-Secret', cfClientSecret);
+  }
+  
   return headers;
 }
 
