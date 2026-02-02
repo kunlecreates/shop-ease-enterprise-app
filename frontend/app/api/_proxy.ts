@@ -72,18 +72,12 @@ export function createProxyHandlers(envVarName: string, upstreamPrefixPath: stri
         redirect: 'manual',
         signal: getAbortSignal(timeoutMs),
       };
+      
+      // For Next.js 15 App Router, we must clone the request body
+      // The original req.body stream can only be read once
       if (method !== 'GET' && method !== 'HEAD') {
-        // For Next.js App Router, we need to get a fresh readable stream
-        // req.body might be locked or already consumed
-        if (req.body) {
-          init.body = req.body;
-        } else {
-          // Fallback: read the entire body as text if body stream is not available
-          const bodyText = await req.text();
-          if (bodyText) {
-            init.body = bodyText;
-          }
-        }
+        const clonedReq = req.clone();
+        init.body = clonedReq.body;
       }
 
       const res = await fetch(target, init);
