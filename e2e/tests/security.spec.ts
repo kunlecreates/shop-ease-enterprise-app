@@ -37,7 +37,7 @@ test.describe('Customer User Journey (FR001, FR002, FR004)', () => {
 
       await test.step('Verify login form is present', async () => {
         await expect(page.getByRole('heading', { name: /^(Sign in|Login)$/i })).toBeVisible();
-        await expect(page.getByLabel(/username/i)).toBeVisible();
+        await expect(page.getByLabel(/email/i)).toBeVisible();
         await expect(page.getByLabel(/^Password$/i)).toBeVisible();
         const signinButton = locators.getExactButtonLocator(page, ['Sign in', 'Login']);
         await expect(signinButton).toBeVisible();
@@ -61,7 +61,7 @@ test.describe('Customer User Journey (FR001, FR002, FR004)', () => {
       await page.goto('/login');
       
       await test.step('Enter invalid credentials', async () => {
-        await page.getByLabel(/username/i).fill('nonexistentuser');
+        await page.getByLabel(/email/i).fill('nonexistent@example.com');
         await page.getByLabel(/^Password$/i).fill('wrongpassword');
         const signinBtn = locators.getExactButtonLocator(page, ['Sign in', 'Login']);
         await signinBtn.click();
@@ -264,7 +264,7 @@ test.describe('Security & Authorization (FR015)', () => {
       
       // Should either be at login page or see admin page
       const currentUrl = page.url();
-      const hasLoginForm = (await page.getByLabel(/username|password/i).count()) > 0;
+      const hasLoginForm = (await page.getByLabel(/email|password/i).count()) > 0;
       
       // If not showing admin content, should require login
       const hasAdminContent = (await page.getByRole('heading', { name: /admin|products/i }).count()) > 0;
