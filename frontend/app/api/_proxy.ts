@@ -21,7 +21,10 @@ export function pickHeaders(req: NextRequest): Headers {
   const headers = new Headers();
   for (const key of FORWARDED_REQ_HEADERS) {
     const v = req.headers.get(key);
-    if (v) headers.set(key, v);
+    if (v) {
+      headers.set(key, v);
+      console.log('[Proxy] Forwarding header:', key, '=', v);
+    }
   }
   
   // Add Cloudflare Access service token headers if configured
@@ -31,6 +34,7 @@ export function pickHeaders(req: NextRequest): Headers {
   if (cfClientId && cfClientSecret) {
     headers.set('CF-Access-Client-Id', cfClientId);
     headers.set('CF-Access-Client-Secret', cfClientSecret);
+    console.log('[Proxy] Added CF Access headers');
   }
   
   return headers;
