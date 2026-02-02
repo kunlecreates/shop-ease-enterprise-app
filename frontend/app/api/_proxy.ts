@@ -23,7 +23,6 @@ export function pickHeaders(req: NextRequest): Headers {
     const v = req.headers.get(key);
     if (v) {
       headers.set(key, v);
-      console.log('[Proxy] Forwarding header:', key, '=', v);
     }
   }
   
@@ -34,7 +33,6 @@ export function pickHeaders(req: NextRequest): Headers {
   if (cfClientId && cfClientSecret) {
     headers.set('CF-Access-Client-Id', cfClientId);
     headers.set('CF-Access-Client-Secret', cfClientSecret);
-    console.log('[Proxy] Added CF Access headers');
   }
   
   return headers;
@@ -80,28 +78,13 @@ export function createProxyHandlers(envVarName: string, upstreamPrefixPath: stri
       // For Next.js 15 App Router, we must clone the request body
       // The original req.body stream can only be read once
       if (method !== 'GET' && method !== 'HEAD') {
-        console.log('[Proxy] Cloning request for body forwarding, method:', method);
-        
-        // Clone once to read body for logging
-        const logClone = req.clone();
-        try {
-          const bodyText = await logClone.text();
-          console.log('[Proxy] Request body:', bodyText);
-          console.log('[Proxy] Request body length:', bodyText.length);
-        } catch (err) {
-          console.log('[Proxy] Could not read body for logging:', err);
-        }
-        
-        // Clone again for the actual request
         const clonedReq = req.clone();
         init.body = clonedReq.body;
         // Node.js fetch requires duplex option when body is a ReadableStream
         (init as any).duplex = 'half';
       }
 
-      console.log('[Proxy] Fetching:', target, 'method:', method);
       const res = await fetch(target, init);
-      console.log('[Proxy] Response status:', res.status);
 
       // Forward response with safe headers
       const outHeaders = new Headers();
