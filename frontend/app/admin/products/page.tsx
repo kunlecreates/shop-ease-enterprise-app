@@ -39,10 +39,16 @@ function ProductManagementContent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const productData = {
+        ...formData,
+        initialStock: formData.stock,
+      };
+      delete (productData as any).stock;
+      
       if (editingProduct) {
-        await ApiClient.put(`/products/${editingProduct.sku}`, formData);
+        await ApiClient.put(`/products/${editingProduct.sku}`, productData);
       } else {
-        await ApiClient.post('/products', formData);
+        await ApiClient.post('/products', productData);
       }
       await loadProducts();
       resetForm();

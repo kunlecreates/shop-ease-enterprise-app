@@ -55,7 +55,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const register = async (username: string, email: string, password: string) => {
     try {
       const response = await ApiClient.post<AuthResponse>('/auth/register', {
-        username,
         email,
         password,
       });
