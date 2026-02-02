@@ -79,6 +79,8 @@ export function createProxyHandlers(envVarName: string, upstreamPrefixPath: stri
         console.log('[Proxy] Cloning request for body forwarding, method:', method);
         const clonedReq = req.clone();
         init.body = clonedReq.body;
+        // Node.js fetch requires duplex option when body is a ReadableStream
+        (init as any).duplex = 'half';
       }
 
       console.log('[Proxy] Fetching:', target, 'method:', method);
