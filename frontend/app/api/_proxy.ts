@@ -91,16 +91,8 @@ export function createProxyHandlers(envVarName: string, upstreamPrefixPath: stri
       });
       return new RuntimeNextResponse(res.body, { status: res.status, headers: outHeaders });
     } catch (err: any) {
-      console.error('[Proxy Error]', {
-        envVar: envVarName,
-        baseUrl: process.env[envVarName],
-        prefix: upstreamPrefixPath,
-        error: err?.message,
-        name: err?.name,
-        stack: err?.stack
-      });
       const msg = err?.name === 'AbortError' ? 'Upstream timeout' : 'Upstream error';
-      return RuntimeNextResponse.json({ error: msg, details: err?.message }, { status: 502 });
+      return RuntimeNextResponse.json({ error: msg }, { status: 502 });
     }
   }
 
