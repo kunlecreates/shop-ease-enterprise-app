@@ -1,5 +1,6 @@
 package org.kunlecreates.order.integration;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.kunlecreates.order.test.JwtTestHelper;
@@ -68,10 +69,27 @@ public class OrderManagementIT {
     @BeforeEach
     void cleanDatabase() {
         // Clean orders table before each test for isolation
+        // Using TRUNCATE for better performance (resets sequences and is faster)
         try {
-            jdbcTemplate.execute("DELETE FROM order_svc.orders");
+            jdbcTemplate.execute("TRUNCATE TABLE order_svc.orders RESTART IDENTITY CASCADE");
         } catch (Exception e) {
-            // Table might not exist yet, ignore
+            // Table might not exist yet, fallback to DELETE
+            try {
+                jdbcTemplate.execute("DELETE FROM order_svc.orders");
+            } catch (Exception ex) {
+                // Ignore - table doesn't exist
+            }
+        }
+    }
+
+    @AfterEach
+    void cleanupAfterTest() {
+        // Additional cleanup after each test completes
+        // Ensures no test data persists if beforeEach fails or during debugging
+        try {
+            jdbcTemplate.execute("TRUNCATE TABLE order_svc.orders RESTART IDENTITY CASCADE");
+        } catch (Exception e) {
+            // Silently ignore - container might be stopping
         }
     }
 

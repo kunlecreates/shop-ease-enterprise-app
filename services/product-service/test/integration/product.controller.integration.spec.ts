@@ -97,6 +97,19 @@ describe('ProductController (Integration)', () => {
     }
   });
 
+  afterEach(async () => {
+    // Clean up test data after each test completes to ensure no data leakage
+    // This provides an additional safety net if beforeEach fails or test debugging leaves data
+    try {
+      await dataSource.query(
+        'TRUNCATE TABLE product_svc.stock_movements, product_svc.product_inventory, product_svc.product_categories, product_svc.products, product_svc.categories RESTART IDENTITY CASCADE'
+      );
+    } catch (err) {
+      // Silently ignore errors - container might be stopping
+      console.warn('afterEach cleanup warning:', err.message);
+    }
+  });
+
   describe('POST /api/product', () => {
     it('should create product and persist to database', async () => {
       const productDto = {

@@ -29,11 +29,9 @@ test('Customer checkout flow: create cart, add item, place order, verify order e
   const cartId = cartResp.data.id;
   expect(cartId).toBeDefined();
 
-  // register cleanup to delete the cart after test
-  try {
-    const { registerDelete } = await import('../framework/cleanup');
-    registerDelete(orderHttp, (id: any) => `/carts/${id}`, cartId);
-  } catch (e) {}
+  // Register cleanup - this is now mandatory
+  const { registerDelete } = await import('../framework/cleanup');
+  registerDelete(orderHttp, (id: any) => `/carts/${id}`, cartId, customerToken);
 
   const itemResp = await orderHttp.post(`/api/cart/${cartId}/items`, { 
     productRef: products[0].id, 

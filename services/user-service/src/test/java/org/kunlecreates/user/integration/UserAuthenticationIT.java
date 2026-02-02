@@ -1,5 +1,6 @@
 package org.kunlecreates.user.integration;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +13,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.testcontainers.oracle.OracleContainer;
@@ -68,10 +70,38 @@ public class UserAuthenticationIT {
     private String baseUrl;
     private String userBaseUrl;
 
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
     @BeforeEach
     void setUp() {
         baseUrl = "http://localhost:" + port + "/api/auth";
         userBaseUrl = "http://localhost:" + port + "/api/user";
+        
+        // Clean test data before each test for isolation
+        cleanupDatabase();
+    }
+
+    @AfterEach
+    void tearDown() {
+        // Clean test data after each test completes
+        cleanupDatabase();
+    }
+
+    private void cleanupDatabase() {
+        try {
+            // Clean user-related tables in correct order (respecting foreign keys)
+            jdbcTemplate.execute("TRUNCATE TABLE user_roles, users, roles RESTART IDENTITY CASCADE");
+        } catch (Exception e) {
+            // Fallback to individual DELETE if TRUNCATE fails
+            try {
+                jdbcTemplate.execute("DELETE FROM user_roles");
+                jdbcTemplate.execute("DELETE FROM users");
+                jdbcTemplate.execute("DELETE FROM roles");
+            } catch (Exception ex) {
+                // Silently ignore - tables might not exist
+            }
+        }
     }
 
     @Test
