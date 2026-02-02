@@ -73,8 +73,17 @@ export function createProxyHandlers(envVarName: string, upstreamPrefixPath: stri
         signal: getAbortSignal(timeoutMs),
       };
       if (method !== 'GET' && method !== 'HEAD') {
-        // Stream or clone body
-        init.body = req.body;
+        // For Next.js App Router, we need to get a fresh readable stream
+        // req.body might be locked or already consumed
+        if (req.body) {
+          init.body = req.body;
+        } else {
+          // Fallback: read the entire body as text if body stream is not available
+          const bodyText = await req.text();
+          if (bodyText) {
+            init.body = bodyText;
+          }
+        }
       }
 
       const res = await fetch(target, init);
