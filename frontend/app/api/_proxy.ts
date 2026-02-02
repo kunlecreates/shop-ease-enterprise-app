@@ -76,11 +76,14 @@ export function createProxyHandlers(envVarName: string, upstreamPrefixPath: stri
       // For Next.js 15 App Router, we must clone the request body
       // The original req.body stream can only be read once
       if (method !== 'GET' && method !== 'HEAD') {
+        console.log('[Proxy] Cloning request for body forwarding, method:', method);
         const clonedReq = req.clone();
         init.body = clonedReq.body;
       }
 
+      console.log('[Proxy] Fetching:', target, 'method:', method);
       const res = await fetch(target, init);
+      console.log('[Proxy] Response status:', res.status);
 
       // Forward response with safe headers
       const outHeaders = new Headers();
@@ -91,6 +94,7 @@ export function createProxyHandlers(envVarName: string, upstreamPrefixPath: stri
       });
       return new RuntimeNextResponse(res.body, { status: res.status, headers: outHeaders });
     } catch (err: any) {
+      console.error('[Proxy] Error caught:', err.message, 'Type:', err.name);
       const msg = err?.name === 'AbortError' ? 'Upstream timeout' : 'Upstream error';
       return RuntimeNextResponse.json({ error: msg }, { status: 502 });
     }
