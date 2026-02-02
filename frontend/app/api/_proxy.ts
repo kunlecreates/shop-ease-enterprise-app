@@ -81,6 +81,18 @@ export function createProxyHandlers(envVarName: string, upstreamPrefixPath: stri
       // The original req.body stream can only be read once
       if (method !== 'GET' && method !== 'HEAD') {
         console.log('[Proxy] Cloning request for body forwarding, method:', method);
+        
+        // Clone once to read body for logging
+        const logClone = req.clone();
+        try {
+          const bodyText = await logClone.text();
+          console.log('[Proxy] Request body:', bodyText);
+          console.log('[Proxy] Request body length:', bodyText.length);
+        } catch (err) {
+          console.log('[Proxy] Could not read body for logging:', err);
+        }
+        
+        // Clone again for the actual request
         const clonedReq = req.clone();
         init.body = clonedReq.body;
         // Node.js fetch requires duplex option when body is a ReadableStream
