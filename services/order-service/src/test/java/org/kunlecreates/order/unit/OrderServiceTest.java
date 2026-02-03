@@ -55,7 +55,9 @@ class OrderServiceTest {
         Order savedOrder = new Order("custom-ref", "PENDING", 5000L);
         when(orderRepository.save(any(Order.class))).thenReturn(savedOrder);
 
-        Order result = orderService.createOrder("custom-ref", null, "PENDING", 50.00, null);
+        Order result = orderService.createOrder("custom-ref", null, "PENDING", 50.00, null,
+                null, null, null, null, null, null, null, null,
+                null, null, null);
 
         assertThat(result.getUserRef()).isEqualTo("custom-ref");
         verify(orderRepository).save(any(Order.class));
@@ -67,7 +69,9 @@ class OrderServiceTest {
         Order savedOrder = new Order("456", "PENDING", 7500L);
         when(orderRepository.save(any(Order.class))).thenReturn(savedOrder);
 
-        Order result = orderService.createOrder(null, 456L, "PENDING", 75.00, null);
+        Order result = orderService.createOrder(null, 456L, "PENDING", 75.00, null,
+                null, null, null, null, null, null, null, null,
+                null, null, null);
 
         assertThat(result.getUserRef()).isEqualTo("456");
         verify(orderRepository).save(any(Order.class));
@@ -75,7 +79,9 @@ class OrderServiceTest {
 
     @Test
     void createOrder_whenNoUserRefOrUserId_shouldThrowException() {
-        assertThatThrownBy(() -> orderService.createOrder(null, null, "PENDING", 50.00, null))
+        assertThatThrownBy(() -> orderService.createOrder(null, null, "PENDING", 50.00, null,
+                null, null, null, null, null, null, null, null,
+                null, null, null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Either userRef or userId must be provided");
 
@@ -87,7 +93,9 @@ class OrderServiceTest {
         Order savedOrder = new Order("user-789", "PENDING", 12000L);
         when(orderRepository.save(any(Order.class))).thenReturn(savedOrder);
 
-        orderService.createOrder(null, 789L, "PENDING", 120.00, "jwt-token");
+        orderService.createOrder(null, 789L, "PENDING", 120.00, "jwt-token",
+                null, null, null, null, null, null, null, null,
+                null, null, null);
 
         verify(notificationClient).sendOrderConfirmation(savedOrder, "jwt-token");
     }
