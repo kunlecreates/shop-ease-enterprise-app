@@ -44,9 +44,27 @@ export interface Order {
   status: 'PENDING' | 'PAID' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
   items: CartItem[];
   total: number;
-  shippingAddress: Address;
+  shippingAddress: ShippingAddress;
+  paymentMethod?: PaymentMethod;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ShippingAddress {
+  recipient: string;
+  street1: string;
+  street2?: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  phone?: string;
+}
+
+export interface PaymentMethod {
+  type: 'CREDIT_CARD' | 'DEBIT_CARD' | 'PAYPAL' | 'APPLE_PAY' | 'GOOGLE_PAY';
+  last4?: string;
+  brand?: string;
 }
 
 export interface Address {

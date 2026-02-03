@@ -27,6 +27,39 @@ public class Order {
     @Column(name = "placed_at")
     private Instant placedAt;
     
+    @Column(name = "shipping_recipient", length = 255)
+    private String shippingRecipient;
+    
+    @Column(name = "shipping_street1", length = 255)
+    private String shippingStreet1;
+    
+    @Column(name = "shipping_street2", length = 255)
+    private String shippingStreet2;
+    
+    @Column(name = "shipping_city", length = 100)
+    private String shippingCity;
+    
+    @Column(name = "shipping_state", length = 100)
+    private String shippingState;
+    
+    @Column(name = "shipping_postal_code", length = 20)
+    private String shippingPostalCode;
+    
+    @Column(name = "shipping_country", length = 100)
+    private String shippingCountry;
+    
+    @Column(name = "shipping_phone", length = 20)
+    private String shippingPhone;
+    
+    @Column(name = "payment_method_type", length = 50)
+    private String paymentMethodType;
+    
+    @Column(name = "payment_last4", length = 4)
+    private String paymentLast4;
+    
+    @Column(name = "payment_brand", length = 50)
+    private String paymentBrand;
+    
     @Column(name = "created_at", nullable = false)
     private Instant createdAt = Instant.now();
     
@@ -52,6 +85,32 @@ public class Order {
     public Long getTotalCents() { return totalCents; }
     public String getCurrency() { return currency; }
     public List<OrderEvent> getDomainEvents() { return new ArrayList<>(domainEvents); }
+    
+    public String getShippingRecipient() { return shippingRecipient; }
+    public String getShippingStreet1() { return shippingStreet1; }
+    public String getShippingStreet2() { return shippingStreet2; }
+    public String getShippingCity() { return shippingCity; }
+    public String getShippingState() { return shippingState; }
+    public String getShippingPostalCode() { return shippingPostalCode; }
+    public String getShippingCountry() { return shippingCountry; }
+    public String getShippingPhone() { return shippingPhone; }
+    
+    public String getPaymentMethodType() { return paymentMethodType; }
+    public String getPaymentLast4() { return paymentLast4; }
+    public String getPaymentBrand() { return paymentBrand; }
+    
+    public void setShippingRecipient(String shippingRecipient) { this.shippingRecipient = shippingRecipient; }
+    public void setShippingStreet1(String shippingStreet1) { this.shippingStreet1 = shippingStreet1; }
+    public void setShippingStreet2(String shippingStreet2) { this.shippingStreet2 = shippingStreet2; }
+    public void setShippingCity(String shippingCity) { this.shippingCity = shippingCity; }
+    public void setShippingState(String shippingState) { this.shippingState = shippingState; }
+    public void setShippingPostalCode(String shippingPostalCode) { this.shippingPostalCode = shippingPostalCode; }
+    public void setShippingCountry(String shippingCountry) { this.shippingCountry = shippingCountry; }
+    public void setShippingPhone(String shippingPhone) { this.shippingPhone = shippingPhone; }
+    
+    public void setPaymentMethodType(String paymentMethodType) { this.paymentMethodType = paymentMethodType; }
+    public void setPaymentLast4(String paymentLast4) { this.paymentLast4 = paymentLast4; }
+    public void setPaymentBrand(String paymentBrand) { this.paymentBrand = paymentBrand; }
     
     public double getTotal() { 
         return (totalCents == null) ? 0.0 : totalCents / 100.0; 

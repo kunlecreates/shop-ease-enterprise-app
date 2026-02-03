@@ -10,5 +10,7 @@ public record OrderResponse(
     String currency,
     Instant placedAt,
     Instant createdAt,
-    Instant updatedAt
+    Instant updatedAt,
+    ShippingAddress shippingAddress,
+    PaymentMethod paymentMethod
 ) {}

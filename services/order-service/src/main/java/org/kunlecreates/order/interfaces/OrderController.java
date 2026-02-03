@@ -83,8 +83,29 @@ public class OrderController {
         // Extract JWT token from Authorization header for notification service
         String jwtToken = extractJwtToken(request);
         
+        // Extract shipping address fields
+        String shippingRecipient = req.shippingAddress() != null ? req.shippingAddress().recipient() : null;
+        String shippingStreet1 = req.shippingAddress() != null ? req.shippingAddress().street1() : null;
+        String shippingStreet2 = req.shippingAddress() != null ? req.shippingAddress().street2() : null;
+        String shippingCity = req.shippingAddress() != null ? req.shippingAddress().city() : null;
+        String shippingState = req.shippingAddress() != null ? req.shippingAddress().state() : null;
+        String shippingPostalCode = req.shippingAddress() != null ? req.shippingAddress().postalCode() : null;
+        String shippingCountry = req.shippingAddress() != null ? req.shippingAddress().country() : null;
+        String shippingPhone = req.shippingAddress() != null ? req.shippingAddress().phone() : null;
+        
+        // Extract payment method fields
+        String paymentMethodType = req.paymentMethod() != null ? req.paymentMethod().type() : null;
+        String paymentLast4 = req.paymentMethod() != null ? req.paymentMethod().last4() : null;
+        String paymentBrand = req.paymentMethod() != null ? req.paymentMethod().brand() : null;
+        
         // Create order with authenticated user's ID (ignore userId from request body for security)
-        Order created = orderService.createOrder(authenticatedUserId, null, req.status(), req.total(), jwtToken);
+        Order created = orderService.createOrder(
+            authenticatedUserId, null, req.status(), req.total(), jwtToken,
+            shippingRecipient, shippingStreet1, shippingStreet2, shippingCity,
+            shippingState, shippingPostalCode, shippingCountry, shippingPhone,
+            paymentMethodType, paymentLast4, paymentBrand
+        );
+        
         URI location = uriBuilder.path("/api/order/{id}").buildAndExpand(created.getId()).toUri();
         
         // Return order details in response body for frontend confirmation
@@ -96,7 +117,9 @@ public class OrderController {
             created.getCurrency(),
             created.getPlacedAt(),
             created.getCreatedAt(),
-            created.getUpdatedAt()
+            created.getUpdatedAt(),
+            req.shippingAddress(),
+            req.paymentMethod()
         );
         return ResponseEntity.created(location).body(response);
     }
