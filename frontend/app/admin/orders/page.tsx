@@ -67,7 +67,7 @@ function OrderManagementContent() {
             <div key={order.id} className="bg-white rounded-lg shadow p-6">
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h3 className="font-semibold text-lg">Order #{order.orderNumber}</h3>
+                  <h3 className="font-semibold text-lg">Order #{order.id}</h3>
                   <p className="text-sm text-gray-600">Customer: {order.userId}</p>
                   <p className="text-sm text-gray-600">
                     Date: {new Date(order.createdAt).toLocaleString()}
@@ -88,13 +88,7 @@ function OrderManagementContent() {
               </div>
 
               <div className="border-t pt-4 mb-4">
-                <h4 className="font-semibold mb-2">Order Items:</h4>
-                {order.items.map((item) => (
-                  <div key={item.id} className="flex justify-between py-1 text-sm">
-                    <span>{item.product.name} × {item.quantity}</span>
-                    <span className="font-medium">${(item.price * item.quantity).toFixed(2)}</span>
-                  </div>
-                ))}
+                <h4 className="font-semibold mb-2">Order Total: ${order.total.toFixed(2)}</h4>
               </div>
 
               <div className="flex space-x-2">

@@ -43,7 +43,7 @@ function OrdersContent() {
             <div key={order.id} className="bg-white rounded-lg shadow p-6">
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h3 className="font-semibold text-lg">Order #{order.orderNumber}</h3>
+                  <h3 className="font-semibold text-lg">Order #{order.id}</h3>
                   <p className="text-sm text-gray-600">
                     {new Date(order.createdAt).toLocaleDateString()}
                   </p>
@@ -59,13 +59,7 @@ function OrdersContent() {
               </div>
               
               <div className="border-t pt-4">
-                {order.items.map((item) => (
-                  <div key={item.id} className="flex justify-between py-2">
-                    <span>{item.product.name} × {item.quantity}</span>
-                    <span className="font-semibold">${(item.price * item.quantity).toFixed(2)}</span>
-                  </div>
-                ))}
-                <div className="flex justify-between pt-2 border-t font-bold text-lg">
+                <div className="flex justify-between pt-2 font-bold text-lg">
                   <span>Total</span>
                   <span className="text-blue-600">${order.total.toFixed(2)}</span>
                 </div>

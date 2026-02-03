@@ -39,13 +39,24 @@ export interface Cart {
 
 export interface Order {
   id: string;
-  userId: string;
-  orderNumber: string;
+  userRef?: string;  // Backend uses userRef, not userId
+  userId?: string;   // Keep for backwards compatibility
   status: 'PENDING' | 'PAID' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
-  items: CartItem[];
-  total: number;
-  shippingAddress: ShippingAddress;
-  paymentMethod?: PaymentMethod;
+  total: number;     // Backend returns totalCents and calculates getTotal()
+  totalCents?: number;
+  currency?: string;
+  placedAt?: string;
+  shippingRecipient?: string;
+  shippingStreet1?: string;
+  shippingStreet2?: string;
+  shippingCity?: string;
+  shippingState?: string;
+  shippingPostalCode?: string;
+  shippingCountry?: string;
+  shippingPhone?: string;
+  paymentMethodType?: string;
+  paymentLast4?: string;
+  paymentBrand?: string;
   createdAt: string;
   updatedAt: string;
 }
