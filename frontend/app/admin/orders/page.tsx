@@ -68,9 +68,15 @@ function OrderManagementContent() {
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <h3 className="font-semibold text-lg">Order #{order.id}</h3>
-                  <p className="text-sm text-gray-600">Customer: {order.userId}</p>
+                  <p className="text-sm text-gray-600">Customer ID: {order.userRef || order.userId || 'N/A'}</p>
                   <p className="text-sm text-gray-600">
-                    Date: {new Date(order.createdAt).toLocaleString()}
+                    Date: {new Date(order.createdAt).toLocaleString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
                   </p>
                 </div>
                 <div className="text-right">
@@ -87,8 +93,42 @@ function OrderManagementContent() {
                 </div>
               </div>
 
-              <div className="border-t pt-4 mb-4">
-                <h4 className="font-semibold mb-2">Order Total: ${order.total.toFixed(2)}</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                {/* Shipping Information */}
+                {order.shippingRecipient ? (
+                  <div className="border rounded-lg p-3 bg-gray-50">
+                    <h4 className="text-xs font-semibold text-gray-500 uppercase mb-1">Shipping Address</h4>
+                    <p className="text-sm font-medium">{order.shippingRecipient}</p>
+                    {order.shippingStreet1 && <p className="text-sm">{order.shippingStreet1}</p>}
+                    {order.shippingStreet2 && <p className="text-sm">{order.shippingStreet2}</p>}
+                    <p className="text-sm">
+                      {order.shippingCity}{order.shippingState && `, ${order.shippingState}`} {order.shippingPostalCode}
+                    </p>
+                    {order.shippingCountry && <p className="text-sm">{order.shippingCountry}</p>}
+                    {order.shippingPhone && <p className="text-sm text-gray-600">📞 {order.shippingPhone}</p>}
+                  </div>
+                ) : (
+                  <div className="border rounded-lg p-3 bg-yellow-50">
+                    <h4 className="text-xs font-semibold text-yellow-700 uppercase mb-1">Shipping Address</h4>
+                    <p className="text-sm text-yellow-600">⚠️ No shipping information</p>
+                  </div>
+                )}
+                
+                {/* Payment Information */}
+                {order.paymentMethodType ? (
+                  <div className="border rounded-lg p-3 bg-gray-50">
+                    <h4 className="text-xs font-semibold text-gray-500 uppercase mb-1">Payment Method</h4>
+                    <p className="text-sm font-medium">
+                      {order.paymentBrand || order.paymentMethodType}
+                      {order.paymentLast4 && ` •••• ${order.paymentLast4}`}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="border rounded-lg p-3 bg-yellow-50">
+                    <h4 className="text-xs font-semibold text-yellow-700 uppercase mb-1">Payment Method</h4>
+                    <p className="text-sm text-yellow-600">⚠️ No payment information</p>
+                  </div>
+                )}
               </div>
 
               <div className="flex space-x-2">

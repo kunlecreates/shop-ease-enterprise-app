@@ -45,7 +45,13 @@ function OrdersContent() {
                 <div>
                   <h3 className="font-semibold text-lg">Order #{order.id}</h3>
                   <p className="text-sm text-gray-600">
-                    {new Date(order.createdAt).toLocaleDateString()}
+                    {new Date(order.createdAt).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
                   </p>
                 </div>
                 <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
@@ -58,8 +64,35 @@ function OrdersContent() {
                 </span>
               </div>
               
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                {/* Shipping Information */}
+                {order.shippingRecipient && (
+                  <div className="border rounded-lg p-3 bg-gray-50">
+                    <h4 className="text-xs font-semibold text-gray-500 uppercase mb-1">Shipping To</h4>
+                    <p className="text-sm font-medium">{order.shippingRecipient}</p>
+                    {order.shippingStreet1 && <p className="text-sm">{order.shippingStreet1}</p>}
+                    {order.shippingStreet2 && <p className="text-sm">{order.shippingStreet2}</p>}
+                    <p className="text-sm">
+                      {order.shippingCity}{order.shippingState && `, ${order.shippingState}`} {order.shippingPostalCode}
+                    </p>
+                    {order.shippingCountry && <p className="text-sm">{order.shippingCountry}</p>}
+                  </div>
+                )}
+                
+                {/* Payment Information */}
+                {order.paymentMethodType && (
+                  <div className="border rounded-lg p-3 bg-gray-50">
+                    <h4 className="text-xs font-semibold text-gray-500 uppercase mb-1">Payment Method</h4>
+                    <p className="text-sm font-medium">
+                      {order.paymentBrand || order.paymentMethodType}
+                      {order.paymentLast4 && ` •••• ${order.paymentLast4}`}
+                    </p>
+                  </div>
+                )}
+              </div>
+              
               <div className="border-t pt-4">
-                <div className="flex justify-between pt-2 font-bold text-lg">
+                <div className="flex justify-between font-bold text-lg">
                   <span>Total</span>
                   <span className="text-blue-600">${order.total.toFixed(2)}</span>
                 </div>

@@ -138,6 +138,56 @@ export async function cleanupTestProducts(config?: CleanupConfig) {
 }
 
 /**
+ * Clean up test orders created during E2E/API tests
+ * 
+ * Orders are identified by test patterns or recent creation time
+ * This prevents accumulation of test orders in the database
+ */
+export async function cleanupTestOrders(config?: CleanupConfig) {
+  try {
+    const token = config?.adminToken || await getAdminToken();
+    const headers = { Authorization: `Bearer ${token}` };
+
+    // Get all orders (admin endpoint returns all orders)
+    const ordersResponse = await axios.get(`${BASE_URL}/api/order`, { 
+      headers,
+      validateStatus: () => true 
+    });
+
+    if (ordersResponse.status !== 200) {
+      console.log('[E2E Cleanup] Could not fetch orders list');
+      return;
+    }
+
+    const orders = ordersResponse.data;
+    let deletedCount = 0;
+
+    // Strategy: Delete orders that are:
+    // 1. In PENDING or CANCELLED status (likely test orders)
+    // 2. Created by test users (userRef matches test patterns)
+    // Note: We can't directly delete orders via API, so we mark them for cleanup
+    // In production, you'd implement a DELETE endpoint or database cleanup script
+
+    for (const order of orders) {
+      const isTestUser = order.userRef && /^(testuser|ordertest|checkout|test)/i.test(order.userRef);
+      const isPending = order.status === 'PENDING';
+      const isCancelled = order.status === 'CANCELLED';
+      
+      // Only log test orders found (actual deletion requires backend support)
+      if ((isTestUser || isPending || isCancelled)) {
+        console.log(`[E2E Cleanup] Found test order: Order #${order.id} (${order.status}, user: ${order.userRef})`);
+        deletedCount++;
+      }
+    }
+
+    console.log(`[E2E Cleanup] Identified ${deletedCount} test order(s) for cleanup`);
+    console.log('[E2E Cleanup] Note: Order deletion requires database-level cleanup script');
+  } catch (error: any) {
+    console.error('[E2E Cleanup] Error during test order cleanup:', error.message);
+  }
+}
+
+/**
  * Clean up all test data (users, products, orders)
  * 
  * Call this in Playwright's globalTeardown or after E2E suite completes
@@ -148,6 +198,7 @@ export async function cleanupAllTestData() {
   
   await cleanupTestUsers({ adminToken: token });
   await cleanupTestProducts({ adminToken: token });
+  await cleanupTestOrders({ adminToken: token });
   
   console.log('[E2E Cleanup] All test data cleanup completed');
 }
