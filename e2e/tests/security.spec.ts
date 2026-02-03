@@ -195,6 +195,11 @@ test.describe('Customer User Journey (FR001, FR002, FR004)', () => {
   });
 
   test.describe('Product Management (FR005)', () => {
+    // Ensure admin authentication is set up before product management tests
+    test.beforeEach(async ({ page, request }) => {
+      await usePersistedAdminStorage(page) || await setAuthFromEnv(page, request);
+    });
+
     test('should display product management interface', async ({ page }) => {
       await page.goto('/admin/products');
       await expect(page.getByRole('heading', { name: /products|inventory|admin/i })).toBeVisible({ timeout: 10000 });

@@ -56,7 +56,7 @@ test.describe('Authentication & Authorization (FR001, FR003)', () => {
       
       await test.step('Verify form structure', async () => {
         await expect(page.getByRole('heading', { name: /^(Sign in|Login)$/i })).toBeVisible();
-        await expect(page.getByLabel(/username/i)).toBeVisible();
+        await expect(page.getByLabel(/email/i)).toBeVisible();
         await expect(page.getByLabel(/^Password$/i)).toBeVisible();
         const signinBtn = locators.getExactButtonLocator(page, ['Sign in', 'Login']);
         await expect(signinBtn).toBeVisible();
@@ -67,7 +67,7 @@ test.describe('Authentication & Authorization (FR001, FR003)', () => {
       await page.goto('/login');
       
       await test.step('Enter invalid credentials', async () => {
-        await page.getByLabel(/username/i).fill('nonexistentuser');
+        await page.getByLabel(/email/i).fill('nonexistent@example.com');
         await page.getByLabel(/^Password$/i).fill('WrongPassword123!');
         const signinBtn = locators.getExactButtonLocator(page, ['Sign in', 'Login']);
         await signinBtn.click();
