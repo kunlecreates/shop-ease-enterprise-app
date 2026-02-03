@@ -5,6 +5,7 @@ import jakarta.validation.Valid;
 import org.kunlecreates.order.application.OrderService;
 import org.kunlecreates.order.domain.Order;
 import org.kunlecreates.order.interfaces.dto.CreateOrderRequest;
+import org.kunlecreates.order.interfaces.dto.OrderResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -72,7 +73,7 @@ public class OrderController {
      * Extract userId from JWT claims to ensure user is creating order for themselves
      */
     @PostMapping
-    public ResponseEntity<Void> create(@Valid @RequestBody CreateOrderRequest req, 
+    public ResponseEntity<OrderResponse> create(@Valid @RequestBody CreateOrderRequest req, 
                                         Authentication authentication,
                                         HttpServletRequest request,
                                         UriComponentsBuilder uriBuilder) {
@@ -85,7 +86,19 @@ public class OrderController {
         // Create order with authenticated user's ID (ignore userId from request body for security)
         Order created = orderService.createOrder(authenticatedUserId, null, req.status(), req.total(), jwtToken);
         URI location = uriBuilder.path("/api/order/{id}").buildAndExpand(created.getId()).toUri();
-        return ResponseEntity.created(location).build();
+        
+        // Return order details in response body for frontend confirmation
+        OrderResponse response = new OrderResponse(
+            created.getId(),
+            created.getUserRef(),
+            created.getStatus(),
+            created.getTotalCents(),
+            created.getCurrency(),
+            created.getPlacedAt(),
+            created.getCreatedAt(),
+            created.getUpdatedAt()
+        );
+        return ResponseEntity.created(location).body(response);
     }
 
     /**

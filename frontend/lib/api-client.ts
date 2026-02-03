@@ -38,8 +38,11 @@ export class ApiClient {
       throw error;
     }
 
-    if (response.status === 204) {
-      return {} as T;
+    if (response.status === 204 || response.status === 201) {
+      const contentLength = response.headers.get('content-length');
+      if (!contentLength || contentLength === '0') {
+        return {} as T;
+      }
     }
 
     return response.json();
