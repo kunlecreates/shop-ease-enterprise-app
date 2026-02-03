@@ -6,7 +6,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.kunlecreates.user.application.EmailVerificationService;
 import org.kunlecreates.user.domain.EmailVerificationToken;
 import org.kunlecreates.user.domain.User;
-import org.kunlecreates.user.infrastructure.EmailVerificationTokenRepository;
+import org.kunlecreates.user.repository.EmailVerificationTokenRepository;
 import org.kunlecreates.user.repository.UserRepository;
 import org.kunlecreates.user.infrastructure.security.JwtService;
 import org.mockito.ArgumentCaptor;
@@ -178,9 +178,8 @@ class EmailVerificationServiceTest {
         when(tokenRepository.findAll()).thenReturn(List.of(oldToken));
         when(passwordEncoder.encode(anyString())).thenReturn("new-hash");
 
-        boolean result = emailVerificationService.resendVerificationEmail("test@example.com");
+        emailVerificationService.resendVerificationEmail("test@example.com");
 
-        assertThat(result).isTrue();
         verify(tokenRepository).delete(oldToken);
         verify(tokenRepository).save(any(EmailVerificationToken.class));
         // Email sending verification omitted as test mode is enabled
