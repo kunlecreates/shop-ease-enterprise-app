@@ -206,7 +206,6 @@ public class OrderManagementIT {
         headers.set("Authorization", "Bearer " + token);
         
         Map<String, Object> orderRequest = createOrderRequest("PENDING", 79.99);
-        );
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(orderRequest, headers);
 
         ResponseEntity<Void> createResponse = restTemplate.postForEntity(
