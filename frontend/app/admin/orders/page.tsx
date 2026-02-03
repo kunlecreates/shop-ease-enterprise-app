@@ -17,7 +17,7 @@ function OrderManagementContent() {
 
   const loadOrders = async () => {
     try {
-      const data = await ApiClient.get<Order[]>('/orders/all');
+      const data = await ApiClient.get<Order[]>('/order');
       setOrders(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Failed to load orders:', error);
@@ -28,7 +28,7 @@ function OrderManagementContent() {
 
   const handleStatusUpdate = async (orderId: string, newStatus: string) => {
     try {
-      await ApiClient.patch(`/orders/${orderId}/status`, { status: newStatus });
+      await ApiClient.patch(`/order/${orderId}/status`, { status: newStatus });
       await loadOrders();
     } catch (error) {
       console.error('Failed to update order status:', error);

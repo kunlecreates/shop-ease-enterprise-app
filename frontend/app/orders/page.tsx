@@ -13,7 +13,7 @@ function OrdersContent() {
   const success = searchParams.get('success');
 
   useEffect(() => {
-    ApiClient.get<Order[]>('/orders')
+    ApiClient.get<Order[]>('/order')
       .then(setOrders)
       .catch(console.error)
       .finally(() => setLoading(false));
