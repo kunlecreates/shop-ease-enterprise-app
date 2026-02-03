@@ -24,7 +24,7 @@ test.describe('Customer User Journey (FR001, FR002, FR004)', () => {
         // Match the primary password field only (avoid matching "Confirm Password")
         await expect(page.getByLabel(/^Password$/i)).toBeVisible({ timeout: 15000 });
         // Use exact button names where possible to avoid ambiguous matches
-        const signupButton = locators.getExactButtonLocator(page, ['Sign up', 'Register', 'Create your account']);
+        const signupButton = locators.getExactButtonLocator(page, ['Create account', 'Sign up', 'Register', 'Create your account']);
         await expect(signupButton).toBeVisible({ timeout: 15000 });
       });
     });
@@ -48,7 +48,7 @@ test.describe('Customer User Journey (FR001, FR002, FR004)', () => {
       await page.goto('/register');
       
       await test.step('Submit empty form', async () => {
-        const submitButton = locators.getExactButtonLocator(page, ['Sign up', 'Register', 'Create your account']);
+        const submitButton = locators.getExactButtonLocator(page, ['Create account', 'Sign up', 'Register', 'Create your account']);
         await submitButton.click();
         
         // HTML5 validation or error message should appear
@@ -202,11 +202,11 @@ test.describe('Customer User Journey (FR001, FR002, FR004)', () => {
 
     test('should display product management interface', async ({ page }) => {
       await page.goto('/admin/products');
-      await expect(page.getByRole('heading', { name: /products|inventory|admin/i })).toBeVisible({ timeout: 10000 });
+      await expect(page.getByRole('heading', { name: /product management|products|inventory|admin/i })).toBeVisible({ timeout: 10000 });
       
       // Should show admin products page or require login
       const hasLoginForm = (await page.getByLabel(/email|password/i).count()) > 0;
-      const hasProductsList = (await page.getByRole('heading', { name: /products|inventory/i }).count()) > 0;
+      const hasProductsList = (await page.getByRole('heading', { name: /product management|products|inventory/i }).count()) > 0;
       
       expect(hasLoginForm || hasProductsList).toBeTruthy();
     });

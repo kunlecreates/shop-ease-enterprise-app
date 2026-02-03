@@ -156,7 +156,7 @@ export default function ProductsPage() {
                   </div>
                 </div>
                 <div className="flex space-x-2 mt-4">
-                  <Link href={`/products/${product.id}`} className="flex-1">
+                  <Link href={`/products/${product.sku}`} className="flex-1">
                     <Button variant="secondary" className="w-full" size="sm">
                       View Details
                     </Button>

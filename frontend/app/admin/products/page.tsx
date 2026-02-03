@@ -27,7 +27,7 @@ function ProductManagementContent() {
 
   const loadProducts = async () => {
     try {
-      const data = await ApiClient.get<Product[]>('/products');
+      const data = await ApiClient.get<Product[]>('/product');
       setProducts(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Failed to load products:', error);
@@ -46,9 +46,9 @@ function ProductManagementContent() {
       delete (productData as any).stock;
       
       if (editingProduct) {
-        await ApiClient.put(`/products/${editingProduct.sku}`, productData);
+        await ApiClient.put(`/product/${editingProduct.sku}`, productData);
       } else {
-        await ApiClient.post('/products', productData);
+        await ApiClient.post('/product', productData);
       }
       await loadProducts();
       resetForm();
@@ -60,7 +60,7 @@ function ProductManagementContent() {
   const handleDelete = async (sku: string) => {
     if (!confirm('Are you sure you want to delete this product?')) return;
     try {
-      await ApiClient.delete(`/products/${sku}`);
+      await ApiClient.delete(`/product/${sku}`);
       await loadProducts();
     } catch (error) {
       console.error('Failed to delete product:', error);

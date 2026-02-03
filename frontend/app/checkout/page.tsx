@@ -22,7 +22,7 @@ export default function CheckoutPage() {
     city: '',
     state: '',
     zipCode: '',
-    country: 'USA',
+    country: 'Canada',
   });
   
   const [paymentMethod, setPaymentMethod] = useState('mock-payment');
@@ -55,7 +55,7 @@ export default function CheckoutPage() {
         paymentMethod,
       };
 
-      await ApiClient.post('/orders', orderData);
+      await ApiClient.post('/order', orderData);
       clearCart();
       router.push('/orders?success=true');
     } catch (err: any) {
@@ -108,7 +108,7 @@ export default function CheckoutPage() {
                 required
               />
               <Input
-                label="State"
+                label="State/Province"
                 value={shippingAddress.state}
                 onChange={(e) => setShippingAddress({ ...shippingAddress, state: e.target.value })}
                 required
@@ -116,7 +116,7 @@ export default function CheckoutPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <Input
-                label="ZIP Code"
+                label="ZIP/Postal Code"
                 value={shippingAddress.zipCode}
                 onChange={(e) => setShippingAddress({ ...shippingAddress, zipCode: e.target.value })}
                 required
