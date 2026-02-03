@@ -83,14 +83,19 @@ public class OrderService {
     }
 
     @Transactional
-    public Order processCheckout(Long userId, double total, String jwtToken) {
+    public Order processCheckout(Long userId, double total, String jwtToken,
+                                String shippingRecipient, String shippingStreet1, String shippingStreet2,
+                                String shippingCity, String shippingState, String shippingPostalCode,
+                                String shippingCountry, String shippingPhone,
+                                String paymentMethodType, String paymentLast4, String paymentBrand) {
         boolean paid = paymentService.charge(userId, total);
         if (!paid) {
             throw new RuntimeException("Payment failed");
         }
         return createOrder(null, userId, "PAID", total, jwtToken,
-                null, null, null, null, null, null, null, null,
-                null, null, null);
+                shippingRecipient, shippingStreet1, shippingStreet2, shippingCity,
+                shippingState, shippingPostalCode, shippingCountry, shippingPhone,
+                paymentMethodType, paymentLast4, paymentBrand);
     }
     
     @Transactional

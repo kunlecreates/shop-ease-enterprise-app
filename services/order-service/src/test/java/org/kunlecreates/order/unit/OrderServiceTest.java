@@ -56,8 +56,9 @@ class OrderServiceTest {
         when(orderRepository.save(any(Order.class))).thenReturn(savedOrder);
 
         Order result = orderService.createOrder("custom-ref", null, "PENDING", 50.00, null,
-                null, null, null, null, null, null, null, null,
-                null, null, null);
+                "John Doe", "123 Main St", "Apt 4B", "Toronto",
+                "ON", "M5H 2N2", "Canada", "+1-416-555-0100",
+                "CREDIT_CARD", "4242", "Visa");
 
         assertThat(result.getUserRef()).isEqualTo("custom-ref");
         verify(orderRepository).save(any(Order.class));
@@ -70,8 +71,9 @@ class OrderServiceTest {
         when(orderRepository.save(any(Order.class))).thenReturn(savedOrder);
 
         Order result = orderService.createOrder(null, 456L, "PENDING", 75.00, null,
-                null, null, null, null, null, null, null, null,
-                null, null, null);
+                "Jane Smith", "456 Oak Ave", null, "Vancouver",
+                "BC", "V6B 1A1", "Canada", "+1-604-555-0200",
+                "DEBIT_CARD", "5678", "Mastercard");
 
         assertThat(result.getUserRef()).isEqualTo("456");
         verify(orderRepository).save(any(Order.class));
@@ -80,8 +82,9 @@ class OrderServiceTest {
     @Test
     void createOrder_whenNoUserRefOrUserId_shouldThrowException() {
         assertThatThrownBy(() -> orderService.createOrder(null, null, "PENDING", 50.00, null,
-                null, null, null, null, null, null, null, null,
-                null, null, null))
+                "Test User", "789 Test St", null, "Montreal",
+                "QC", "H3A 1A1", "Canada", "+1-514-555-0300",
+                "CREDIT_CARD", "1234", "Visa"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Either userRef or userId must be provided");
 
@@ -94,8 +97,9 @@ class OrderServiceTest {
         when(orderRepository.save(any(Order.class))).thenReturn(savedOrder);
 
         orderService.createOrder(null, 789L, "PENDING", 120.00, "jwt-token",
-                null, null, null, null, null, null, null, null,
-                null, null, null);
+                "Alice Johnson", "321 Elm St", "Suite 100", "Calgary",
+                "AB", "T2P 2M5", "Canada", "+1-403-555-0400",
+                "PAYPAL", null, null);
 
         verify(notificationClient).sendOrderConfirmation(savedOrder, "jwt-token");
     }
@@ -106,7 +110,10 @@ class OrderServiceTest {
         when(paymentService.charge(100L, 250.00)).thenReturn(true);
         when(orderRepository.save(any(Order.class))).thenReturn(savedOrder);
 
-        Order result = orderService.processCheckout(100L, 250.00, null);
+        Order result = orderService.processCheckout(100L, 250.00, null,
+                "Bob Wilson", "555 Park Blvd", null, "Ottawa",
+                "ON", "K1A 0A9", "Canada", "+1-613-555-0500",
+                "CREDIT_CARD", "9876", "Amex");
 
         assertThat(result.getStatus()).isEqualTo("PAID");
         verify(paymentService).charge(100L, 250.00);
@@ -117,7 +124,10 @@ class OrderServiceTest {
     void processCheckout_whenPaymentFails_shouldThrowException() {
         when(paymentService.charge(200L, 100.00)).thenReturn(false);
 
-        assertThatThrownBy(() -> orderService.processCheckout(200L, 100.00, null))
+        assertThatThrownBy(() -> orderService.processCheckout(200L, 100.00, null,
+                "Carol Brown", "777 Queen St", "Unit 5", "Halifax",
+                "NS", "B3H 2Y9", "Canada", "+1-902-555-0600",
+                "DEBIT_CARD", "3456", "Visa"))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessage("Payment failed");
 

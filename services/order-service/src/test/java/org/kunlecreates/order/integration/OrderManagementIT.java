@@ -89,6 +89,27 @@ public class OrderManagementIT {
         }
     }
 
+    private Map<String, Object> createOrderRequest(String status, double total) {
+        return Map.of(
+                "status", status,
+                "total", total,
+                "shippingAddress", Map.of(
+                        "recipient", "Test User",
+                        "street1", "123 Test St",
+                        "city", "Toronto",
+                        "state", "ON",
+                        "postalCode", "M5H 2N2",
+                        "country", "Canada",
+                        "phone", "+1-416-555-0100"
+                ),
+                "paymentMethod", Map.of(
+                        "type", "CREDIT_CARD",
+                        "last4", "4242",
+                        "brand", "Visa"
+                )
+        );
+    }
+
     @Test
     void createOrder_shouldPersistToDatabase_andReturnLocation() {
         // Given: Valid order creation request with JWT authentication
@@ -98,7 +119,21 @@ public class OrderManagementIT {
         
         Map<String, Object> orderRequest = Map.of(
                 "status", "PENDING",
-                "total", 99.99
+                "total", 99.99,
+                "shippingAddress", Map.of(
+                        "recipient", "Integration Test User",
+                        "street1", "123 Test St",
+                        "city", "Toronto",
+                        "state", "ON",
+                        "postalCode", "M5H 2N2",
+                        "country", "Canada",
+                        "phone", "+1-416-555-1000"
+                ),
+                "paymentMethod", Map.of(
+                        "type", "CREDIT_CARD",
+                        "last4", "4242",
+                        "brand", "Visa"
+                )
         );
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(orderRequest, headers);
 
@@ -132,10 +167,7 @@ public class OrderManagementIT {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + token);
         
-        Map<String, Object> orderRequest = Map.of(
-                "status", "PENDING",
-                "total", 49.99
-        );
+        Map<String, Object> orderRequest = createOrderRequest("PENDING", 49.99);
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(orderRequest, headers);
 
         // When: Create order
@@ -173,9 +205,7 @@ public class OrderManagementIT {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + token);
         
-        Map<String, Object> orderRequest = Map.of(
-                "status", "PENDING",
-                "total", 79.99
+        Map<String, Object> orderRequest = createOrderRequest("PENDING", 79.99);
         );
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(orderRequest, headers);
 
@@ -232,10 +262,7 @@ public class OrderManagementIT {
         HttpHeaders headersUserB = new HttpHeaders();
         headersUserB.set("Authorization", "Bearer " + tokenUserB);
         
-        Map<String, Object> orderRequest = Map.of(
-                "status", "PENDING",
-                "total", 59.99
-        );
+        Map<String, Object> orderRequest = createOrderRequest("PENDING", 59.99);
         HttpEntity<Map<String, Object>> createEntity = new HttpEntity<>(orderRequest, headersUserB);
 
         // Create order as user-b
@@ -272,10 +299,7 @@ public class OrderManagementIT {
         HttpHeaders regularUserHeaders = new HttpHeaders();
         regularUserHeaders.set("Authorization", "Bearer " + regularUserToken);
         
-        Map<String, Object> orderRequest = Map.of(
-                "status", "PENDING",
-                "total", 129.99
-        );
+        Map<String, Object> orderRequest = createOrderRequest("PENDING", 129.99);
         HttpEntity<Map<String, Object>> createEntity = new HttpEntity<>(orderRequest, regularUserHeaders);
 
         ResponseEntity<Void> createResponse = restTemplate.postForEntity(
@@ -314,8 +338,8 @@ public class OrderManagementIT {
         HttpHeaders headersUser5 = new HttpHeaders();
         headersUser5.set("Authorization", "Bearer " + tokenUser5);
         
-        Map<String, Object> orderRequest1 = Map.of("status", "PENDING", "total", 10.00);
-        Map<String, Object> orderRequest2 = Map.of("status", "DELIVERED", "total", 20.00);
+        Map<String, Object> orderRequest1 = createOrderRequest("PENDING", 10.00);
+        Map<String, Object> orderRequest2 = createOrderRequest("DELIVERED", 20.00);
 
         // Create orders as test-user-5
         ResponseEntity<Void> createResponse1 = restTemplate.postForEntity("/api/order", new HttpEntity<>(orderRequest1, headersUser5), Void.class);
@@ -328,7 +352,7 @@ public class OrderManagementIT {
         String tokenOther = JwtTestHelper.createToken("other-user");
         HttpHeaders headersOther = new HttpHeaders();
         headersOther.set("Authorization", "Bearer " + tokenOther);
-        ResponseEntity<Void> createResponse3 = restTemplate.postForEntity("/api/order", new HttpEntity<>(Map.of("status", "PENDING", "total", 30.00), headersOther), Void.class);
+        ResponseEntity<Void> createResponse3 = restTemplate.postForEntity("/api/order", new HttpEntity<>(createOrderRequest("PENDING", 30.00), headersOther), Void.class);
         assertThat(createResponse3.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
         // When: List orders as test-user-5
@@ -357,10 +381,10 @@ public class OrderManagementIT {
         HttpHeaders headersUser2 = new HttpHeaders();
         headersUser2.set("Authorization", "Bearer " + tokenUser2);
 
-        ResponseEntity<Void> createResponse1 = restTemplate.postForEntity("/api/order", new HttpEntity<>(Map.of("status", "PENDING", "total", 15.00), headersUser1), Void.class);
+        ResponseEntity<Void> createResponse1 = restTemplate.postForEntity("/api/order", new HttpEntity<>(createOrderRequest("PENDING", 15.00), headersUser1), Void.class);
         assertThat(createResponse1.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         
-        ResponseEntity<Void> createResponse2 = restTemplate.postForEntity("/api/order", new HttpEntity<>(Map.of("status", "DELIVERED", "total", 25.00), headersUser2), Void.class);
+        ResponseEntity<Void> createResponse2 = restTemplate.postForEntity("/api/order", new HttpEntity<>(createOrderRequest("DELIVERED", 25.00), headersUser2), Void.class);
         assertThat(createResponse2.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
         // When: Admin lists orders
@@ -386,10 +410,7 @@ public class OrderManagementIT {
     void createOrder_withoutAuthentication_shouldReturn401() {
         // Given: Order creation request without authentication
         TestRestTemplate unauthenticatedTemplate = new TestRestTemplate();
-        Map<String, Object> orderRequest = Map.of(
-                "status", "PENDING",
-                "total", 39.99
-        );
+        Map<String, Object> orderRequest = createOrderRequest("PENDING", 39.99);
 
         // When: Try to create order without auth
         ResponseEntity<Void> response = unauthenticatedTemplate.postForEntity(
