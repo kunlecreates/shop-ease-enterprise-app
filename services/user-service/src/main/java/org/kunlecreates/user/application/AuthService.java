@@ -70,6 +70,22 @@ public class AuthService {
         String verificationToken = emailVerificationService.createVerificationToken(user);
         emailVerificationService.sendVerificationEmail(user, verificationToken);
 
+        // Reload user to check if auto-verified (test mode)
+        user = userRepository.findById(user.getId()).orElseThrow();
+        
+        // Generate JWT token if user is now active (test mode auto-verification)
+        String jwtToken = null;
+        if (user.getIsActive() == 1) {
+            List<String> roleList = user.getRoles().stream()
+                .map(role -> role.getName().toUpperCase())
+                .toList();
+            jwtToken = jwtService.generateToken(
+                user.getEmail(),
+                String.valueOf(user.getId()),
+                roleList
+            );
+        }
+        
         // Return response without JWT token - user must verify email first
         String primaryRole = "CUSTOMER";
         AuthResponse.UserInfo userInfo = new AuthResponse.UserInfo(
@@ -79,8 +95,8 @@ public class AuthService {
             primaryRole
         );
 
-        // Return null token to indicate verification required
-        return new AuthResponse(null, String.valueOf(user.getId()), user.getEmail(), userInfo);
+        // Return token if user is active, otherwise null to indicate verification required
+        return new AuthResponse(jwtToken, String.valueOf(user.getId()), user.getEmail(), userInfo);
     }
 
     @Transactional(readOnly = true)

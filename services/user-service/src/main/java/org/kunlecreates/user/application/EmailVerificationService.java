@@ -71,7 +71,11 @@ public class EmailVerificationService {
     @Transactional
     public void sendVerificationEmail(User user, String rawToken) {
         if (testMode) {
-            log.info("Test mode enabled - skipping email send for user: {}", user.getEmail());
+            log.info("Test mode enabled - auto-verifying user without sending email: {}", user.getEmail());
+            // In test mode, automatically verify the user to avoid blocking integration tests
+            user.setEmailVerified(1);
+            user.setIsActive(1); // Also activate the user
+            userRepository.save(user);
             return;
         }
         
