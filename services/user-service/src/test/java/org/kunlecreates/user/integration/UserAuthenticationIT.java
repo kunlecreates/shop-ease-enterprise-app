@@ -92,9 +92,9 @@ public class UserAuthenticationIT {
         try {
             // Clean user-related tables in correct order (respecting foreign keys)
             // Oracle doesn't support RESTART IDENTITY - use DELETE instead
+            // DO NOT delete from roles table - it contains seed data needed by tests!
             jdbcTemplate.execute("DELETE FROM user_roles");
             jdbcTemplate.execute("DELETE FROM users");
-            jdbcTemplate.execute("DELETE FROM roles");
         } catch (Exception e) {
             // Silently ignore - tables might not exist during test initialization
             System.err.println("Cleanup warning: " + e.getMessage());
