@@ -156,7 +156,23 @@ export default function CheckoutPage() {
               placeholder="+1 234 567 8900"
             />
           </div>
-          <Button onClick={() => setStep(2)} className="mt-6">
+          <Button 
+            onClick={() => {
+              const isValid = shippingAddress.recipient && 
+                              shippingAddress.street1 && 
+                              shippingAddress.city && 
+                              shippingAddress.state && 
+                              shippingAddress.postalCode && 
+                              shippingAddress.country;
+              if (!isValid) {
+                setError('Please fill in all required shipping address fields');
+                return;
+              }
+              setError('');
+              setStep(2);
+            }} 
+            className="mt-6"
+          >
             Continue to Payment
           </Button>
         </div>
