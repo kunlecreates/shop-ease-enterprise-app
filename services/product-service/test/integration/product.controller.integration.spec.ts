@@ -106,7 +106,8 @@ describe('ProductController (Integration)', () => {
       );
     } catch (err) {
       // Silently ignore errors - container might be stopping
-      console.warn('afterEach cleanup warning:', err.message);
+      const message = err instanceof Error ? err.message : String(err);
+      console.warn('afterEach cleanup warning:', message);
     }
   });
 

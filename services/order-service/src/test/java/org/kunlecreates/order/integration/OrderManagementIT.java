@@ -69,16 +69,12 @@ public class OrderManagementIT {
     @BeforeEach
     void cleanDatabase() {
         // Clean orders table before each test for isolation
-        // Using TRUNCATE for better performance (resets sequences and is faster)
+        // MS SQL Server doesn't support RESTART IDENTITY CASCADE - use DELETE
         try {
-            jdbcTemplate.execute("TRUNCATE TABLE order_svc.orders RESTART IDENTITY CASCADE");
+            jdbcTemplate.execute("DELETE FROM order_svc.orders");
         } catch (Exception e) {
-            // Table might not exist yet, fallback to DELETE
-            try {
-                jdbcTemplate.execute("DELETE FROM order_svc.orders");
-            } catch (Exception ex) {
-                // Ignore - table doesn't exist
-            }
+            // Silently ignore - table might not exist during test initialization
+            System.err.println("Cleanup warning: " + e.getMessage());
         }
     }
 
@@ -87,7 +83,7 @@ public class OrderManagementIT {
         // Additional cleanup after each test completes
         // Ensures no test data persists if beforeEach fails or during debugging
         try {
-            jdbcTemplate.execute("TRUNCATE TABLE order_svc.orders RESTART IDENTITY CASCADE");
+            jdbcTemplate.execute("DELETE FROM order_svc.orders");
         } catch (Exception e) {
             // Silently ignore - container might be stopping
         }

@@ -91,16 +91,13 @@ public class UserAuthenticationIT {
     private void cleanupDatabase() {
         try {
             // Clean user-related tables in correct order (respecting foreign keys)
-            jdbcTemplate.execute("TRUNCATE TABLE user_roles, users, roles RESTART IDENTITY CASCADE");
+            // Oracle doesn't support RESTART IDENTITY - use DELETE instead
+            jdbcTemplate.execute("DELETE FROM user_roles");
+            jdbcTemplate.execute("DELETE FROM users");
+            jdbcTemplate.execute("DELETE FROM roles");
         } catch (Exception e) {
-            // Fallback to individual DELETE if TRUNCATE fails
-            try {
-                jdbcTemplate.execute("DELETE FROM user_roles");
-                jdbcTemplate.execute("DELETE FROM users");
-                jdbcTemplate.execute("DELETE FROM roles");
-            } catch (Exception ex) {
-                // Silently ignore - tables might not exist
-            }
+            // Silently ignore - tables might not exist during test initialization
+            System.err.println("Cleanup warning: " + e.getMessage());
         }
     }
 
