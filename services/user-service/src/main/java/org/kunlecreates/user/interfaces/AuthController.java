@@ -2,6 +2,7 @@ package org.kunlecreates.user.interfaces;
 
 import jakarta.validation.Valid;
 import org.kunlecreates.user.application.AuthService;
+import org.kunlecreates.user.application.EmailVerificationService;
 import org.kunlecreates.user.interfaces.dto.AuthResponse;
 import org.kunlecreates.user.interfaces.dto.CreateUserRequest;
 import org.kunlecreates.user.interfaces.dto.LoginRequest;
@@ -20,9 +21,11 @@ import java.util.Map;
 public class AuthController {
 
     private final AuthService authService;
+    private final EmailVerificationService emailVerificationService;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, EmailVerificationService emailVerificationService) {
         this.authService = authService;
+        this.emailVerificationService = emailVerificationService;
     }
 
     @PostMapping("/register")
@@ -76,6 +79,44 @@ public class AuthController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(Map.of("message", e.getMessage() != null ? e.getMessage() : "Invalid or expired reset token"));
+        }
+    }
+
+    @PostMapping("/verify-email")
+    public ResponseEntity<Map<String, String>> verifyEmail(
+            @RequestParam String email,
+            @RequestParam String token) {
+        try {
+            boolean verified = emailVerificationService.verifyEmail(email, token);
+            if (verified) {
+                return ResponseEntity.ok(Map.of(
+                    "message", "Email verified successfully",
+                    "status", "verified"
+                ));
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", "Invalid or expired verification token"));
+            }
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/resend-verification")
+    public ResponseEntity<Map<String, String>> resendVerification(@RequestParam String email) {
+        try {
+            emailVerificationService.resendVerificationEmail(email);
+            return ResponseEntity.ok(Map.of(
+                "message", "Verification email sent",
+                "email", email
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("message", e.getMessage()));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("message", e.getMessage()));
         }
     }
 }

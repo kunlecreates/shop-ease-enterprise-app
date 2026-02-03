@@ -29,19 +29,22 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final EmailVerificationService emailVerificationService;
 
     public AuthService(
         UserRepository userRepository,
         RoleRepository roleRepository,
         PasswordEncoder passwordEncoder,
         JwtService jwtService,
-        PasswordResetTokenRepository passwordResetTokenRepository
+        PasswordResetTokenRepository passwordResetTokenRepository,
+        EmailVerificationService emailVerificationService
     ) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
+        this.emailVerificationService = emailVerificationService;
     }
 
     @Transactional
@@ -52,24 +55,23 @@ public class AuthService {
 
         String hashedPassword = passwordEncoder.encode(request.password());
         User user = new User(request.email(), hashedPassword);
+        
+        // Set user as inactive until email is verified
+        user.setIsActive(0);
+        user.setEmailVerified(0);
         user = userRepository.save(user);
 
         var customerRole = roleRepository.findByNameIgnoreCase("customer")
                 .orElseThrow(() -> new IllegalStateException("Customer role not found"));
         user.getRoles().add(customerRole);
-        userRepository.save(user);
+        user = userRepository.save(user);
 
-        List<String> roles = user.getRoles().stream()
-                .map(r -> r.getName().toUpperCase())
-                .collect(Collectors.toList());
+        // Create and send verification token
+        String verificationToken = emailVerificationService.createVerificationToken(user);
+        emailVerificationService.sendVerificationEmail(user, verificationToken);
 
-        String token = jwtService.generateToken(
-            String.valueOf(user.getId()),
-            user.getEmail(),
-            roles
-        );
-
-        String primaryRole = roles.isEmpty() ? "CUSTOMER" : roles.get(0);
+        // Return response without JWT token - user must verify email first
+        String primaryRole = "CUSTOMER";
         AuthResponse.UserInfo userInfo = new AuthResponse.UserInfo(
             String.valueOf(user.getId()),
             user.getEmail().split("@")[0],
@@ -77,7 +79,8 @@ public class AuthService {
             primaryRole
         );
 
-        return new AuthResponse(token, String.valueOf(user.getId()), user.getEmail(), userInfo);
+        // Return null token to indicate verification required
+        return new AuthResponse(null, String.valueOf(user.getId()), user.getEmail(), userInfo);
     }
 
     @Transactional(readOnly = true)
@@ -87,6 +90,11 @@ public class AuthService {
         
         if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
             throw new IllegalArgumentException("Invalid credentials");
+        }
+
+        // Check if email is verified
+        if (user.getEmailVerified() == 0) {
+            throw new IllegalStateException("Email not verified. Please check your email for verification link.");
         }
 
         // Enforce password reset if there exists an unused, unexpired password reset token

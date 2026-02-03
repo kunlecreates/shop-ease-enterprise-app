@@ -25,6 +25,7 @@ jobs:
       # Admin credentials used by the auth helper/fixtures
       ADMIN_EMAIL: ${{ secrets.E2E_ADMIN_EMAIL }}
       ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }}
+      EMAIL_VERIFICATION_TEST_MODE: 'true'
       # Test runtime flags for deterministic seeding and health checks
       # E2E_REQUIRE_PRODUCTS: false  # (default if not set)
       # E2E_SEED: false               # (default if not set)

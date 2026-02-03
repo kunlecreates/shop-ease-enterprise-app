@@ -91,3 +91,5 @@ export class ApiClient {
     return this.handleResponse<T>(response);
   }
 }
+
+export const apiClient = ApiClient;

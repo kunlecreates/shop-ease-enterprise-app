@@ -35,6 +35,13 @@ spring:
     enabled: ${FLYWAY_ENABLED:false}
 jwt:
   secret: ${JWT_SECRET:test-secret-key-for-development-only-min-256-bits-required-for-hs256-algorithm}
+app:
+  frontend:
+    url: ${FRONTEND_URL:https://shop.kunlecreates.org}
+  notification:
+    url: ${NOTIFICATION_SERVICE_URL:http://notification-service:8080}
+  verification:
+    test-mode: ${EMAIL_VERIFICATION_TEST_MODE:false}
 management:
   endpoints:
     web:

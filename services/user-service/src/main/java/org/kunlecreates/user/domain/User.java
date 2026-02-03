@@ -23,6 +23,9 @@ public class User {
 
     @Column(name = "IS_ACTIVE", nullable = false)
     private Integer isActive = 1;
+    
+    @Column(name = "EMAIL_VERIFIED", nullable = false)
+    private Integer emailVerified = 0;
 
     @Column(name = "CREATED_AT", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -54,6 +57,7 @@ public class User {
     public String getPasswordHash() { return passwordHash; }
     public String getFullName() { return fullName; }
     public Integer getIsActive() { return isActive; }
+    public Integer getEmailVerified() { return emailVerified; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public LocalDateTime getLastLoginAt() { return lastLoginAt; }
@@ -76,6 +80,11 @@ public class User {
 
     public void setIsActive(Integer isActive) { 
         this.isActive = isActive;
+        this.updatedAt = LocalDateTime.now();
+    }
+    
+    public void setEmailVerified(Integer emailVerified) {
+        this.emailVerified = emailVerified;
         this.updatedAt = LocalDateTime.now();
     }
 

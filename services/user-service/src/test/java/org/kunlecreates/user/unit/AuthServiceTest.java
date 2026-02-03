@@ -7,6 +7,7 @@ import org.mockito.Mock;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.kunlecreates.user.application.AuthService;
+import org.kunlecreates.user.application.EmailVerificationService;
 import org.kunlecreates.user.domain.User;
 import org.kunlecreates.user.domain.Role;
 import org.kunlecreates.user.domain.PasswordResetToken;
@@ -51,6 +52,9 @@ class AuthServiceTest {
     @Mock
     private PasswordResetTokenRepository passwordResetTokenRepository;
 
+    @Mock
+    private EmailVerificationService emailVerificationService;
+
     @InjectMocks
     private AuthService authService;
 
@@ -89,12 +93,14 @@ class AuthServiceTest {
         when(passwordEncoder.encode("rawPassword")).thenReturn("hashedPassword");
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
         when(roleRepository.findByNameIgnoreCase("customer")).thenReturn(Optional.of(customerRole));
-        when(jwtService.generateToken(anyString(), anyString(), anyList())).thenReturn("jwt-token");
+        when(emailVerificationService.createVerificationToken(any(User.class))).thenReturn("mock-token");
 
         authService.register(request);
 
         verify(passwordEncoder).encode("rawPassword");
         verify(userRepository, times(2)).save(any(User.class));
+        verify(emailVerificationService).createVerificationToken(any(User.class));
+        verify(emailVerificationService).sendVerificationEmail(any(User.class), eq("mock-token"));
     }
 
     @Test

@@ -59,6 +59,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         password,
       });
       
+      // If token is null, user needs to verify email
+      if (!response.token) {
+        return;
+      }
+      
       localStorage.setItem('auth_token', response.token);
       localStorage.setItem('user', JSON.stringify(response.user));
       setUser(response.user);
