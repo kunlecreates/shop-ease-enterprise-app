@@ -6,10 +6,11 @@ type CleanupFn = () => Promise<void>;
 let cleanupFns: CleanupFn[] = [];
 
 // Test data markers - used to identify test data vs seed data
+// Patterns match ACTUAL prefixes created by test files (testuser, profile, checkout, etc.)
 export const TEST_DATA_MARKERS = {
-  EMAIL_PATTERN: /^(test-|checkout|api-test|e2e-|temp-).*@/i,
-  SKU_PATTERN: /^(int-|test-|temp-|api-)/i,
-  USERNAME_PATTERN: /^(test-|checkout|api-test|e2e-|temp-)/i,
+  EMAIL_PATTERN: /^(testuser|profile|deleteme|logintest|metest|roletest|regular|ordertest|canceltest|admintest|disable|checkout|tracking|fullflow|duplicate|reset)\d+@example\.com$/i,
+  SKU_PATTERN: /^(int-|BULK-)/i,
+  USERNAME_PATTERN: /^(testuser|profile|deleteme|logintest|metest|roletest|regular|ordertest|canceltest|admintest|disable|checkout|tracking|fullflow|duplicate|reset)\d+$/i,
 };
 
 export function registerCleanup(fn: CleanupFn) {

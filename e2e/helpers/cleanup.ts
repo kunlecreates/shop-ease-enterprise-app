@@ -2,10 +2,11 @@ import axios, { AxiosInstance } from 'axios';
 
 const BASE_URL = process.env.E2E_BASE_URL || 'http://localhost:3000';
 
-// Test data markers matching API test patterns
+// Test data markers matching ACTUAL patterns created by tests
+// Updated to match real prefixes: testuser, profile, checkout, int-, BULK-, etc.
 const TEST_DATA_MARKERS = {
-  EMAIL_PATTERN: /^(test-|checkout|api-test|e2e-|temp-).*@/i,
-  SKU_PATTERN: /^(int-|test-|temp-|api-|e2e-)/i,
+  EMAIL_PATTERN: /^(testuser|profile|deleteme|logintest|metest|roletest|regular|ordertest|canceltest|admintest|disable|checkout|tracking|fullflow|duplicate|reset)\d+@example\.com$/i,
+  SKU_PATTERN: /^(int-|BULK-)/i,
 };
 
 /**
