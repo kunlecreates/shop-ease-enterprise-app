@@ -45,21 +45,21 @@ export default function CheckoutPage() {
 
     try {
       const orderData = {
+        status: 'PENDING',
+        total: getTotal(),
         items: items.map(item => ({
-          productRef: item.productId,
+          productRef: String(item.productId),
           quantity: item.quantity,
           unitPrice: item.price,
         })),
-        total: getTotal(),
-        shippingAddress,
-        paymentMethod,
       };
 
       await ApiClient.post('/order', orderData);
       clearCart();
       router.push('/orders?success=true');
     } catch (err: any) {
-      setError(err.message || 'Failed to process order');
+      console.error('Order submission failed:', err);
+      setError(err.message || 'Failed to process order. Please try again.');
     } finally {
       setIsProcessing(false);
     }

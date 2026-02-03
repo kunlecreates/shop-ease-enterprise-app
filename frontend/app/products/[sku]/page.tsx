@@ -16,16 +16,24 @@ export default function ProductDetailPage() {
   const [added, setAdded] = useState(false);
   
   const addItem = useCartStore((state) => state.addItem);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const apiBase = process.env.NEXT_PUBLIC_PRODUCT_API || '/api';
-    fetch(`${apiBase}/products/${params.sku}`)
+    fetch(`/api/product/${params.sku}`)
       .then(async (r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        if (!r.ok) {
+          const errorData = await r.json().catch(() => ({ message: `HTTP ${r.status}` }));
+          throw new Error(errorData.message || `HTTP ${r.status}`);
+        }
         const data = await r.json();
         setProduct(data);
       })
-      .catch(() => router.push('/products'))
+      .catch((err) => {
+        console.error('Failed to load product:', err);
+        setError(err.message);
+        // Redirect after showing error briefly
+        setTimeout(() => router.push('/products'), 2000);
+      })
       .finally(() => setLoading(false));
   }, [params.sku, router]);
 

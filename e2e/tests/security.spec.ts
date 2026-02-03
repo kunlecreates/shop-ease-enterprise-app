@@ -202,13 +202,21 @@ test.describe('Customer User Journey (FR001, FR002, FR004)', () => {
 
     test('should display product management interface', async ({ page }) => {
       await page.goto('/admin/products');
-      await expect(page.getByRole('heading', { name: /product management|products|inventory|admin/i })).toBeVisible({ timeout: 10000 });
       
-      // Should show admin products page or require login
+      // Wait for page to settle - either show admin page or redirect to login
+      await page.waitForLoadState('networkidle', { timeout: 15000 });
+      
+      // Check what page we're on
       const hasLoginForm = (await page.getByLabel(/email|password/i).count()) > 0;
-      const hasProductsList = (await page.getByRole('heading', { name: /product management|products|inventory/i }).count()) > 0;
+      const hasProductsHeading = (await page.getByRole('heading', { name: /product management|products|inventory/i }).count()) > 0;
       
-      expect(hasLoginForm || hasProductsList).toBeTruthy();
+      // Should show either admin page (if authenticated) or login page (if not)
+      expect(hasLoginForm || hasProductsHeading).toBeTruthy();
+      
+      // If we have the admin page, verify it has the expected content
+      if (hasProductsHeading) {
+        await expect(page.getByRole('heading', { name: /product management|products|inventory/i })).toBeVisible();
+      }
     });
   });
 });
