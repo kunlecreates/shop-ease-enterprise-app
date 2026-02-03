@@ -1,5 +1,3 @@
--- V1__baseline.sql
--- Baseline existing order_svc schema.
--- This migration intentionally does nothing. It trusts that the live DB schema
--- matches the expected state as defined in the original migration scripts.
--- This file is used to set the baseline version for Flyway migrations.
+-- V1__init.sql
+-- Baseline migration - assumes production database already has the base schema
+-- This is intentionally empty as it represents the starting point for existing databases
