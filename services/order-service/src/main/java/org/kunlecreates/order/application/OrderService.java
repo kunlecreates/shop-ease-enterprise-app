@@ -88,7 +88,9 @@ public class OrderService {
         if (!paid) {
             throw new RuntimeException("Payment failed");
         }
-        return createOrder(null, userId, "PAID", total, jwtToken);
+        return createOrder(null, userId, "PAID", total, jwtToken,
+                null, null, null, null, null, null, null, null,
+                null, null, null);
     }
     
     @Transactional
