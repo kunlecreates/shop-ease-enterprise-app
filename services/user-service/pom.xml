@@ -145,7 +145,7 @@
                     <excludes>
                         <exclude>**/*IT.java</exclude>
                     </excludes>
-                    <argLine>-Djdk.module.illegalAccess.silent=true --add-opens java.base/java.lang=ALL-UNNAMED</argLine>
+                    <argLine>-Djdk.module.illegalAccess.silent=true --add-opens java.base/java.lang=ALL-UNNAMED -XX:+EnableDynamicAgentLoading</argLine>
                 </configuration>
             </plugin>
             <!-- Maven Failsafe for integration tests (*IT.java) -->

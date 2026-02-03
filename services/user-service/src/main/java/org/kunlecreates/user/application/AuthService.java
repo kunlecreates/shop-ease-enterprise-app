@@ -80,8 +80,8 @@ public class AuthService {
                 .map(role -> role.getName().toUpperCase())
                 .toList();
             jwtToken = jwtService.generateToken(
-                user.getEmail(),
                 String.valueOf(user.getId()),
+                user.getEmail(),
                 roleList
             );
         }
