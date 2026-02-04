@@ -3,6 +3,8 @@ package org.kunlecreates.user.repository;
 import org.kunlecreates.user.domain.PasswordResetToken;
 import org.kunlecreates.user.domain.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -18,4 +20,8 @@ public interface PasswordResetTokenRepository extends JpaRepository<PasswordRese
     boolean existsByUserAndUsedAtIsNullAndExpiresAtAfter(User user, LocalDateTime now);
 
     List<PasswordResetToken> findByUsedAtIsNullAndExpiresAtAfter(LocalDateTime now);
+    
+    @Transactional
+    @Modifying
+    void deleteByUser(User user);
 }
