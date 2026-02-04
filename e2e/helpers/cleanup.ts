@@ -52,42 +52,58 @@ export async function getAdminToken(): Promise<string> {
  */
 export async function cleanupTestUsers(config?: CleanupConfig) {
   try {
+    console.log('[E2E Cleanup] Fetching admin token...');
     const token = config?.adminToken || await getAdminToken();
     const headers = { Authorization: `Bearer ${token}` };
 
+    console.log('[E2E Cleanup] Fetching users list from /api/user...');
     // Get all users
     const usersResponse = await axios.get(`${BASE_URL}/api/user`, { 
       headers,
       validateStatus: () => true 
     });
 
+    console.log(`[E2E Cleanup] Users list response status: ${usersResponse.status}`);
+
     if (usersResponse.status !== 200) {
-      console.log('[E2E Cleanup] Could not fetch users list');
+      console.log(`[E2E Cleanup] Could not fetch users list. Status: ${usersResponse.status}, Response:`, JSON.stringify(usersResponse.data));
       return;
     }
 
-    const users = usersResponse.data;
+    const users = Array.isArray(usersResponse.data) ? usersResponse.data : [];
+    console.log(`[E2E Cleanup] Found ${users.length} total user(s)`);
+    
     let deletedCount = 0;
+    let testUserCount = 0;
 
     for (const user of users) {
-      // Only delete test users (skip seed data)
+      // Log each user to see what we're working with
       if (TEST_DATA_MARKERS.EMAIL_PATTERN.test(user.email)) {
+        testUserCount++;
+        console.log(`[E2E Cleanup] Found test user: ${user.email} (ID: ${user.id})`);
         try {
-          await axios.delete(`${BASE_URL}/api/user/${user.id}`, { 
+          const deleteResponse = await axios.delete(`${BASE_URL}/api/user/${user.id}`, { 
             headers,
             validateStatus: () => true 
           });
-          console.log(`[E2E Cleanup] Deleted test user: ${user.email}`);
-          deletedCount++;
+          if (deleteResponse.status === 204 || deleteResponse.status === 200) {
+            console.log(`[E2E Cleanup] ✓ Deleted test user: ${user.email}`);
+            deletedCount++;
+          } else {
+            console.log(`[E2E Cleanup] ✗ Failed to delete user ${user.email}. Status: ${deleteResponse.status}`);
+          }
         } catch (e: any) {
-          console.error(`[E2E Cleanup] Failed to delete user ${user.email}:`, e.message);
+          console.error(`[E2E Cleanup] ✗ Exception deleting user ${user.email}:`, e.message);
         }
       }
     }
 
-    console.log(`[E2E Cleanup] Deleted ${deletedCount} test user(s)`);
+    console.log(`[E2E Cleanup] Found ${testUserCount} test user(s), deleted ${deletedCount}`);
   } catch (error: any) {
     console.error('[E2E Cleanup] Error during test user cleanup:', error.message);
+    if (error.response) {
+      console.error('[E2E Cleanup] Error response:', JSON.stringify(error.response.data));
+    }
   }
 }
 
@@ -99,41 +115,57 @@ export async function cleanupTestUsers(config?: CleanupConfig) {
  */
 export async function cleanupTestProducts(config?: CleanupConfig) {
   try {
+    console.log('[E2E Cleanup] Fetching admin token for product cleanup...');
     const token = config?.adminToken || await getAdminToken();
     const headers = { Authorization: `Bearer ${token}` };
 
+    console.log('[E2E Cleanup] Fetching products list from /api/product...');
     // Get all products
     const productsResponse = await axios.get(`${BASE_URL}/api/product`, { 
       validateStatus: () => true 
     });
 
+    console.log(`[E2E Cleanup] Products list response status: ${productsResponse.status}`);
+
     if (productsResponse.status !== 200) {
-      console.log('[E2E Cleanup] Could not fetch products list');
+      console.log(`[E2E Cleanup] Could not fetch products list. Status: ${productsResponse.status}`);
       return;
     }
 
-    const products = productsResponse.data;
+    const products = Array.isArray(productsResponse.data) ? productsResponse.data : [];
+    console.log(`[E2E Cleanup] Found ${products.length} total product(s)`);
+    
     let deletedCount = 0;
+    let testProductCount = 0;
 
     for (const product of products) {
       // Only delete test products (skip seed data)
       if (TEST_DATA_MARKERS.SKU_PATTERN.test(product.sku)) {
+        testProductCount++;
+        console.log(`[E2E Cleanup] Found test product: ${product.sku} (Name: ${product.name})`);
         try {
-          await axios.delete(`${BASE_URL}/api/product/${product.sku}`, { 
+          const deleteResponse = await axios.delete(`${BASE_URL}/api/product/${product.sku}`, { 
             headers,
             validateStatus: () => true 
           });
-          console.log(`[E2E Cleanup] Deleted test product: ${product.sku}`);
-          deletedCount++;
+          if (deleteResponse.status === 204 || deleteResponse.status === 200) {
+            console.log(`[E2E Cleanup] ✓ Deleted test product: ${product.sku}`);
+            deletedCount++;
+          } else {
+            console.log(`[E2E Cleanup] ✗ Failed to delete product ${product.sku}. Status: ${deleteResponse.status}`);
+          }
         } catch (e: any) {
-          console.error(`[E2E Cleanup] Failed to delete product ${product.sku}:`, e.message);
+          console.error(`[E2E Cleanup] ✗ Exception deleting product ${product.sku}:`, e.message);
         }
       }
     }
 
-    console.log(`[E2E Cleanup] Deleted ${deletedCount} test product(s)`);
+    console.log(`[E2E Cleanup] Found ${testProductCount} test product(s), deleted ${deletedCount}`);
   } catch (error: any) {
     console.error('[E2E Cleanup] Error during test product cleanup:', error.message);
+    if (error.response) {
+      console.error('[E2E Cleanup] Error response:', JSON.stringify(error.response.data));
+    }
   }
 }
 
@@ -145,45 +177,52 @@ export async function cleanupTestProducts(config?: CleanupConfig) {
  */
 export async function cleanupTestOrders(config?: CleanupConfig) {
   try {
+    console.log('[E2E Cleanup] Fetching admin token for order cleanup...');
     const token = config?.adminToken || await getAdminToken();
     const headers = { Authorization: `Bearer ${token}` };
 
+    console.log('[E2E Cleanup] Fetching orders list from /api/order...');
     // Get all orders (admin endpoint returns all orders)
     const ordersResponse = await axios.get(`${BASE_URL}/api/order`, { 
       headers,
       validateStatus: () => true 
     });
 
+    console.log(`[E2E Cleanup] Orders list response status: ${ordersResponse.status}`);
+
     if (ordersResponse.status !== 200) {
-      console.log('[E2E Cleanup] Could not fetch orders list');
+      console.log(`[E2E Cleanup] Could not fetch orders list. Status: ${ordersResponse.status}`);
       return;
     }
 
-    const orders = ordersResponse.data;
-    let deletedCount = 0;
+    const orders = Array.isArray(ordersResponse.data) ? ordersResponse.data : [];
+    console.log(`[E2E Cleanup] Found ${orders.length} total order(s)`);
+    
+    let testOrderCount = 0;
 
-    // Strategy: Delete orders that are:
-    // 1. In PENDING or CANCELLED status (likely test orders)
-    // 2. Created by test users (userRef matches test patterns)
-    // Note: We can't directly delete orders via API, so we mark them for cleanup
-    // In production, you'd implement a DELETE endpoint or database cleanup script
-
+    // Strategy: Identify test orders for potential cleanup
+    // Note: Direct order deletion may require backend support
     for (const order of orders) {
       const isTestUser = order.userRef && /^(testuser|ordertest|checkout|test)/i.test(order.userRef);
       const isPending = order.status === 'PENDING';
       const isCancelled = order.status === 'CANCELLED';
       
-      // Only log test orders found (actual deletion requires backend support)
+      // Log test orders found
       if ((isTestUser || isPending || isCancelled)) {
-        console.log(`[E2E Cleanup] Found test order: Order #${order.id} (${order.status}, user: ${order.userRef})`);
-        deletedCount++;
+        console.log(`[E2E Cleanup] Found test order: Order #${order.id} (Status: ${order.status}, User: ${order.userRef})`);
+        testOrderCount++;
       }
     }
 
-    console.log(`[E2E Cleanup] Identified ${deletedCount} test order(s) for cleanup`);
-    console.log('[E2E Cleanup] Note: Order deletion requires database-level cleanup script');
+    console.log(`[E2E Cleanup] Identified ${testOrderCount} test order(s) for cleanup`);
+    if (testOrderCount > 0) {
+      console.log('[E2E Cleanup] Note: Order deletion requires database-level cleanup script or backend DELETE endpoint');
+    }
   } catch (error: any) {
     console.error('[E2E Cleanup] Error during test order cleanup:', error.message);
+    if (error.response) {
+      console.error('[E2E Cleanup] Error response:', JSON.stringify(error.response.data));
+    }
   }
 }
 
