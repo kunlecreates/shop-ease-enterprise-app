@@ -38,13 +38,12 @@ export class ApiClient {
       throw error;
     }
 
-    if (response.status === 204 || response.status === 201) {
-      const contentLength = response.headers.get('content-length');
-      if (!contentLength || contentLength === '0') {
-        return {} as T;
-      }
+    // 204 No Content should return empty object
+    if (response.status === 204) {
+      return {} as T;
     }
 
+    // All other successful responses (including 201 Created) should parse JSON
     return response.json();
   }
 
