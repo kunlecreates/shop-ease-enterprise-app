@@ -73,6 +73,11 @@ export async function cleanupTestUsers(config?: CleanupConfig) {
     const users = Array.isArray(usersResponse.data) ? usersResponse.data : [];
     console.log(`[E2E Cleanup] Found ${users.length} total user(s)`);
     
+    // Log first few users to debug
+    if (users.length > 0) {
+      console.log(`[E2E Cleanup] Sample users:`, users.slice(0, 3).map((u: any) => ({ id: u.id, email: u.email })));
+    }
+    
     let deletedCount = 0;
     let testUserCount = 0;
 
