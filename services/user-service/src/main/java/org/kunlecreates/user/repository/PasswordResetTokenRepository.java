@@ -22,7 +22,7 @@ public interface PasswordResetTokenRepository extends JpaRepository<PasswordRese
 
     List<PasswordResetToken> findByUsedAtIsNullAndExpiresAtAfter(LocalDateTime now);
     
-    @Modifying
-    @Query("DELETE FROM PasswordResetToken prt WHERE prt.user.id = :userId")
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(value = "DELETE FROM PASSWORD_RESET_TOKENS WHERE USER_ID = :userId", nativeQuery = true)
     void deleteByUserId(@Param("userId") Long userId);
 }

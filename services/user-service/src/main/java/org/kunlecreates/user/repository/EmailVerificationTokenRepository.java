@@ -16,7 +16,7 @@ public interface EmailVerificationTokenRepository extends JpaRepository<EmailVer
     Optional<EmailVerificationToken> findByTokenHash(String tokenHash);
     boolean existsByUserAndUsedAtIsNullAndExpiresAtAfter(User user, Instant now);
     
-    @Modifying
-    @Query("DELETE FROM EmailVerificationToken evt WHERE evt.user.id = :userId")
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(value = "DELETE FROM EMAIL_VERIFICATION_TOKENS WHERE USER_ID = :userId", nativeQuery = true)
     void deleteByUserId(@Param("userId") Long userId);
 }
