@@ -3,9 +3,9 @@ import axios, { AxiosInstance } from 'axios';
 const BASE_URL = process.env.E2E_BASE_URL || 'http://localhost:3000';
 
 // Test data markers matching ACTUAL patterns created by tests
-// Updated to match real prefixes: testuser, profile, checkout, int-, BULK-, etc.
+// Updated to match real prefixes: test, testuser, profile, checkout, int-, BULK-, etc.
 const TEST_DATA_MARKERS = {
-  EMAIL_PATTERN: /^(testuser|profile|deleteme|logintest|metest|roletest|regular|ordertest|canceltest|admintest|disable|checkout|tracking|fullflow|duplicate|reset)\d+@example\.com$/i,
+  EMAIL_PATTERN: /^(test|testuser|profile|deleteme|logintest|metest|roletest|regular|ordertest|canceltest|admintest|disable|checkout|tracking|fullflow|duplicate|reset)\d+@example\.com$/i,
   SKU_PATTERN: /^(int-|BULK-)/i,
 };
 

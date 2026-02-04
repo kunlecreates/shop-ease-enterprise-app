@@ -78,6 +78,7 @@ public class EmailVerificationService {
             user.setEmailVerified(1);
             user.setIsActive(1);
             userRepository.save(user);
+            userRepository.flush(); // Force immediate write to database
             return;
         }
         
