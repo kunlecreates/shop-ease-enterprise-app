@@ -59,5 +59,6 @@ spec:
             - "-defaultSchema=$(MIG_DB_USER)"
             - "-baselineOnMigrate=true"
             - "-baselineVersion=1"
+            - "-outOfOrder=true"
             - "migrate"
 {{- end }}
