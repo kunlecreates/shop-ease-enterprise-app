@@ -2,6 +2,7 @@ package org.kunlecreates.user.application;
 
 import org.kunlecreates.user.domain.Role;
 import org.kunlecreates.user.domain.User;
+import org.kunlecreates.user.repository.EmailVerificationTokenRepository;
 import org.kunlecreates.user.repository.RoleRepository;
 import org.kunlecreates.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -15,10 +16,12 @@ import java.util.Optional;
 public class UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final EmailVerificationTokenRepository verificationTokenRepository;
 
-    public UserService(UserRepository userRepository, RoleRepository roleRepository) {
+    public UserService(UserRepository userRepository, RoleRepository roleRepository, EmailVerificationTokenRepository verificationTokenRepository) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
+        this.verificationTokenRepository = verificationTokenRepository;
     }
 
     @Transactional(readOnly = true)
@@ -77,6 +80,13 @@ public class UserService {
         if (!userRepository.existsById(userId)) {
             return false;
         }
+        
+        // Delete verification tokens first to avoid foreign key constraint violation
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isPresent()) {
+            verificationTokenRepository.deleteByUser(userOpt.get());
+        }
+        
         userRepository.deleteById(userId);
         return true;
     }
