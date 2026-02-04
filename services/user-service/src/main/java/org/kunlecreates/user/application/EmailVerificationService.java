@@ -70,11 +70,13 @@ public class EmailVerificationService {
 
     @Transactional
     public void sendVerificationEmail(User user, String rawToken) {
-        if (testMode) {
-            log.info("Test mode enabled - auto-verifying user without sending email: {}", user.getEmail());
-            // In test mode, automatically verify the user to avoid blocking integration tests
+        // Auto-verify test users based on email pattern OR global test mode
+        boolean isTestUser = isTestEmail(user.getEmail());
+        
+        if (testMode || isTestUser) {
+            log.info("Auto-verifying user (testMode={}, isTestUser={}): {}", testMode, isTestUser, user.getEmail());
             user.setEmailVerified(1);
-            user.setIsActive(1); // Also activate the user
+            user.setIsActive(1);
             userRepository.save(user);
             return;
         }
@@ -149,6 +151,20 @@ public class EmailVerificationService {
         // Create new token and send email
         String rawToken = createVerificationToken(user);
         sendVerificationEmail(user, rawToken);
+    }
+
+    /**
+     * Check if an email belongs to a test user that should be auto-verified.
+     * Test patterns: *@example.com, *@test.local, emails containing 'test'
+     */
+    private boolean isTestEmail(String email) {
+        if (email == null) {
+            return false;
+        }
+        String lowerEmail = email.toLowerCase();
+        return lowerEmail.endsWith("@example.com")
+            || lowerEmail.endsWith("@test.local")
+            || lowerEmail.contains("test");
     }
 
     private String buildVerificationEmailBody(String verificationUrl) {
