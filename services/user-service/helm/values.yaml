@@ -18,6 +18,13 @@ env:
         - "http://staging.shopease.local"
   # Ensure Spring Boot binds to the container port used by probes (8081)
   SERVER_PORT: "8081"
+  # Email verification test mode for staging - auto-verify to allow automated testing
+  # For production, set this to "false" in production values file to require real email verification
+  EMAIL_VERIFICATION_TEST_MODE: "true"
+  # Frontend URL for verification emails (when test mode is false)
+  FRONTEND_URL: "https://shop.kunlecreates.org"
+  # Notification service URL - use full Kubernetes service DNS for cross-namespace communication
+  NOTIFICATION_SERVICE_URL: "http://notification-service.shopease-notification.svc.cluster.local:8080"
 
 db:
   # Name of a pre-created Secret containing DB connection envs.
