@@ -1,0 +1,38 @@
+-- V2__add_delete_performance_indexes.sql
+-- Add indexes to improve DELETE operation performance on USER_ID foreign key columns
+
+-- Index for EMAIL_VERIFICATION_TOKENS.USER_ID (used in deleteByUserId query)
+-- Speeds up: DELETE FROM EMAIL_VERIFICATION_TOKENS WHERE USER_ID = ?
+BEGIN
+    EXECUTE IMMEDIATE 'CREATE INDEX IDX_EVT_USER_ID ON USER_SVC.EMAIL_VERIFICATION_TOKENS(USER_ID)';
+EXCEPTION
+    WHEN OTHERS THEN
+        IF SQLCODE != -955 THEN  -- ORA-00955: name is already used by an existing object
+            RAISE;
+        END IF;
+END;
+/
+
+-- Index for PASSWORD_RESET_TOKENS.USER_ID (used in deleteByUserId query)  
+-- Speeds up: DELETE FROM PASSWORD_RESET_TOKENS WHERE USER_ID = ?
+BEGIN
+    EXECUTE IMMEDIATE 'CREATE INDEX IDX_PRT_USER_ID ON USER_SVC.PASSWORD_RESET_TOKENS(USER_ID)';
+EXCEPTION
+    WHEN OTHERS THEN
+        IF SQLCODE != -955 THEN
+            RAISE;
+        END IF;
+END;
+/
+
+-- Index for REFRESH_TOKENS.USER_ID (potential future deletion)
+-- Speeds up: DELETE FROM REFRESH_TOKENS WHERE USER_ID = ?
+BEGIN
+    EXECUTE IMMEDIATE 'CREATE INDEX IDX_RT_USER_ID ON USER_SVC.REFRESH_TOKENS(USER_ID)';
+EXCEPTION
+    WHEN OTHERS THEN
+        IF SQLCODE != -955 THEN
+            RAISE;
+        END IF;
+END;
+/
