@@ -17,6 +17,14 @@ test.describe('Authentication & Authorization (FR001, FR003)', () => {
     });
 
     test('should show email verification message after registration', async ({ page }) => {
+      // Capture console logs to debug registration flow
+      const consoleLogs: string[] = [];
+      page.on('console', msg => {
+        const text = msg.text();
+        consoleLogs.push(`[${msg.type()}] ${text}`);
+        console.log(`[Browser Console ${msg.type()}] ${text}`);
+      });
+      
       await page.goto('/register');
       
       await test.step('Fill registration form', async () => {
@@ -32,7 +40,14 @@ test.describe('Authentication & Authorization (FR001, FR003)', () => {
       if (isTestMode()) {
         await test.step('In test mode - should bypass verification', async () => {
           // In test mode, user should be redirected or logged in
-          await page.waitForURL(/\/(products|profile)/, { timeout: testConfig.timeouts.navigation });
+          try {
+            await page.waitForURL(/\/(products|profile)/, { timeout: testConfig.timeouts.navigation });
+          } catch (error) {
+            console.log('\n=== CONSOLE LOGS DUMP ===');
+            consoleLogs.forEach(log => console.log(log));
+            console.log('=== END CONSOLE LOGS ===\n');
+            throw error;
+          }
         });
       } else {
         await test.step('Should show email verification message', async () => {
