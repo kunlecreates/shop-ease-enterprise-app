@@ -54,19 +54,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const register = async (username: string, email: string, password: string) => {
     try {
+      console.log('[AuthContext] Registering user:', email);
       const response = await ApiClient.post<AuthResponse>('/auth/register', {
         email,
         password,
       });
       
+      console.log('[AuthContext] Registration response:', JSON.stringify(response));
+      console.log('[AuthContext] Token present:', !!response.token);
+      
       // If token is null, user needs to verify email
       if (!response.token) {
+        console.log('[AuthContext] No token - user needs email verification');
         return;
       }
       
+      console.log('[AuthContext] Setting token in localStorage');
       localStorage.setItem('auth_token', response.token);
       localStorage.setItem('user', JSON.stringify(response.user));
       setUser(response.user);
+      console.log('[AuthContext] Token set, user updated');
     } catch (error) {
       console.error('Registration failed:', error);
       throw error;

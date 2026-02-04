@@ -39,19 +39,26 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
+      console.log('[RegisterPage] Starting registration for:', email);
       await register(username, email, password);
       
+      console.log('[RegisterPage] Register completed, checking token');
       // Check if user is logged in (test mode auto-verification)
       const token = localStorage.getItem('auth_token');
+      console.log('[RegisterPage] Token found in localStorage:', !!token);
+      
       if (token) {
+        console.log('[RegisterPage] Token found - redirecting to /products');
         // User was auto-verified and logged in, redirect to products page
         router.push('/products');
         return;
       }
       
+      console.log('[RegisterPage] No token - showing verification message');
       // Otherwise, show email verification message
       setRegistrationComplete(true);
     } catch (err: any) {
+      console.error('[RegisterPage] Registration error:', err);
       setError(err.message || 'Registration failed. Please try again.');
     } finally {
       setIsLoading(false);
