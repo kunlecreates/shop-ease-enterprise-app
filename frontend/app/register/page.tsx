@@ -40,6 +40,16 @@ export default function RegisterPage() {
 
     try {
       await register(username, email, password);
+      
+      // Check if user is logged in (test mode auto-verification)
+      const token = localStorage.getItem('auth_token');
+      if (token) {
+        // User was auto-verified and logged in, redirect to products page
+        router.push('/products');
+        return;
+      }
+      
+      // Otherwise, show email verification message
       setRegistrationComplete(true);
     } catch (err: any) {
       setError(err.message || 'Registration failed. Please try again.');
