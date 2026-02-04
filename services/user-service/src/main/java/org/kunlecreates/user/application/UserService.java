@@ -88,14 +88,9 @@ public class UserService {
         }
         
         // Delete child records first to avoid foreign key constraint violations
-        Optional<User> userOpt = userRepository.findById(userId);
-        if (userOpt.isPresent()) {
-            User user = userOpt.get();
-            // Delete verification tokens
-            verificationTokenRepository.deleteByUser(user);
-            // Delete password reset tokens
-            passwordResetTokenRepository.deleteByUser(user);
-        }
+        // Using explicit JPQL queries for better performance and to avoid SELECT-then-DELETE
+        verificationTokenRepository.deleteByUserId(userId);
+        passwordResetTokenRepository.deleteByUserId(userId);
         
         userRepository.deleteById(userId);
         return true;
