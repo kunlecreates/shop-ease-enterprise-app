@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import locators from './helpers/locators';
-import { testConfig, isTestMode } from './helpers/test-config';
+import { testConfig, isTestMode } from '../helpers/test-config';
 
 test.describe('Authentication & Authorization (FR001, FR003)', () => {
   test.describe('Registration Flow', () => {
