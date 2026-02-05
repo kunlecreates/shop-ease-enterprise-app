@@ -24,7 +24,7 @@ env:
   # Frontend URL for verification emails
   FRONTEND_URL: "https://shop.kunlecreates.org"
   # Notification service URL - use full Kubernetes service DNS for cross-namespace communication
-  NOTIFICATION_SERVICE_URL: "http://notification-service.shopease-notification.svc.cluster.local:8080"
+  NOTIFICATION_SERVICE_URL: "http://notification-service.shopease-notification.svc.cluster.local:80"
 
 db:
   # Name of a pre-created Secret containing DB connection envs.
