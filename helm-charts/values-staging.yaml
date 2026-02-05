@@ -76,6 +76,7 @@ services:
     networkPolicy:
       allowedNamespaces:
         - shopease-frontend
+        - shopease-user         # Allow user-service to send verification emails
         - shopease-order        # Allow order-service to send notification requests
         - arc-system            # GitHub Actions Runner Controller namespace for API tests
         - arc-runners           # GitHub Actions runner pods namespace
