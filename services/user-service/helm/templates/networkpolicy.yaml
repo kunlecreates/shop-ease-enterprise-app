@@ -12,6 +12,44 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
+  name: user-allow-egress
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: user-service
+  policyTypes:
+    - Egress
+  egress:
+    # Allow DNS resolution
+    - to:
+      - namespaceSelector:
+          matchLabels:
+            kubernetes.io/metadata.name: kube-system
+      ports:
+      - protocol: UDP
+        port: 53
+    # Allow traffic to notification service
+    - to:
+      - namespaceSelector:
+          matchLabels:
+            kubernetes.io/metadata.name: shopease-notification
+      ports:
+      - protocol: TCP
+        port: 80
+      - protocol: TCP
+        port: 8080
+    # Allow traffic to Oracle database
+    - to:
+      - namespaceSelector:
+          matchLabels:
+            kubernetes.io/metadata.name: oracle-system
+      ports:
+      - protocol: TCP
+        port: 1521
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
   name: user-allow-from-frontend-and-curl
 spec:
   podSelector:
