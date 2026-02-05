@@ -28,7 +28,7 @@ spec:
       ports:
       - protocol: UDP
         port: 53
-    # Allow traffic to notification service
+    # Allow traffic to notification service (Service port 80, Pod port 8084)
     - to:
       - namespaceSelector:
           matchLabels:
@@ -38,6 +38,8 @@ spec:
         port: 80
       - protocol: TCP
         port: 8080
+      - protocol: TCP
+        port: 8084
     # Allow traffic to Oracle database
     - to:
       - namespaceSelector:
