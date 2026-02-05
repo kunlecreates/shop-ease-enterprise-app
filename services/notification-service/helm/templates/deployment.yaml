@@ -70,32 +70,36 @@ spec:
             {{- end }}
 
             {{- if .Values.credentials.secretName }}
-            # Notification credentials
-            - name: MAIL_HOST
+            # SMTP credentials from secret
+            - name: EMAIL_PROVIDER
+              value: "smtp"
+            - name: SMTP_HOST
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.credentials.secretName }}
                   key: NOTIFICATION_MAIL_HOST
-            - name: MAIL_PORT
+            - name: SMTP_PORT
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.credentials.secretName }}
                   key: NOTIFICATION_MAIL_PORT
-            - name: MAIL_USER
+            - name: SMTP_USERNAME
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.credentials.secretName }}
                   key: NOTIFICATION_MAIL_USER
-            - name: MAIL_PASSWORD
+            - name: SMTP_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.credentials.secretName }}
                   key: NOTIFICATION_MAIL_PASSWORD
-            - name: MAIL_FROM
+            - name: SMTP_FROM_EMAIL
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.credentials.secretName }}
                   key: NOTIFICATION_MAIL_FROM
+            - name: SMTP_FROM_NAME
+              value: "ShopEase"
             {{- end }}
 
           ports:
