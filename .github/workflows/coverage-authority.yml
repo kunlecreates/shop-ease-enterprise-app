@@ -114,6 +114,9 @@ jobs:
           path: coverage
           name: raw-coverage-.*
           name_is_regexp: true
+          search_artifacts: true
+          check_artifacts: true
+          skip_unpack: false
 
       # ---- Normalize each service ----
 
