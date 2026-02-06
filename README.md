@@ -46,8 +46,8 @@
 └────────────────────────────┬─────────────────────────────────────┘
                              │
 ┌────────────────────────────▼─────────────────────────────────────┐
-│                    NGINX Ingress Controller                       │
-│             (TLS termination, path-based routing)                 │
+│                    NGINX Ingress Controller                      │
+│             (TLS termination, path-based routing)                │
 └──────┬──────────────┬──────────────┬──────────────┬──────────────┘
        │              │              │              │
        ▼              ▼              ▼              ▼
@@ -55,8 +55,8 @@
   │  User   │  │ Product  │  │   Order   │  │ Notification │
   │ Service │  │ Service  │  │  Service  │  │   Service    │
   └────┬────┘  └────┬─────┘  └─────┬─────┘  └──────┬───────┘
-       │            │              │                │
-       ▼            ▼              ▼                ▼
+       │            │              │               │
+       ▼            ▼              ▼               ▼
   ┌─────────┐  ┌──────────┐  ┌─────────┐   ┌─────────────┐
   │ Oracle  │  │PostgreSQL│  │  MSSQL  │   │ Email API   │
   │   DB    │  │    DB    │  │   DB    │   │  (Mock)     │
@@ -190,13 +190,13 @@ This project implements a **comprehensive 4-layer testing pyramid** with clear o
 ```
         /\
        /E2E\         ← Playwright (browser, full system, post-deployment)
-      /------\
+      /-----\
      /  API  \       ← API Contract Tests (HTTP, post-deployment)
-    /----------\
+    /---------\
    /Integration\     ← Testcontainers (real DB, pre-deployment, blocks CI)
-  /--------------\
+  /-------------\
  /     Unit      \   ← Mocked dependencies (fast, blocks PR)
-/------------------\
+/_________________\
 ```
 
 ### Layer 1: Unit Tests (Per-Service)
