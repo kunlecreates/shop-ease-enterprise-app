@@ -121,12 +121,12 @@ public class EmailVerificationService {
         var tokens = tokenRepository.findAll().stream()
                 .filter(t -> t.getUser().getId().equals(user.getId()))
                 .filter(t -> t.getUsedAt() == null)
-                .filter(t -> t.getExpiresAt().isAfter(Instant.now()))
+                .filter(t -> t.getExpiresAt().isAfter(LocalDateTime.now()))
                 .toList();
         
         for (EmailVerificationToken token : tokens) {
             if (passwordEncoder.matches(rawToken, token.getTokenHash())) {
-                token.markUsed(Instant.now());
+                token.markUsed(LocalDateTime.now());
                 tokenRepository.save(token);
                 
                 user.setEmailVerified(1);
