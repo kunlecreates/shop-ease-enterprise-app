@@ -25,9 +25,9 @@ jobs:
           declare -A services=( \
             ["frontend"]="jest:coverage/raw-coverage-frontend/coverage-summary.json" \
             ["notification-service"]="pytest:coverage/raw-coverage-notification-service/coverage.json" \
-            ["order-service"]="jacoco:coverage/raw-coverage-order-service/target/site/jacoco/jacoco.xml" \
+            ["order-service"]="jacoco:coverage/raw-coverage-order-service/jacoco.xml" \
             ["product-service"]="jest:coverage/raw-coverage-product-service/coverage-summary.json" \
-            ["user-service"]="jacoco:coverage/raw-coverage-user-service/target/site/jacoco/jacoco.xml" \
+            ["user-service"]="jacoco:coverage/raw-coverage-user-service/jacoco.xml" \
           )
           for svc in "${!services[@]}"; do
             IFS=':' read -r fmt path <<< "${services[$svc]}"
