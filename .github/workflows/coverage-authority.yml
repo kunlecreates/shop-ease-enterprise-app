@@ -207,18 +207,19 @@ jobs:
 
           jq -s '
             def sum(field): map(.lines[field]) | add;
-
+            
             {
               services: .,
               overall: {
-                total:   sum("total"),
+                total: sum("total"),
                 covered: sum("covered"),
-                missed:  sum("missed"),
-                coverage_pct:
-                  if sum("total") > 0
-                  then ((sum("covered") / sum("total")) * 100 | round )
-                else 0
-                end
+                missed: sum("missed"),
+                coverage_pct: (
+                  if sum("total") > 0 
+                  then ((sum("covered") / sum("total")) * 100 | round) 
+                  else 0 
+                  end
+                )
               }
             }
           ' coverage/*/coverage.json > coverage/aggregate.json
