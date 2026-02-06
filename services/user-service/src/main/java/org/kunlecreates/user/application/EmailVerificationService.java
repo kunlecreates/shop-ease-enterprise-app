@@ -16,8 +16,8 @@ import org.springframework.http.MediaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
+import java.time.LocalDateTime;
+
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -60,7 +60,7 @@ public class EmailVerificationService {
     public String createVerificationToken(User user) {
         String rawToken = UUID.randomUUID().toString();
         String tokenHash = passwordEncoder.encode(rawToken);
-        Instant expiresAt = Instant.now().plus(24, ChronoUnit.HOURS);
+        LocalDateTime expiresAt = LocalDateTime.now().plusHours(24);
         
         EmailVerificationToken token = new EmailVerificationToken(user, tokenHash, expiresAt);
         tokenRepository.save(token);
