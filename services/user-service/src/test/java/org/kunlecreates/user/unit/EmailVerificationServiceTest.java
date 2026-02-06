@@ -16,7 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.List;
 
@@ -83,7 +83,7 @@ class EmailVerificationServiceTest {
         EmailVerificationToken savedToken = tokenCaptor.getValue();
         assertThat(savedToken.getTokenHash()).isEqualTo("bcrypt-hash");
         assertThat(savedToken.getUser()).isEqualTo(testUser);
-        assertThat(savedToken.getExpiresAt()).isAfter(Instant.now());
+        assertThat(savedToken.getExpiresAt()).isAfter(LocalDateTime.now());
     }
 
     @Test
@@ -116,7 +116,7 @@ class EmailVerificationServiceTest {
     @Test
     void verifyEmail_withValidToken_shouldActivateUserAndMarkTokenUsed() {
         String rawToken = "valid-token";
-        EmailVerificationToken token = new EmailVerificationToken(testUser, "token-hash", Instant.now().plusSeconds(3600));
+        EmailVerificationToken token = new EmailVerificationToken(testUser, "token-hash", LocalDateTime.now().plusSeconds(3600));
         
         when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(testUser));
         when(tokenRepository.findAll()).thenReturn(List.of(token));
@@ -135,7 +135,7 @@ class EmailVerificationServiceTest {
     @Test
     void verifyEmail_withInvalidToken_shouldReturnFalse() {
         String rawToken = "invalid-token";
-        EmailVerificationToken token = new EmailVerificationToken(testUser, "token-hash", Instant.now().plusSeconds(3600));
+        EmailVerificationToken token = new EmailVerificationToken(testUser, "token-hash", LocalDateTime.now().plusSeconds(3600));
         
         when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(testUser));
         when(tokenRepository.findAll()).thenReturn(List.of(token));
@@ -150,7 +150,7 @@ class EmailVerificationServiceTest {
     @Test
     void verifyEmail_withExpiredToken_shouldReturnFalse() {
         String rawToken = "expired-token";
-        EmailVerificationToken token = new EmailVerificationToken(testUser, "token-hash", Instant.now().minusSeconds(3600));
+        EmailVerificationToken token = new EmailVerificationToken(testUser, "token-hash", LocalDateTime.now().minusSeconds(3600));
         
         when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(testUser));
         when(tokenRepository.findAll()).thenReturn(List.of(token));
@@ -172,7 +172,7 @@ class EmailVerificationServiceTest {
 
     @Test
     void resendVerificationEmail_shouldCreateNewTokenAndSendEmail() {
-        EmailVerificationToken oldToken = new EmailVerificationToken(testUser, "old-hash", Instant.now().plusSeconds(1800));
+        EmailVerificationToken oldToken = new EmailVerificationToken(testUser, "old-hash", LocalDateTime.now().plusSeconds(1800));
         
         when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(testUser));
         when(tokenRepository.findAll()).thenReturn(List.of(oldToken));
