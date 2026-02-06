@@ -136,7 +136,7 @@ jobs:
           name: raw-coverage-user-service
           run-id: ${{ needs.check-completion.outputs.user_run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          path: coverage/raw-coverage-user-service
+          path: raw-coverage/raw-coverage-user-service
 
       - name: Download order-service coverage
         uses: actions/download-artifact@v4
@@ -144,7 +144,7 @@ jobs:
           name: raw-coverage-order-service
           run-id: ${{ needs.check-completion.outputs.order_run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          path: coverage/raw-coverage-order-service
+          path: raw-coverage/raw-coverage-order-service
 
       - name: Download product-service coverage
         uses: actions/download-artifact@v4
@@ -152,7 +152,7 @@ jobs:
           name: raw-coverage-product-service
           run-id: ${{ needs.check-completion.outputs.product_run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          path: coverage/raw-coverage-product-service
+          path: raw-coverage/raw-coverage-product-service
 
       - name: Download notification-service coverage
         uses: actions/download-artifact@v4
@@ -160,7 +160,7 @@ jobs:
           name: raw-coverage-notification-service
           run-id: ${{ needs.check-completion.outputs.notification_run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          path: coverage/raw-coverage-notification-service
+          path: raw-coverage/raw-coverage-notification-service
 
       - name: Download frontend coverage
         uses: actions/download-artifact@v4
@@ -168,7 +168,7 @@ jobs:
           name: raw-coverage-frontend
           run-id: ${{ needs.check-completion.outputs.frontend_run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          path: coverage/raw-coverage-frontend
+          path: raw-coverage/raw-coverage-frontend
 
       # ---- Normalize each service ----
 
@@ -176,11 +176,11 @@ jobs:
         run: |
           set -e
           declare -A services=( \
-            ["frontend"]="jest:coverage/raw-coverage-frontend/coverage-summary.json" \
-            ["notification-service"]="pytest:coverage/raw-coverage-notification-service/coverage.json" \
-            ["order-service"]="jacoco:coverage/raw-coverage-order-service/jacoco.xml" \
-            ["product-service"]="jest:coverage/raw-coverage-product-service/coverage-summary.json" \
-            ["user-service"]="jacoco:coverage/raw-coverage-user-service/jacoco.xml" \
+            ["frontend"]="jest:raw-coverage/raw-coverage-frontend/coverage-summary.json" \
+            ["notification-service"]="pytest:raw-coverage/raw-coverage-notification-service/coverage.json" \
+            ["order-service"]="jacoco:raw-coverage/raw-coverage-order-service/jacoco.xml" \
+            ["product-service"]="jest:raw-coverage/raw-coverage-product-service/coverage-summary.json" \
+            ["user-service"]="jacoco:raw-coverage/raw-coverage-user-service/jacoco.xml" \
           )
           for svc in "${!services[@]}"; do
             IFS=':' read -r fmt path <<< "${services[$svc]}"
