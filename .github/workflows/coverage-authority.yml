@@ -7,6 +7,7 @@ on:
       - "CI — Order-service Component Tests"  
       - "CI — Product-service Component Tests"
       - "CI — Notification-service Component Tests"
+      - "CI — Frontend Component Tests"
     types:
       - completed
     branches:
@@ -30,7 +31,8 @@ jobs:
               'CI — User-service Component Tests',
               'CI — Order-service Component Tests',
               'CI — Product-service Component Tests',
-              'CI — Notification-service Component Tests'
+              'CI — Notification-service Component Tests',
+              'CI — Frontend Component Tests'
             ];
             
             const headSha = context.payload.workflow_run.head_sha;
