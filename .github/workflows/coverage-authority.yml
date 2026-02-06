@@ -262,11 +262,12 @@ jobs:
               schemaVersion: 1,
               label: "coverage",
               message: (($c | tostring) + "%"),
-              color:
+              color: (
                 if $c >= 80 then "brightgreen"
                 elif $c >= 65 then "yellow"
                 else "red"
                 end
+              )
             }
           ' coverage/aggregate.json > coverage/badge.json
 
