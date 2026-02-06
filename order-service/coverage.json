@@ -1,0 +1,1 @@
+{"service": "order-service", "language": "java", "lines": {"total": 621, "covered": 377, "missed": 244, "coverage_pct": 60.71}}

@@ -1,0 +1,60 @@
+{
+  "services": [
+    {
+      "service": "frontend",
+      "language": "javascript",
+      "lines": {
+        "total": 55,
+        "covered": 25,
+        "missed": 30,
+        "coverage_pct": 45.45
+      }
+    },
+    {
+      "service": "notification-service",
+      "language": "python",
+      "lines": {
+        "total": 278,
+        "covered": 255,
+        "missed": 23,
+        "coverage_pct": 91.73
+      }
+    },
+    {
+      "service": "order-service",
+      "language": "java",
+      "lines": {
+        "total": 621,
+        "covered": 377,
+        "missed": 244,
+        "coverage_pct": 60.71
+      }
+    },
+    {
+      "service": "product-service",
+      "language": "javascript",
+      "lines": {
+        "total": 258,
+        "covered": 186,
+        "missed": 72,
+        "coverage_pct": 72.09
+      }
+    },
+    {
+      "service": "user-service",
+      "language": "java",
+      "lines": {
+        "total": 684,
+        "covered": 242,
+        "missed": 442,
+        "coverage_pct": 35.38
+      }
+    }
+  ],
+  "overall": {
+    "total": 1896,
+    "covered": 1085,
+    "missed": 811,
+    "coverage_pct": 57
+  }
+}
