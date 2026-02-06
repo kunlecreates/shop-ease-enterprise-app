@@ -83,31 +83,43 @@ public class AuthController {
     }
 
     @PostMapping("/verify-email")
-    public ResponseEntity<Map<String, String>> verifyEmail(
-            @RequestParam String email,
-            @RequestParam String token) {
+    public ResponseEntity<Map<String, Object>> verifyEmail(@RequestBody Map<String, String> request) {
         try {
+            String email = request.get("email");
+            String token = request.get("token");
+            
+            if (email == null || token == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("success", false, "message", "Email and token are required"));
+            }
+            
             boolean verified = emailVerificationService.verifyEmail(email, token);
             if (verified) {
                 return ResponseEntity.ok(Map.of(
-                    "message", "Email verified successfully",
-                    "status", "verified"
+                    "success", true,
+                    "message", "Email verified successfully"
                 ));
             } else {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("message", "Invalid or expired verification token"));
+                    .body(Map.of("success", false, "message", "Invalid or expired verification token"));
             }
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(Map.of("message", e.getMessage()));
+                .body(Map.of("success", false, "message", e.getMessage()));
         }
     }
 
     @PostMapping("/resend-verification")
-    public ResponseEntity<Map<String, String>> resendVerification(@RequestParam String email) {
+    public ResponseEntity<Map<String, Object>> resendVerification(@RequestBody Map<String, String> request) {
         try {
+            String email = request.get("email");
+            if (email == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("success", false, "message", "Email is required"));
+            }
             emailVerificationService.resendVerificationEmail(email);
             return ResponseEntity.ok(Map.of(
+                "success", true,
                 "message", "Verification email sent",
                 "email", email
             ));
