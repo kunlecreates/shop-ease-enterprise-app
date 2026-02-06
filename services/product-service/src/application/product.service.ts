@@ -24,13 +24,14 @@ export class ProductService {
     @InjectRepository(StockMovement) private readonly movements: Repository<StockMovement>
   ) {}
 
-  async createProduct(data: { sku: string; name: string; description?: string; price?: number; priceCents?: number; currency?: string; categoryNames?: string[] }) {
+  async createProduct(data: { sku: string; name: string; description?: string; price?: number; priceCents?: number; currency?: string; categoryCodes?: string[]; initialStock?: number }) {
     const cats: Category[] = [];
-    if (data.categoryNames) {
-      for (const name of data.categoryNames) {
-        let cat = await this.categories.findOne({ where: { name } });
+    if (data.categoryCodes) {
+      for (const code of data.categoryCodes) {
+        // map incoming category code to category `name` field in the DB
+        let cat = await this.categories.findOne({ where: { name: code } });
         if (!cat) {
-          cat = this.categories.create({ name });
+          cat = this.categories.create({ name: code });
           cat = await this.categories.save(cat);
         }
         cats.push(cat);
@@ -55,7 +56,17 @@ export class ProductService {
       prod.priceCents = 0;
     }
     
-    return this.products.save(prod);
+    const saved = await this.products.save(prod);
+
+    // If initialStock is provided, create an initial stock movement
+    if (data.initialStock !== undefined && Number.isInteger(data.initialStock) && data.initialStock !== 0) {
+      const qty = data.initialStock;
+      const movement = this.movements.create({ product: saved, quantity: qty, reason: 'Initial stock' });
+      await this.movements.save(movement);
+    }
+
+    // Return product with relations (categories and movements) so callers can see stock
+    return this.products.findOne({ where: { id: saved.id }, relations: ['categories', 'movements'] });
   }
 
   async listProducts(options?: ProductSearchOptions): Promise<Product[]> {
@@ -67,7 +78,7 @@ export class ProductService {
       .leftJoinAndSelect('p.movements', 'movements');
 
     if (options.q) {
-      qb.andWhere("p.search_vector @@ plainto_tsquery('english', :query)", { query: options.q });
+      qb.andWhere("to_tsvector('english', coalesce(p.name,'') || ' ' || coalesce(p.description,'')) @@ plainto_tsquery('english', :query)", { query: options.q });
     }
 
     if (options.category) {
@@ -88,10 +99,10 @@ export class ProductService {
     if (options.inStock === true) {
       const stockSubQuery = this.movements
         .createQueryBuilder('m')
-        .select('SUM(m.quantity)', 'stock')
-        .where('m.productid = p.id')
+        .select('SUM(m.change_qty)', 'stock')
+        .where('m.product_id = p.id')
         .getQuery();
-      
+
       qb.andWhere(`(${stockSubQuery}) > 0`);
     }
 
@@ -119,10 +130,11 @@ export class ProductService {
   }
 
   async searchProducts(query: string, pagination?: { page: number; limit: number }): Promise<Product[]> {
-    const qb = this.products.createQueryBuilder('p');
-    
-    qb.where("p.search_vector @@ plainto_tsquery('english', :query)", { query })
-      .orderBy("ts_rank(p.search_vector, plainto_tsquery('english', :query))", 'DESC')
+    const qb = this.products.createQueryBuilder('p')
+      .leftJoinAndSelect('p.movements', 'movements');
+
+    qb.where("to_tsvector('english', coalesce(p.name,'') || ' ' || coalesce(p.description,'')) @@ plainto_tsquery('english', :query)", { query })
+      .orderBy("ts_rank(to_tsvector('english', coalesce(p.name,'') || ' ' || coalesce(p.description,'')), plainto_tsquery('english', :query))", 'DESC')
       .setParameter('query', query);
 
     if (pagination) {
@@ -166,8 +178,8 @@ export class ProductService {
     if (!product) throw new NotFoundException(`Product with sku ${sku} not found`);
     const result = await this.movements
       .createQueryBuilder('m')
-      .select('COALESCE(SUM(m.quantity),0)', 'stock')
-      .where('m.productid = :pid', { pid: product.id })
+      .select('COALESCE(SUM(m.change_qty),0)', 'stock')
+      .where('m.product_id = :pid', { pid: product.id })
       .getRawOne<{ stock: string }>();
     return parseInt(result?.stock || '0', 10);
   }

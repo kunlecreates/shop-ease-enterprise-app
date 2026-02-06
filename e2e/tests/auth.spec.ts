@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import locators from './helpers/locators';
+import { testConfig, isTestMode } from '../helpers/test-config';
 
 test.describe('Authentication & Authorization (FR001, FR003)', () => {
   test.describe('Registration Flow', () => {
@@ -13,6 +14,33 @@ test.describe('Authentication & Authorization (FR001, FR003)', () => {
         await expect(page.getByLabel(/confirm password/i)).toBeVisible();
           await expect(page.getByRole('button', { name: /^(Create account|Create your account)$/i })).toBeVisible();
       });
+    });
+
+    test('should show email verification message after registration', async ({ page }) => {
+      await page.goto('/register');
+      
+      await test.step('Fill registration form', async () => {
+        const timestamp = Date.now();
+        await page.getByLabel(/username/i).fill(`testuser${timestamp}`);
+        await page.getByLabel(/^email$/i).fill(`test${timestamp}@example.com`);
+        await page.getByLabel(/^password$/i).fill('ValidPassword123!');
+        await page.getByLabel(/confirm password/i).fill('ValidPassword123!');
+        const createBtn = locators.getExactButtonLocator(page, ['Create account', 'Create your account']);
+        await createBtn.click();
+      });
+
+      if (isTestMode()) {
+        await test.step('In test mode - should bypass verification', async () => {
+          // In test mode, user should be redirected or logged in
+          await page.waitForURL(/\/(products|profile)/, { timeout: testConfig.timeouts.navigation });
+        });
+      } else {
+        await test.step('Should show email verification message', async () => {
+          await page.waitForLoadState('networkidle');
+          const verificationMessage = page.getByText(/check.*email|verify.*email|verification email/i);
+          await expect(verificationMessage).toBeVisible({ timeout: testConfig.timeouts.shortWait });
+        });
+      }
     });
 
     test('should show validation for empty registration form', async ({ page }) => {
@@ -56,7 +84,7 @@ test.describe('Authentication & Authorization (FR001, FR003)', () => {
       
       await test.step('Verify form structure', async () => {
         await expect(page.getByRole('heading', { name: /^(Sign in|Login)$/i })).toBeVisible();
-        await expect(page.getByLabel(/username/i)).toBeVisible();
+        await expect(page.getByLabel(/email/i)).toBeVisible();
         await expect(page.getByLabel(/^Password$/i)).toBeVisible();
         const signinBtn = locators.getExactButtonLocator(page, ['Sign in', 'Login']);
         await expect(signinBtn).toBeVisible();
@@ -67,7 +95,7 @@ test.describe('Authentication & Authorization (FR001, FR003)', () => {
       await page.goto('/login');
       
       await test.step('Enter invalid credentials', async () => {
-        await page.getByLabel(/username/i).fill('nonexistentuser');
+        await page.getByLabel(/email/i).fill('nonexistent@example.com');
         await page.getByLabel(/^Password$/i).fill('WrongPassword123!');
         const signinBtn = locators.getExactButtonLocator(page, ['Sign in', 'Login']);
         await signinBtn.click();

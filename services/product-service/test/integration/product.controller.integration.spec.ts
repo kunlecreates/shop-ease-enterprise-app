@@ -70,11 +70,13 @@ describe('ProductController (Integration)', () => {
   });
 
   afterAll(async () => {
-    if (dataSource && dataSource.isInitialized) {
-      await dataSource.destroy();
-    }
+    // Close the Nest application first to ensure it releases any DB connections
+    // and server listeners before destroying the DataSource and stopping the container.
     if (app) {
       await app.close();
+    }
+    if (dataSource && dataSource.isInitialized) {
+      await dataSource.destroy();
     }
     if (container) {
       await container.stop();
@@ -82,8 +84,31 @@ describe('ProductController (Integration)', () => {
   });
 
   beforeEach(async () => {
-    // Clean up products between tests
-    await dataSource.query('TRUNCATE TABLE product_svc.products CASCADE');
+    // Clean up product-service schema tables between tests to ensure a clean state
+    // Truncate all known tables in the canonical schema and restart identities
+    try {
+      await dataSource.query(
+        'TRUNCATE TABLE product_svc.stock_movements, product_svc.product_inventory, product_svc.product_categories, product_svc.products, product_svc.categories RESTART IDENTITY CASCADE'
+      );
+    } catch (err) {
+      // Fallback: if schema or some tables don't exist yet, attempt a safe single-table truncate
+      // This keeps tests resilient while migrations run in CI/local
+      await dataSource.query("TRUNCATE TABLE IF EXISTS product_svc.products RESTART IDENTITY CASCADE");
+    }
+  });
+
+  afterEach(async () => {
+    // Clean up test data after each test completes to ensure no data leakage
+    // This provides an additional safety net if beforeEach fails or test debugging leaves data
+    try {
+      await dataSource.query(
+        'TRUNCATE TABLE product_svc.stock_movements, product_svc.product_inventory, product_svc.product_categories, product_svc.products, product_svc.categories RESTART IDENTITY CASCADE'
+      );
+    } catch (err) {
+      // Silently ignore errors - container might be stopping
+      const message = err instanceof Error ? err.message : String(err);
+      console.warn('afterEach cleanup warning:', message);
+    }
   });
 
   describe('POST /api/product', () => {

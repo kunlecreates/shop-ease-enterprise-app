@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { apiClient } from '@/lib/api-client';
+import { Mail, CheckCircle } from 'lucide-react';
 
 export default function RegisterPage() {
   const [username, setUsername] = useState('');
@@ -14,6 +16,8 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [registrationComplete, setRegistrationComplete] = useState(false);
+  const [resendingEmail, setResendingEmail] = useState(false);
   
   const { register } = useAuth();
   const router = useRouter();
@@ -36,13 +40,86 @@ export default function RegisterPage() {
 
     try {
       await register(username, email, password);
-      router.push('/products');
+      
+      // Check if user is logged in (test mode auto-verification)
+      const token = localStorage.getItem('auth_token');
+      if (token) {
+        // User was auto-verified and logged in, redirect to products page
+        router.push('/products');
+        return;
+      }
+      
+      // Otherwise, show email verification message
+      setRegistrationComplete(true);
     } catch (err: any) {
       setError(err.message || 'Registration failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
+
+  const handleResendEmail = async () => {
+    setResendingEmail(true);
+    try {
+      await apiClient.post('/auth/resend-verification', { email });
+      setError('');
+      alert('Verification email has been resent! Please check your inbox.');
+    } catch (err: any) {
+      setError(err.message || 'Failed to resend email. Please try again.');
+    } finally {
+      setResendingEmail(false);
+    }
+  };
+
+  if (registrationComplete) {
+    return (
+      <main className="flex items-center justify-center min-h-[calc(100vh-4rem)] px-4">
+        <div className="max-w-md w-full space-y-6 bg-white p-8 rounded-lg shadow text-center">
+          <div className="flex justify-center">
+            <Mail className="h-16 w-16 text-blue-500" />
+          </div>
+          
+          <h2 className="text-3xl font-bold text-gray-900">
+            Check your email
+          </h2>
+          
+          <div className="space-y-4 text-gray-600">
+            <p>
+              We've sent a verification email to:
+            </p>
+            <p className="font-semibold text-gray-900 text-lg">
+              {email}
+            </p>
+            <p>
+              Please click the verification link in the email to activate your account.
+            </p>
+            <p className="text-sm">
+              Didn't receive the email? Check your spam folder or click the button below to resend.
+            </p>
+          </div>
+
+          <div className="space-y-3 pt-4">
+            <Button
+              onClick={handleResendEmail}
+              variant="secondary"
+              className="w-full"
+              isLoading={resendingEmail}
+            >
+              Resend Verification Email
+            </Button>
+            
+            <Button
+              onClick={() => router.push('/login')}
+              variant="ghost"
+              className="w-full"
+            >
+              Back to Login
+            </Button>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="flex items-center justify-center min-h-[calc(100vh-4rem)] px-4">

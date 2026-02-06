@@ -39,7 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (username: string, password: string) => {
     try {
       const response = await ApiClient.post<AuthResponse>('/auth/login', {
-        username,
+        email: username,
         password,
       });
       
@@ -55,10 +55,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const register = async (username: string, email: string, password: string) => {
     try {
       const response = await ApiClient.post<AuthResponse>('/auth/register', {
-        username,
         email,
         password,
       });
+      
+      // If token is null, user needs to verify email
+      if (!response.token) {
+        return;
+      }
       
       localStorage.setItem('auth_token', response.token);
       localStorage.setItem('user', JSON.stringify(response.user));

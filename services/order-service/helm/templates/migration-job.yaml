@@ -58,5 +58,6 @@ spec:
             - "-schemas=$(DB_NAME)"
             - "-defaultSchema=$(DB_NAME)"
             - "-baselineOnMigrate=true"
+            - "-baselineVersion=1"
             - "migrate"
 {{- end }}

@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { ApiClient } from '@/lib/api-client';
+import type { ShippingAddress, PaymentMethod } from '@/types';
 
 export default function CheckoutPage() {
   const { items, getTotal, clearCart } = useCartStore();
@@ -17,15 +18,22 @@ export default function CheckoutPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
   
-  const [shippingAddress, setShippingAddress] = useState({
-    street: '',
+  const [shippingAddress, setShippingAddress] = useState<ShippingAddress>({
+    recipient: '',
+    street1: '',
+    street2: '',
     city: '',
     state: '',
-    zipCode: '',
-    country: 'USA',
+    postalCode: '',
+    country: 'Canada',
+    phone: '',
   });
   
-  const [paymentMethod, setPaymentMethod] = useState('mock-payment');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>({
+    type: 'CREDIT_CARD',
+    last4: '4242',
+    brand: 'Visa',
+  });
 
   useEffect(() => {
     if (items.length === 0) {
@@ -45,21 +53,23 @@ export default function CheckoutPage() {
 
     try {
       const orderData = {
-        items: items.map(item => ({
-          productId: item.productId,
-          quantity: item.quantity,
-          price: item.price,
-        })),
+        status: 'PENDING',
         total: getTotal(),
+        items: items.map(item => ({
+          productRef: String(item.productId),
+          quantity: item.quantity,
+          unitPrice: item.price,
+        })),
         shippingAddress,
         paymentMethod,
       };
 
-      await ApiClient.post('/orders', orderData);
+      await ApiClient.post('/order', orderData);
       clearCart();
       router.push('/orders?success=true');
     } catch (err: any) {
-      setError(err.message || 'Failed to process order');
+      console.error('Order submission failed:', err);
+      setError(err.message || 'Failed to process order. Please try again.');
     } finally {
       setIsProcessing(false);
     }
@@ -95,10 +105,21 @@ export default function CheckoutPage() {
           <h2 className="text-2xl font-bold mb-4">Shipping Address</h2>
           <div className="space-y-4">
             <Input
-              label="Street Address"
-              value={shippingAddress.street}
-              onChange={(e) => setShippingAddress({ ...shippingAddress, street: e.target.value })}
+              label="Recipient Name"
+              value={shippingAddress.recipient}
+              onChange={(e) => setShippingAddress({ ...shippingAddress, recipient: e.target.value })}
               required
+            />
+            <Input
+              label="Street Address"
+              value={shippingAddress.street1}
+              onChange={(e) => setShippingAddress({ ...shippingAddress, street1: e.target.value })}
+              required
+            />
+            <Input
+              label="Apartment, Suite, etc. (optional)"
+              value={shippingAddress.street2}
+              onChange={(e) => setShippingAddress({ ...shippingAddress, street2: e.target.value })}
             />
             <div className="grid grid-cols-2 gap-4">
               <Input
@@ -108,7 +129,7 @@ export default function CheckoutPage() {
                 required
               />
               <Input
-                label="State"
+                label="State/Province"
                 value={shippingAddress.state}
                 onChange={(e) => setShippingAddress({ ...shippingAddress, state: e.target.value })}
                 required
@@ -116,9 +137,9 @@ export default function CheckoutPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <Input
-                label="ZIP Code"
-                value={shippingAddress.zipCode}
-                onChange={(e) => setShippingAddress({ ...shippingAddress, zipCode: e.target.value })}
+                label="ZIP/Postal Code"
+                value={shippingAddress.postalCode}
+                onChange={(e) => setShippingAddress({ ...shippingAddress, postalCode: e.target.value })}
                 required
               />
               <Input
@@ -128,8 +149,30 @@ export default function CheckoutPage() {
                 required
               />
             </div>
+            <Input
+              label="Phone Number"
+              value={shippingAddress.phone}
+              onChange={(e) => setShippingAddress({ ...shippingAddress, phone: e.target.value })}
+              placeholder="+1 234 567 8900"
+            />
           </div>
-          <Button onClick={() => setStep(2)} className="mt-6">
+          <Button 
+            onClick={() => {
+              const isValid = shippingAddress.recipient && 
+                              shippingAddress.street1 && 
+                              shippingAddress.city && 
+                              shippingAddress.state && 
+                              shippingAddress.postalCode && 
+                              shippingAddress.country;
+              if (!isValid) {
+                setError('Please fill in all required shipping address fields');
+                return;
+              }
+              setError('');
+              setStep(2);
+            }} 
+            className="mt-6"
+          >
             Continue to Payment
           </Button>
         </div>
@@ -143,16 +186,36 @@ export default function CheckoutPage() {
               <input
                 type="radio"
                 name="payment"
-                value="mock-payment"
-                checked={paymentMethod === 'mock-payment'}
-                onChange={(e) => setPaymentMethod(e.target.value)}
+                value="CREDIT_CARD"
+                checked={paymentMethod.type === 'CREDIT_CARD'}
+                onChange={(e) => setPaymentMethod({ ...paymentMethod, type: 'CREDIT_CARD' })}
                 className="w-4 h-4"
               />
               <div>
-                <div className="font-semibold">Mock Payment (Test Mode)</div>
-                <div className="text-sm text-gray-600">For testing purposes only</div>
+                <div className="font-semibold">Credit Card</div>
+                <div className="text-sm text-gray-600">Visa, Mastercard, Amex</div>
               </div>
             </label>
+            <label className="flex items-center space-x-3 p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+              <input
+                type="radio"
+                name="payment"
+                value="PAYPAL"
+                checked={paymentMethod.type === 'PAYPAL'}
+                onChange={(e) => setPaymentMethod({ ...paymentMethod, type: 'PAYPAL' })}
+                className="w-4 h-4"
+              />
+              <div>
+                <div className="font-semibold">PayPal</div>
+                <div className="text-sm text-gray-600">Pay with your PayPal account</div>
+              </div>
+            </label>
+            {paymentMethod.type === 'CREDIT_CARD' && (
+              <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-600 mb-2">Test Mode - Using mock card</p>
+                <p className="text-sm font-mono">Visa •••• {paymentMethod.last4}</p>
+              </div>
+            )}
           </div>
           <div className="flex space-x-4 mt-6">
             <Button variant="secondary" onClick={() => setStep(1)}>
@@ -173,9 +236,22 @@ export default function CheckoutPage() {
             <div className="mb-6">
               <h3 className="font-semibold mb-2">Shipping Address</h3>
               <p className="text-gray-700">
-                {shippingAddress.street}<br />
-                {shippingAddress.city}, {shippingAddress.state} {shippingAddress.zipCode}<br />
+                {shippingAddress.recipient}<br />
+                {shippingAddress.street1}
+                {shippingAddress.street2 && <>, {shippingAddress.street2}</>}<br />
+                {shippingAddress.city}, {shippingAddress.state} {shippingAddress.postalCode}<br />
                 {shippingAddress.country}
+                {shippingAddress.phone && <><br />{shippingAddress.phone}</>}
+              </p>
+            </div>
+
+            <div className="mb-6">
+              <h3 className="font-semibold mb-2">Payment Method</h3>
+              <p className="text-gray-700">
+                {paymentMethod.type === 'CREDIT_CARD' ? 'Credit Card' : paymentMethod.type}
+                {paymentMethod.last4 && paymentMethod.brand && 
+                  ` - ${paymentMethod.brand} ••••${paymentMethod.last4}`
+                }
               </p>
             </div>
 

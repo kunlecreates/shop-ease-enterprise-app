@@ -80,3 +80,12 @@ autoscaling:
 securityContext:
   runAsNonRoot: true
   runAsUser: 1000
+
+# Network policy: allow ingress from specific namespaces
+networkPolicy:
+  allowedNamespaces:
+    - shopease-frontend
+    - shopease-user
+    - shopease-order
+    - arc-system
+    - arc-runners

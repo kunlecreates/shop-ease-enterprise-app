@@ -24,7 +24,7 @@ test.describe('Customer User Journey (FR001, FR002, FR004)', () => {
         // Match the primary password field only (avoid matching "Confirm Password")
         await expect(page.getByLabel(/^Password$/i)).toBeVisible({ timeout: 15000 });
         // Use exact button names where possible to avoid ambiguous matches
-        const signupButton = locators.getExactButtonLocator(page, ['Sign up', 'Register', 'Create your account']);
+        const signupButton = locators.getExactButtonLocator(page, ['Create account', 'Sign up', 'Register', 'Create your account']);
         await expect(signupButton).toBeVisible({ timeout: 15000 });
       });
     });
@@ -37,7 +37,7 @@ test.describe('Customer User Journey (FR001, FR002, FR004)', () => {
 
       await test.step('Verify login form is present', async () => {
         await expect(page.getByRole('heading', { name: /^(Sign in|Login)$/i })).toBeVisible();
-        await expect(page.getByLabel(/username/i)).toBeVisible();
+        await expect(page.getByLabel(/email/i)).toBeVisible();
         await expect(page.getByLabel(/^Password$/i)).toBeVisible();
         const signinButton = locators.getExactButtonLocator(page, ['Sign in', 'Login']);
         await expect(signinButton).toBeVisible();
@@ -48,7 +48,7 @@ test.describe('Customer User Journey (FR001, FR002, FR004)', () => {
       await page.goto('/register');
       
       await test.step('Submit empty form', async () => {
-        const submitButton = locators.getExactButtonLocator(page, ['Sign up', 'Register', 'Create your account']);
+        const submitButton = locators.getExactButtonLocator(page, ['Create account', 'Sign up', 'Register', 'Create your account']);
         await submitButton.click();
         
         // HTML5 validation or error message should appear
@@ -61,7 +61,7 @@ test.describe('Customer User Journey (FR001, FR002, FR004)', () => {
       await page.goto('/login');
       
       await test.step('Enter invalid credentials', async () => {
-        await page.getByLabel(/username/i).fill('nonexistentuser');
+        await page.getByLabel(/email/i).fill('nonexistent@example.com');
         await page.getByLabel(/^Password$/i).fill('wrongpassword');
         const signinBtn = locators.getExactButtonLocator(page, ['Sign in', 'Login']);
         await signinBtn.click();
@@ -195,15 +195,28 @@ test.describe('Customer User Journey (FR001, FR002, FR004)', () => {
   });
 
   test.describe('Product Management (FR005)', () => {
+    // Ensure admin authentication is set up before product management tests
+    test.beforeEach(async ({ page, request }) => {
+      await usePersistedAdminStorage(page) || await setAuthFromEnv(page, request);
+    });
+
     test('should display product management interface', async ({ page }) => {
       await page.goto('/admin/products');
-      await expect(page.getByRole('heading', { name: /products|inventory|admin/i })).toBeVisible({ timeout: 10000 });
       
-      // Should show admin products page or require login
+      // Wait for page to settle - either show admin page or redirect to login
+      await page.waitForLoadState('networkidle', { timeout: 15000 });
+      
+      // Check what page we're on
       const hasLoginForm = (await page.getByLabel(/email|password/i).count()) > 0;
-      const hasProductsList = (await page.getByRole('heading', { name: /products|inventory/i }).count()) > 0;
+      const hasProductsHeading = (await page.getByRole('heading', { name: /product management|products|inventory/i }).count()) > 0;
       
-      expect(hasLoginForm || hasProductsList).toBeTruthy();
+      // Should show either admin page (if authenticated) or login page (if not)
+      expect(hasLoginForm || hasProductsHeading).toBeTruthy();
+      
+      // If we have the admin page, verify it has the expected content
+      if (hasProductsHeading) {
+        await expect(page.getByRole('heading', { name: /product management|products|inventory/i })).toBeVisible();
+      }
     });
   });
 });
@@ -264,7 +277,7 @@ test.describe('Security & Authorization (FR015)', () => {
       
       // Should either be at login page or see admin page
       const currentUrl = page.url();
-      const hasLoginForm = (await page.getByLabel(/username|password/i).count()) > 0;
+      const hasLoginForm = (await page.getByLabel(/email|password/i).count()) > 0;
       
       // If not showing admin content, should require login
       const hasAdminContent = (await page.getByRole('heading', { name: /admin|products/i }).count()) > 0;

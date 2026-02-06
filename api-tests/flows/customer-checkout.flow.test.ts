@@ -18,6 +18,13 @@ test('Customer checkout flow: create cart, add item, place order, verify order e
     password: customer.password
   });
   const customerToken = loginResp.data.token;
+  const userId = loginResp.data.userId || loginResp.data.user?.id;
+
+  // Register cleanup for user
+  const { registerDelete } = await import('../framework/cleanup');
+  if (userId) {
+    registerDelete(userHttp, (id: any) => `/api/user/${id}`, userId, customerToken);
+  }
 
   const cartResp = await orderHttp.post('/api/cart', {}, {
     headers: { Authorization: `Bearer ${customerToken}` },
@@ -29,11 +36,8 @@ test('Customer checkout flow: create cart, add item, place order, verify order e
   const cartId = cartResp.data.id;
   expect(cartId).toBeDefined();
 
-  // register cleanup to delete the cart after test
-  try {
-    const { registerDelete } = await import('../framework/cleanup');
-    registerDelete(orderHttp, (id: any) => `/carts/${id}`, cartId);
-  } catch (e) {}
+  // Register cleanup for cart
+  registerDelete(orderHttp, (id: any) => `/carts/${id}`, cartId, customerToken);
 
   const itemResp = await orderHttp.post(`/api/cart/${cartId}/items`, { 
     productRef: products[0].id, 

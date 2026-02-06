@@ -5,6 +5,7 @@ import jakarta.validation.Valid;
 import org.kunlecreates.order.application.OrderService;
 import org.kunlecreates.order.domain.Order;
 import org.kunlecreates.order.interfaces.dto.CreateOrderRequest;
+import org.kunlecreates.order.interfaces.dto.OrderResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -60,11 +61,11 @@ public class OrderController {
                 .map(order -> {
                     // Check ownership: user must own the order OR be an admin
                     if (!currentUserId.equals(order.getUserRef()) && !isAdmin) {
-                        return ResponseEntity.status(HttpStatus.FORBIDDEN).<Order>build();
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).<Order>body(null);
                     }
                     return ResponseEntity.ok(order);
                 })
-                .orElse(ResponseEntity.notFound().build());
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).<Order>body(null));
     }
 
     /**
@@ -72,7 +73,7 @@ public class OrderController {
      * Extract userId from JWT claims to ensure user is creating order for themselves
      */
     @PostMapping
-    public ResponseEntity<Void> create(@Valid @RequestBody CreateOrderRequest req, 
+    public ResponseEntity<OrderResponse> create(@Valid @RequestBody CreateOrderRequest req, 
                                         Authentication authentication,
                                         HttpServletRequest request,
                                         UriComponentsBuilder uriBuilder) {
@@ -82,10 +83,45 @@ public class OrderController {
         // Extract JWT token from Authorization header for notification service
         String jwtToken = extractJwtToken(request);
         
+        // Extract shipping address fields
+        String shippingRecipient = req.shippingAddress() != null ? req.shippingAddress().recipient() : null;
+        String shippingStreet1 = req.shippingAddress() != null ? req.shippingAddress().street1() : null;
+        String shippingStreet2 = req.shippingAddress() != null ? req.shippingAddress().street2() : null;
+        String shippingCity = req.shippingAddress() != null ? req.shippingAddress().city() : null;
+        String shippingState = req.shippingAddress() != null ? req.shippingAddress().state() : null;
+        String shippingPostalCode = req.shippingAddress() != null ? req.shippingAddress().postalCode() : null;
+        String shippingCountry = req.shippingAddress() != null ? req.shippingAddress().country() : null;
+        String shippingPhone = req.shippingAddress() != null ? req.shippingAddress().phone() : null;
+        
+        // Extract payment method fields
+        String paymentMethodType = req.paymentMethod() != null ? req.paymentMethod().type() : null;
+        String paymentLast4 = req.paymentMethod() != null ? req.paymentMethod().last4() : null;
+        String paymentBrand = req.paymentMethod() != null ? req.paymentMethod().brand() : null;
+        
         // Create order with authenticated user's ID (ignore userId from request body for security)
-        Order created = orderService.createOrder(authenticatedUserId, null, req.status(), req.total(), jwtToken);
+        Order created = orderService.createOrder(
+            authenticatedUserId, null, req.status(), req.total(), jwtToken,
+            shippingRecipient, shippingStreet1, shippingStreet2, shippingCity,
+            shippingState, shippingPostalCode, shippingCountry, shippingPhone,
+            paymentMethodType, paymentLast4, paymentBrand
+        );
+        
         URI location = uriBuilder.path("/api/order/{id}").buildAndExpand(created.getId()).toUri();
-        return ResponseEntity.created(location).build();
+        
+        // Return order details in response body for frontend confirmation
+        OrderResponse response = new OrderResponse(
+            created.getId(),
+            created.getUserRef(),
+            created.getStatus(),
+            created.getTotalCents(),
+            created.getCurrency(),
+            created.getPlacedAt(),
+            created.getCreatedAt(),
+            created.getUpdatedAt(),
+            req.shippingAddress(),
+            req.paymentMethod()
+        );
+        return ResponseEntity.created(location).body(response);
     }
 
     /**
@@ -136,7 +172,8 @@ public class OrderController {
             Authentication authentication) {
         
         if (!hasRole(authentication, "ADMIN")) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(null);
         }
         
         try {
@@ -149,7 +186,8 @@ public class OrderController {
             Order updated = orderService.updateStatus(id, newStatus, jwtToken);
             return ResponseEntity.ok(updated);
         } catch (IllegalArgumentException | IllegalStateException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(null);
         }
     }
     
@@ -175,7 +213,8 @@ public class OrderController {
                 return ResponseEntity.ok(cancelled);
             }
         } catch (IllegalArgumentException | IllegalStateException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(null);
         }
     }
     

@@ -25,12 +25,13 @@ jobs:
       # Admin credentials used by the auth helper/fixtures
       ADMIN_EMAIL: ${{ secrets.E2E_ADMIN_EMAIL }}
       ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }}
+      EMAIL_VERIFICATION_TEST_MODE: 'true'
       # Test runtime flags for deterministic seeding and health checks
-      E2E_REQUIRE_PRODUCTS: 'true'
-      E2E_SEED: 'true'
+      # E2E_REQUIRE_PRODUCTS: false  # (default if not set)
+      # E2E_SEED: false               # (default if not set)
       E2E_HEALTH_TIMEOUT_MS: '30000'
       # Gate admin-scoped tests; set to 'true' to run admin flows (ensure secrets are present)
-      E2E_RUN_ADMIN_TESTS: 'false'
+      E2E_RUN_ADMIN_TESTS: 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v5

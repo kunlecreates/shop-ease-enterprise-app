@@ -1,5 +1,6 @@
 package org.kunlecreates.order.interfaces.dto;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
@@ -24,7 +25,13 @@ public record CreateOrderRequest(
     double total,
 
     // List of items: productRef uses String to support UUIDs
-    List<CreateOrderItem> items
+    List<CreateOrderItem> items,
+    
+    @Valid
+    ShippingAddress shippingAddress,
+    
+    @Valid
+    PaymentMethod paymentMethod
 ) {
     public record CreateOrderItem(
         @NotNull

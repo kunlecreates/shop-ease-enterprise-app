@@ -1,21 +1,37 @@
 name: Coverage Authority (PR)
 
 on:
-  pull_request:
-    branches: [ main ]
+  workflow_run:
+    workflows:
+      - "CI — User-service Component Tests"
+      - "CI — Order-service Component Tests"  
+      - "CI — Product-service Component Tests"
+      - "CI — Notification-service Component Tests"
+      - "CI — Frontend Component Tests"
+    types:
+      - completed
+    branches:
+      - '**'  # Run for all branches (will filter for PR later)
 
 jobs:
   aggregate:
     name: Aggregate and enforce coverage policy
     runs-on: ubuntu-latest
+    if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success'
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Download all raw coverage artifacts
-        uses: actions/download-artifact@v4
+        uses: dawidd6/action-download-artifact@v6
         with:
+          workflow_conclusion: success
+          commit: ${{ github.event.workflow_run.head_sha }}
           path: coverage
+          name: raw-coverage-.*
+          name_is_regexp: true
 
       # ---- Normalize each service ----
 
@@ -25,9 +41,9 @@ jobs:
           declare -A services=( \
             ["frontend"]="jest:coverage/raw-coverage-frontend/coverage-summary.json" \
             ["notification-service"]="pytest:coverage/raw-coverage-notification-service/coverage.json" \
-            ["order-service"]="jacoco:coverage/raw-coverage-order-service/target/site/jacoco/jacoco.xml" \
+            ["order-service"]="jacoco:coverage/raw-coverage-order-service/jacoco.xml" \
             ["product-service"]="jest:coverage/raw-coverage-product-service/coverage-summary.json" \
-            ["user-service"]="jacoco:coverage/raw-coverage-user-service/target/site/jacoco/jacoco.xml" \
+            ["user-service"]="jacoco:coverage/raw-coverage-user-service/jacoco.xml" \
           )
           for svc in "${!services[@]}"; do
             IFS=':' read -r fmt path <<< "${services[$svc]}"

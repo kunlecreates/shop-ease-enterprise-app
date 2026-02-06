@@ -1,26 +1,24 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, ValueTransformer } from 'typeorm';
+import { Entity, PrimaryColumn, Column, OneToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { Product } from './product.entity';
 
 @Entity('product_inventory')
 export class ProductInventory {
-  @PrimaryGeneratedColumn('uuid') id!: string;
+  // product_id is the PK (one-to-one with products)
+  @PrimaryColumn({ name: 'product_id', type: 'bigint' })
+  productId!: number;
 
-  @ManyToOne(() => Product, { nullable: false })
-  @JoinColumn({ name: 'productid' })
+  @OneToOne(() => Product)
+  @JoinColumn({ name: 'product_id' })
   product!: Product;
 
-  @Column({ type: 'text', nullable: true }) location?: string;
-
-  // bigint columns return strings by default; transform to number for application convenience
-  private static bigintTransformer: ValueTransformer = {
-    to: (entityValue: number) => (entityValue === null || entityValue === undefined) ? entityValue : entityValue,
-    from: (dbValue: string) => (dbValue === null || dbValue === undefined) ? 0 : parseInt(dbValue, 10)
+  // Use bigint for quantity/reserved to match DB schema
+  private static bigintTransformer = {
+    to: (entityValue: number) => entityValue,
+    from: (dbValue: string) => (dbValue == null ? BigInt(0) : BigInt(dbValue))
   };
 
-  @Column({ type: 'bigint', default: 0, transformer: ProductInventory.bigintTransformer }) quantity!: number;
-
-  @Column({ type: 'bigint', default: 0, transformer: ProductInventory.bigintTransformer }) reserved!: number;
-
-  @CreateDateColumn({ name: 'created_at' }) createdAt!: Date;
-  @UpdateDateColumn({ name: 'updated_at' }) updatedAt!: Date;
+  @Column({ type: 'bigint', default: 0, transformer: ProductInventory.bigintTransformer }) quantity!: bigint;
+  @Column({ type: 'bigint', default: 0, transformer: ProductInventory.bigintTransformer }) reserved!: bigint;
+  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' }) createdAt!: Date;
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' }) updatedAt!: Date;
 }

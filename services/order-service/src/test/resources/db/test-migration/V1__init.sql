@@ -48,6 +48,22 @@ BEGIN
     total_cents    BIGINT NOT NULL CONSTRAINT chk_orders_total CHECK (total_cents >= 0),
     currency       NCHAR(3) NOT NULL CONSTRAINT df_orders_currency DEFAULT N'USD',
     placed_at      DATETIME2(6) NULL,
+    
+    -- Shipping Address Fields (8 columns)
+    shipping_recipient VARCHAR(255),
+    shipping_street1 VARCHAR(255),
+    shipping_street2 VARCHAR(255),
+    shipping_city VARCHAR(100),
+    shipping_state VARCHAR(100),
+    shipping_postal_code VARCHAR(20),
+    shipping_country VARCHAR(100),
+    shipping_phone VARCHAR(20),
+    
+    -- Payment Method Display Fields (3 columns)
+    payment_method_type VARCHAR(50),
+    payment_last4 VARCHAR(4),
+    payment_brand VARCHAR(50),
+    
     created_at     DATETIME2(6) NOT NULL CONSTRAINT df_orders_created DEFAULT SYSUTCDATETIME(),
     updated_at     DATETIME2(6) NOT NULL CONSTRAINT df_orders_updated DEFAULT SYSUTCDATETIME()
   );

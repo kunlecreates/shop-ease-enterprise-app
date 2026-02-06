@@ -25,7 +25,7 @@ function UserManagementContent() {
 
   const loadUsers = async () => {
     try {
-      const data = await ApiClient.get<User[]>('/users');
+      const data = await ApiClient.get<User[]>('/user');
       setUsers(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Failed to load users:', error);
@@ -36,7 +36,7 @@ function UserManagementContent() {
 
   const handleToggleStatus = async (userId: string, currentStatus: boolean) => {
     try {
-      await ApiClient.patch(`/users/${userId}/status`, { isActive: !currentStatus });
+      await ApiClient.patch(`/user/${userId}/status`, { isActive: !currentStatus });
       await loadUsers();
     } catch (error) {
       console.error('Failed to update user status:', error);
@@ -45,7 +45,7 @@ function UserManagementContent() {
 
   const handleRoleChange = async (userId: string, newRole: string) => {
     try {
-      await ApiClient.patch(`/users/${userId}/role`, { role: newRole });
+      await ApiClient.patch(`/user/${userId}/role`, { role: newRole });
       await loadUsers();
     } catch (error) {
       console.error('Failed to update user role:', error);

@@ -11,6 +11,7 @@ spring:
     driver-class-name: oracle.jdbc.OracleDriver
     # Fix ORA-18716: not in any time zone.DATE error when reading TIMESTAMP columns
     hikari:
+      connection-init-sql: "ALTER SESSION SET TIME_ZONE = 'UTC'"
       data-source-properties:
         oracle.jdbc.timezoneAsRegion: false
   jpa:
@@ -24,10 +25,23 @@ spring:
         # Oracle stores unquoted identifiers as uppercase, so we need to match that
         # This ensures Hibernate generates USERS instead of users in SQL
         physical_naming_strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+        # Fix ORA-18716 timezone error when querying TIMESTAMP columns with Instant
+        jdbc:
+          time_zone: UTC
+        # Force Hibernate to use TIMESTAMP (not TIMESTAMP WITH TIME ZONE) for Instant/ZonedDateTime
+        timezone:
+          default_storage: NORMALIZE
   flyway:
     enabled: ${FLYWAY_ENABLED:false}
 jwt:
   secret: ${JWT_SECRET:test-secret-key-for-development-only-min-256-bits-required-for-hs256-algorithm}
+app:
+  frontend:
+    url: ${FRONTEND_URL:https://shop.kunlecreates.org}
+  notification:
+    url: ${NOTIFICATION_SERVICE_URL:http://notification-service:8080}
+  verification:
+    test-mode: ${EMAIL_VERIFICATION_TEST_MODE:false}
 management:
   endpoints:
     web:
@@ -44,10 +58,4 @@ otel:
 logging:
   level:
     root: INFO
-    org.springframework.security: DEBUG
-    org.springframework.security.web: DEBUG
-    org.springframework.web: TRACE
-    org.springframework.web.servlet: TRACE
-    org.springframework.web.servlet.mvc: TRACE
-    org.springframework.web.servlet.handler: TRACE
-    org.kunlecreates.user: DEBUG
+    org.kunlecreates.user: INFO

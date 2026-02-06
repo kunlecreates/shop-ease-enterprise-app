@@ -2,6 +2,8 @@ package org.kunlecreates.user.application;
 
 import org.kunlecreates.user.domain.Role;
 import org.kunlecreates.user.domain.User;
+import org.kunlecreates.user.repository.EmailVerificationTokenRepository;
+import org.kunlecreates.user.repository.PasswordResetTokenRepository;
 import org.kunlecreates.user.repository.RoleRepository;
 import org.kunlecreates.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -15,10 +17,17 @@ import java.util.Optional;
 public class UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final EmailVerificationTokenRepository verificationTokenRepository;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
 
-    public UserService(UserRepository userRepository, RoleRepository roleRepository) {
+    public UserService(UserRepository userRepository, 
+                      RoleRepository roleRepository, 
+                      EmailVerificationTokenRepository verificationTokenRepository,
+                      PasswordResetTokenRepository passwordResetTokenRepository) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
+        this.verificationTokenRepository = verificationTokenRepository;
+        this.passwordResetTokenRepository = passwordResetTokenRepository;
     }
 
     @Transactional(readOnly = true)
@@ -77,6 +86,12 @@ public class UserService {
         if (!userRepository.existsById(userId)) {
             return false;
         }
+        
+        // Delete child records first to avoid foreign key constraint violations
+        // Using explicit JPQL queries for better performance and to avoid SELECT-then-DELETE
+        verificationTokenRepository.deleteByUserId(userId);
+        passwordResetTokenRepository.deleteByUserId(userId);
+        
         userRepository.deleteById(userId);
         return true;
     }

@@ -42,15 +42,16 @@ spec:
               kubernetes.io/metadata.name: "shopease-notification"
         {{- end }}
       ports:
-        {{- if and .Values.networkPolicy .Values.networkPolicy.backendPorts }}
-        {{- range $p := .Values.networkPolicy.backendPorts }}
-        - protocol: TCP
-          port: {{ $p }}
-        {{- end }}
-        {{- else }}
         - protocol: TCP
           port: 80
-        {{- end }}
+        - protocol: TCP
+          port: 3000
+        - protocol: TCP
+          port: 8081
+        - protocol: TCP
+          port: 8083
+        - protocol: TCP
+          port: 8084
     # Allow OTEL export if configured (4317)
     - to:
         - namespaceSelector:

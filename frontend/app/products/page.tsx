@@ -92,6 +92,7 @@ export default function ProductsPage() {
       <div className="bg-white p-4 rounded-lg shadow mb-6 space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Input
+            type="search"
             placeholder="Search by name or SKU..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -128,7 +129,7 @@ export default function ProductsPage() {
       {!loading && !error && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProducts.map((product) => (
-            <div key={product.id} className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow">
+            <div key={product.id} role="article" data-testid="product-card" className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow">
               <div className="p-6">
                 <h3 className="text-xl font-semibold mb-2">{product.name}</h3>
                 <p className="text-sm text-gray-600 mb-1">SKU: {product.sku}</p>
@@ -155,7 +156,7 @@ export default function ProductsPage() {
                   </div>
                 </div>
                 <div className="flex space-x-2 mt-4">
-                  <Link href={`/products/${product.id}`} className="flex-1">
+                  <Link href={`/products/${product.sku}`} className="flex-1">
                     <Button variant="secondary" className="w-full" size="sm">
                       View Details
                     </Button>

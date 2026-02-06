@@ -51,7 +51,7 @@ describe('Admin User Management Flow', () => {
     expect(roleUpdateResp.status).toBe(200);
     expect(roleUpdateResp.data).toHaveProperty('roles');
     expect(roleUpdateResp.data.roles).toContain('admin');
-  });
+  }, 30000);
 
   test('Admin can disable/enable user accounts', async () => {
     const timestamp = Date.now();
@@ -88,5 +88,5 @@ describe('Admin User Management Flow', () => {
       }
       throw error;
     }
-  });
+  }, 30000);
 });

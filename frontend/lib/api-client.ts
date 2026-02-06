@@ -22,15 +22,28 @@ export class ApiClient {
       try {
         error = await response.json();
       } catch {
-        error = { message: `HTTP ${response.status}: ${response.statusText}` };
+        const statusMessages: Record<number, string> = {
+          400: 'Bad Request',
+          401: 'Invalid credentials',
+          403: 'Access forbidden',
+          404: 'Resource not found',
+          409: 'Resource already exists',
+          500: 'Internal server error',
+          502: 'Bad gateway',
+          503: 'Service unavailable'
+        };
+        const message = statusMessages[response.status] || response.statusText || 'Request failed';
+        error = { message: `${message}` };
       }
       throw error;
     }
 
+    // 204 No Content should return empty object
     if (response.status === 204) {
       return {} as T;
     }
 
+    // All other successful responses (including 201 Created) should parse JSON
     return response.json();
   }
 
@@ -77,3 +90,5 @@ export class ApiClient {
     return this.handleResponse<T>(response);
   }
 }
+
+export const apiClient = ApiClient;

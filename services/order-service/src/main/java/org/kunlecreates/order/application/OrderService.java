@@ -43,7 +43,11 @@ public class OrderService {
     }
 
     @Transactional
-    public Order createOrder(String userRef, Long userId, String status, double total, String jwtToken) {
+    public Order createOrder(String userRef, Long userId, String status, double total, String jwtToken,
+                           String shippingRecipient, String shippingStreet1, String shippingStreet2,
+                           String shippingCity, String shippingState, String shippingPostalCode,
+                           String shippingCountry, String shippingPhone,
+                           String paymentMethodType, String paymentLast4, String paymentBrand) {
         String ref;
         if (userRef != null && !userRef.isBlank()) {
             ref = userRef;
@@ -54,6 +58,20 @@ public class OrderService {
         }
         long cents = Math.round(total * 100);
         Order o = new Order(ref, status, cents);
+        
+        o.setShippingRecipient(shippingRecipient);
+        o.setShippingStreet1(shippingStreet1);
+        o.setShippingStreet2(shippingStreet2);
+        o.setShippingCity(shippingCity);
+        o.setShippingState(shippingState);
+        o.setShippingPostalCode(shippingPostalCode);
+        o.setShippingCountry(shippingCountry);
+        o.setShippingPhone(shippingPhone);
+        
+        o.setPaymentMethodType(paymentMethodType);
+        o.setPaymentLast4(paymentLast4);
+        o.setPaymentBrand(paymentBrand);
+        
         Order saved = orderRepository.save(o);
         
         // Send order confirmation email asynchronously (non-blocking)
@@ -65,12 +83,19 @@ public class OrderService {
     }
 
     @Transactional
-    public Order processCheckout(Long userId, double total, String jwtToken) {
+    public Order processCheckout(Long userId, double total, String jwtToken,
+                                String shippingRecipient, String shippingStreet1, String shippingStreet2,
+                                String shippingCity, String shippingState, String shippingPostalCode,
+                                String shippingCountry, String shippingPhone,
+                                String paymentMethodType, String paymentLast4, String paymentBrand) {
         boolean paid = paymentService.charge(userId, total);
         if (!paid) {
             throw new RuntimeException("Payment failed");
         }
-        return createOrder(null, userId, "PAID", total, jwtToken);
+        return createOrder(null, userId, "PAID", total, jwtToken,
+                shippingRecipient, shippingStreet1, shippingStreet2, shippingCity,
+                shippingState, shippingPostalCode, shippingCountry, shippingPhone,
+                paymentMethodType, paymentLast4, paymentBrand);
     }
     
     @Transactional

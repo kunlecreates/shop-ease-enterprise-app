@@ -17,6 +17,7 @@ jobs:
       MAVEN_GOAL: verify
       JDK_VERSION: '21'
       MAVEN_ARGS: '-Dtestcontainers.enabled=true -Dapi.version=1.44'
+      EMAIL_VERIFICATION_TEST_MODE: 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v4

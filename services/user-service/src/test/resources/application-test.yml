@@ -1,4 +1,7 @@
-logging:
-  level:
-    org.springframework.security: DEBUG
-    org.springframework.security.web: DEBUG
+spring:
+  flyway:
+    enabled: true
+    schemas: USER_SVC
+  jpa:
+    hibernate:
+      ddl-auto: validate

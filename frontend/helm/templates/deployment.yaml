@@ -55,6 +55,11 @@ spec:
               {{- end }}
           {{- end }}
           {{- end }}
+          {{- if .Values.cloudflareAccess.enabled }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.cloudflareAccess.secretName }}
+          {{- end }}
           ports:
             - containerPort: 3000
           resources:

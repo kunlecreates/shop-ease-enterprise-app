@@ -13,7 +13,8 @@ export const userSchema = {
 export const productSchema = {
   type: 'object',
   properties: {
-    id: { type: 'number' },
+    // Product `id` may be numeric or string depending on service implementation
+    id: { type: ['number', 'string'] },
     sku: { type: 'string' },
     name: { type: 'string' },
     price: { type: 'number' }

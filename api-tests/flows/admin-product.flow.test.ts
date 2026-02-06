@@ -21,8 +21,7 @@ maybe('Admin product flow: create product', async () => {
   expect(resp.data.priceCents).toBe(1000);
 
   const sku = resp.data.sku;
-  try {
-    const { registerDelete } = await import('../framework/cleanup');
-    registerDelete(productHttp, (s: any) => `/api/product/${s}`, sku);
-  } catch (e) {}
+  // Register cleanup with admin token
+  const { registerDelete } = await import('../framework/cleanup');
+  registerDelete(productHttp, (s: any) => `/api/product/${s}`, sku, token);
 });

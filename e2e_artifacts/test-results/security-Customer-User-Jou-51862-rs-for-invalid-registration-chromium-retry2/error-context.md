@@ -1,0 +1,47 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - link "ShopEase" [ref=e6] [cursor=pointer]:
+          - /url: /
+        - link "Products" [ref=e7] [cursor=pointer]:
+          - /url: /products
+      - generic [ref=e8]:
+        - link [ref=e9] [cursor=pointer]:
+          - /url: /cart
+          - img [ref=e10]
+        - link "Login" [ref=e12] [cursor=pointer]:
+          - /url: /login
+        - link "Register" [ref=e13] [cursor=pointer]:
+          - /url: /register
+  - main [ref=e14]:
+    - generic [ref=e15]:
+      - heading "Create your account" [level=2] [ref=e17]
+      - generic [ref=e18]:
+        - generic [ref=e19]:
+          - generic [ref=e20]:
+            - generic [ref=e21]: Username
+            - textbox "Username" [ref=e22]:
+              - /placeholder: Choose a username
+          - generic [ref=e23]:
+            - generic [ref=e24]: Email
+            - textbox "Email" [ref=e25]:
+              - /placeholder: you@example.com
+          - generic [ref=e26]:
+            - generic [ref=e27]: Password
+            - textbox "Password" [ref=e28]:
+              - /placeholder: At least 8 characters
+          - generic [ref=e29]:
+            - generic [ref=e30]: Confirm Password
+            - textbox "Confirm Password" [ref=e31]:
+              - /placeholder: Confirm your password
+        - button "Create account" [ref=e32]
+        - paragraph [ref=e33]:
+          - text: Already have an account?
+          - link "Sign in here" [ref=e34] [cursor=pointer]:
+            - /url: /login
+  - alert [ref=e35]
+```

@@ -35,7 +35,7 @@ export default function CartPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-4">
           {items.map((item) => (
-            <div key={item.id} className="bg-white rounded-lg shadow p-4 flex items-center space-x-4">
+            <div key={item.id} data-testid="cart-item" className="bg-white rounded-lg shadow p-4 flex items-center space-x-4">
               <div className="flex-1">
                 <h3 className="font-semibold text-lg">{item.product.name}</h3>
                 <p className="text-sm text-gray-600">SKU: {item.product.sku}</p>

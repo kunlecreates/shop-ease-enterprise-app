@@ -28,6 +28,11 @@ jobs:
       ORDER_SERVICE_URL: http://order-service.shopease-order.svc.cluster.local
       NOTIFICATION_SERVICE_URL: http://notification-service.shopease-notification.svc.cluster.local
       TEST_JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      # Email verification test mode - auto-verify users in test environments
+      EMAIL_VERIFICATION_TEST_MODE: 'true'
+      # Admin credentials for cleanup operations
+      ADMIN_EMAIL: ${{ secrets.E2E_ADMIN_EMAIL || 'admin@shopease.local' }}
+      ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD || 'Admin123!' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -45,7 +50,7 @@ jobs:
           if [ "$missing" = true ]; then
             exit 1
           fi
-
+      
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:

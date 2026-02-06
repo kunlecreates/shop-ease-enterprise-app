@@ -21,8 +21,20 @@ export function pickHeaders(req: NextRequest): Headers {
   const headers = new Headers();
   for (const key of FORWARDED_REQ_HEADERS) {
     const v = req.headers.get(key);
-    if (v) headers.set(key, v);
+    if (v) {
+      headers.set(key, v);
+    }
   }
+  
+  // Add Cloudflare Access service token headers if configured
+  // This authenticates the frontend service with Cloudflare Access
+  const cfClientId = process.env.CF_ACCESS_CLIENT_ID;
+  const cfClientSecret = process.env.CF_ACCESS_CLIENT_SECRET;
+  if (cfClientId && cfClientSecret) {
+    headers.set('CF-Access-Client-Id', cfClientId);
+    headers.set('CF-Access-Client-Secret', cfClientSecret);
+  }
+  
   return headers;
 }
 
@@ -55,15 +67,21 @@ export function createProxyHandlers(envVarName: string, upstreamPrefixPath: stri
       const extraSegments = params?.path ?? [];
       const target = buildTargetUrl(baseUrl, upstreamPrefixPath, extraSegments, req.nextUrl.searchParams);
 
+      const timeoutMs = Number(process.env.PROXY_UPSTREAM_TIMEOUT_MS) || 30000;
       const init: RequestInit = {
         method,
         headers: pickHeaders(req),
         redirect: 'manual',
-        signal: getAbortSignal(10000),
+        signal: getAbortSignal(timeoutMs),
       };
+      
+      // For Next.js 15 App Router, we must clone the request body
+      // The original req.body stream can only be read once
       if (method !== 'GET' && method !== 'HEAD') {
-        // Stream or clone body
-        init.body = req.body;
+        const clonedReq = req.clone();
+        init.body = clonedReq.body;
+        // Node.js fetch requires duplex option when body is a ReadableStream
+        (init as any).duplex = 'half';
       }
 
       const res = await fetch(target, init);
@@ -77,6 +95,7 @@ export function createProxyHandlers(envVarName: string, upstreamPrefixPath: stri
       });
       return new RuntimeNextResponse(res.body, { status: res.status, headers: outHeaders });
     } catch (err: any) {
+      console.error('[Proxy] Error caught:', err.message, 'Type:', err.name);
       const msg = err?.name === 'AbortError' ? 'Upstream timeout' : 'Upstream error';
       return RuntimeNextResponse.json({ error: msg }, { status: 502 });
     }
