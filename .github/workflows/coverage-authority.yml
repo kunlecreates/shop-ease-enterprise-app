@@ -20,6 +20,11 @@ jobs:
     if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success'
     outputs:
       all_completed: ${{ steps.check.outputs.all_completed }}
+      user_run_id: ${{ steps.check.outputs.user_run_id }}
+      order_run_id: ${{ steps.check.outputs.order_run_id }}
+      product_run_id: ${{ steps.check.outputs.product_run_id }}
+      notification_run_id: ${{ steps.check.outputs.notification_run_id }}
+      frontend_run_id: ${{ steps.check.outputs.frontend_run_id }}
       
     steps:
       - name: Check all workflows completed
@@ -88,6 +93,25 @@ jobs:
             
             core.setOutput('all_completed', allCompleted.toString());
             
+            // Set individual run IDs for artifact download
+            if (allCompleted) {
+              const runIdMap = {
+                'CI — User-service Component Tests': 'user_run_id',
+                'CI — Order-service Component Tests': 'order_run_id',
+                'CI — Product-service Component Tests': 'product_run_id',
+                'CI — Notification-service Component Tests': 'notification_run_id',
+                'CI — Frontend Component Tests': 'frontend_run_id'
+              };
+              
+              for (const [workflowName, outputKey] of Object.entries(runIdMap)) {
+                const run = latestRunsByWorkflow[workflowName];
+                if (run) {
+                  console.log(`Setting ${outputKey} = ${run.id}`);
+                  core.setOutput(outputKey, run.id.toString());
+                }
+              }
+            }
+            
             if (!allCompleted) {
               console.log('⏳ Waiting for other workflows to complete...');
               console.log(`Started: ${startedWorkflows.length}, Completed: ${completedWorkflows.length}`);
@@ -106,17 +130,45 @@ jobs:
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
 
-      - name: Download all raw coverage artifacts
-        uses: dawidd6/action-download-artifact@v6
+      - name: Download user-service coverage
+        uses: actions/download-artifact@v4
         with:
-          workflow_conclusion: success
-          commit: ${{ github.event.workflow_run.head_sha }}
-          path: coverage
-          name: raw-coverage-.*
-          name_is_regexp: true
-          search_artifacts: true
-          check_artifacts: true
-          skip_unpack: false
+          name: raw-coverage-user-service
+          run-id: ${{ needs.check-completion.outputs.user_run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: coverage/raw-coverage-user-service
+
+      - name: Download order-service coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: raw-coverage-order-service
+          run-id: ${{ needs.check-completion.outputs.order_run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: coverage/raw-coverage-order-service
+
+      - name: Download product-service coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: raw-coverage-product-service
+          run-id: ${{ needs.check-completion.outputs.product_run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: coverage/raw-coverage-product-service
+
+      - name: Download notification-service coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: raw-coverage-notification-service
+          run-id: ${{ needs.check-completion.outputs.notification_run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: coverage/raw-coverage-notification-service
+
+      - name: Download frontend coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: raw-coverage-frontend
+          run-id: ${{ needs.check-completion.outputs.frontend_run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: coverage/raw-coverage-frontend
 
       # ---- Normalize each service ----
 
