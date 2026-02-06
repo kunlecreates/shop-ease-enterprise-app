@@ -262,7 +262,7 @@ jobs:
             .overall.coverage_pct as $c |
             {
               schemaVersion: 1,
-              label: "coverage",
+              label: "Test Coverage",
               message: (($c | tostring) + "%"),
               color: (
                 if $c >= 80 then "brightgreen"
