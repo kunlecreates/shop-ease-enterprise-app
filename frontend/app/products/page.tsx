@@ -86,10 +86,10 @@ export default function ProductsPage() {
   };
 
   return (
-    <main className="p-6">
-      <h1 className="text-3xl font-bold mb-6">Products</h1>
+    <main className="p-6 dark:bg-gray-900 min-h-screen">
+      <h1 className="text-3xl font-bold mb-6 dark:text-white">Products</h1>
 
-      <div className="bg-white p-4 rounded-lg shadow mb-6 space-y-4">
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-6 space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Input
             type="search"
@@ -99,7 +99,7 @@ export default function ProductsPage() {
           />
 
           <select
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
           >
@@ -112,7 +112,7 @@ export default function ProductsPage() {
           </select>
 
           <select
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
           >
@@ -123,18 +123,36 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      {loading && <p className="text-center py-8">Loading products...</p>}
-      {error && <p className="text-center text-red-600 py-8">Error: {error}</p>}
+      {loading && <p className="text-center py-8 dark:text-white">Loading products...</p>}
+      {error && <p className="text-center text-red-600 dark:text-red-400 py-8">Error: {error}</p>}
       
       {!loading && !error && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProducts.map((product) => (
-            <div key={product.id} role="article" data-testid="product-card" className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow">
+            <div key={product.id} role="article" data-testid="product-card" className="bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden">
+              {/* Product Image */}
+              <div className="aspect-square bg-gray-100 dark:bg-gray-900 flex items-center justify-center overflow-hidden">
+                {product.imageUrl ? (
+                  <img
+                    src={product.imageUrl}
+                    alt={product.name}
+                    className="w-full h-full object-contain"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      const svg = e.currentTarget.nextElementSibling as HTMLElement;
+                      if (svg) svg.style.display = 'block';
+                    }}
+                  />
+                ) : null}
+                <svg className={product.imageUrl ? 'hidden w-24 h-24 text-gray-400 dark:text-gray-600' : 'w-24 h-24 text-gray-400 dark:text-gray-600'} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
               <div className="p-6">
-                <h3 className="text-xl font-semibold mb-2">{product.name}</h3>
-                <p className="text-sm text-gray-600 mb-1">SKU: {product.sku}</p>
+                <h3 className="text-xl font-semibold mb-2 dark:text-white">{product.name}</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">SKU: {product.sku}</p>
                 {product.category && (
-                  <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mb-3">
+                  <span className="inline-block bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs px-2 py-1 rounded mb-3">
                     {typeof product.category === 'string' 
                       ? product.category 
                       : Array.isArray(product.category) && product.category.length > 0
@@ -143,15 +161,15 @@ export default function ProductsPage() {
                   </span>
                 )}
                 {product.description && (
-                  <p className="text-gray-700 mb-4 line-clamp-2">{product.description}</p>
+                  <p className="text-gray-700 dark:text-gray-300 mb-4 line-clamp-2">{product.description}</p>
                 )}
                 <div className="flex items-center justify-between mt-4">
-                  <span className="text-2xl font-bold text-blue-600">${product.price.toFixed(2)}</span>
+                  <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">${product.price.toFixed(2)}</span>
                   <div className="flex items-center space-x-2">
                     {product.stock > 0 ? (
-                      <span className="text-sm text-green-600">In stock: {product.stock}</span>
+                      <span className="text-sm text-green-600 dark:text-green-400">In stock: {product.stock}</span>
                     ) : (
-                      <span className="text-sm text-red-600">Out of stock</span>
+                      <span className="text-sm text-red-600 dark:text-red-400">Out of stock</span>
                     )}
                   </div>
                 </div>
@@ -174,7 +192,7 @@ export default function ProductsPage() {
             </div>
           ))}
           {filteredProducts.length === 0 && (
-            <div className="col-span-full text-center py-12 text-gray-600">
+            <div className="col-span-full text-center py-12 text-gray-600 dark:text-gray-400">
               No products found matching your criteria.
             </div>
           )}

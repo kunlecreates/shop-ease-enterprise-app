@@ -2,8 +2,8 @@ import Link from 'next/link';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'ShopEase - Premium Shopping Experience',
-  description: 'Experience luxury shopping with curated collections from the world\'s finest brands',
+  title: 'ShopEase - Your Online Superstore',
+  description: 'Shop fresh groceries, quality essentials, and household items delivered to your door. Your trusted online superstore.',
 };
 
 export default function HomePage() {
@@ -24,15 +24,15 @@ export default function HomePage() {
             </div>
 
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-8 leading-tight text-white tracking-tighter">
-              Experience
+              Your Online
               <br />
               <span className="bg-gradient-to-r from-luxury-500 to-accent-purple bg-clip-text text-transparent">
-                Luxury Shopping
+                Superstore
               </span>
             </h1>
             
             <p className="text-lg md:text-xl lg:text-2xl mb-14 text-white/70 max-w-2xl leading-relaxed font-normal">
-              Curated collections from the world's finest brands. Delivered to your doorstep with unmatched service.
+              Fresh groceries, quality essentials, and household items delivered to your doorstep with care.
             </p>
             
             <div className="flex gap-4 flex-wrap items-center">
@@ -52,7 +52,7 @@ export default function HomePage() {
             <div className="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-10 mt-20 pt-12 border-t border-white/10 max-w-2xl">
               <div>
                 <div className="text-4xl font-bold text-white mb-1">10K+</div>
-                <div className="text-sm text-white/60 font-medium">Premium Products</div>
+                <div className="text-sm text-white/60 font-medium">Fresh Products</div>
               </div>
               <div>
                 <div className="text-4xl font-bold text-white mb-1">50K+</div>

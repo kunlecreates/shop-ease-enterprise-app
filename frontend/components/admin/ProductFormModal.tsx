@@ -22,6 +22,9 @@ interface ProductFormData {
   stock: number;
   category: string;
   imageUrl: string;
+  aisle: string;
+  section: string;
+  shelfLocation: string;
 }
 
 export function ProductFormModal({
@@ -39,6 +42,9 @@ export function ProductFormModal({
     stock: 0,
     category: '',
     imageUrl: '',
+    aisle: '',
+    section: '',
+    shelfLocation: '',
   });
   const [imagePreview, setImagePreview] = useState<string>('');
   const [imageError, setImageError] = useState(false);
@@ -59,6 +65,9 @@ export function ProductFormModal({
         stock: product.stock || 0,
         category: categoryStr,
         imageUrl: product.imageUrl || '',
+        aisle: product.aisle || '',
+        section: product.section || '',
+        shelfLocation: product.shelfLocation || '',
       });
       if (product.imageUrl) {
         setImagePreview(product.imageUrl);
@@ -72,6 +81,9 @@ export function ProductFormModal({
         stock: 0,
         category: '',
         imageUrl: '',
+        aisle: '',
+        section: '',
+        shelfLocation: '',
       });
       setImagePreview('');
     }
@@ -213,6 +225,51 @@ export function ProductFormModal({
                   type="text"
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  className="w-full"
+                />
+              </div>
+
+              {/* Aisle */}
+              <div>
+                <label htmlFor="aisle" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Aisle
+                </label>
+                <Input
+                  id="aisle"
+                  type="text"
+                  placeholder="e.g., A5"
+                  value={formData.aisle}
+                  onChange={(e) => setFormData({ ...formData, aisle: e.target.value })}
+                  className="w-full"
+                />
+              </div>
+
+              {/* Section */}
+              <div>
+                <label htmlFor="section" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Section
+                </label>
+                <Input
+                  id="section"
+                  type="text"
+                  placeholder="e.g., Fresh Produce"
+                  value={formData.section}
+                  onChange={(e) => setFormData({ ...formData, section: e.target.value })}
+                  className="w-full"
+                />
+              </div>
+
+              {/* Shelf Location */}
+              <div>
+                <label htmlFor="shelfLocation" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Shelf Location
+                </label>
+                <Input
+                  id="shelfLocation"
+                  type="text"
+                  placeholder="e.g., Top shelf, bin 3"
+                  value={formData.shelfLocation}
+                  onChange={(e) => setFormData({ ...formData, shelfLocation: e.target.value })}
                   className="w-full"
                 />
               </div>

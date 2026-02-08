@@ -31,6 +31,9 @@ export class Product {
   @Column({ type: 'jsonb', nullable: true }) attributes?: Record<string, any>;
   @Column({ type: 'char', length: 3, default: 'USD' }) currency!: string;
   @Column({ name: 'image_url', type: 'varchar', length: 500, nullable: true }) imageUrl?: string;
+  @Column({ type: 'varchar', length: 50, nullable: true }) aisle?: string;
+  @Column({ type: 'varchar', length: 100, nullable: true }) section?: string;
+  @Column({ name: 'shelf_location', type: 'varchar', length: 100, nullable: true }) shelfLocation?: string;
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' }) createdAt!: Date;
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' }) updatedAt!: Date;
   @Column({ name: 'is_active', type: 'boolean', default: true }) active!: boolean;
@@ -55,6 +58,9 @@ export class Product {
       currency: this.currency,
       attributes: this.attributes,
       imageUrl: this.imageUrl,
+      aisle: this.aisle,
+      section: this.section,
+      shelfLocation: this.shelfLocation,
       active: this.active,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
