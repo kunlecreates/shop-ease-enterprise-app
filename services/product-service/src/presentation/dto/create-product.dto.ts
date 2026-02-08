@@ -33,6 +33,26 @@ export class CreateProductDto {
   currency?: string;
 
   @IsOptional()
+  @IsString()
+  @Length(0, 500)
+  imageUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  @Length(0, 50)
+  aisle?: string;
+
+  @IsOptional()
+  @IsString()
+  @Length(0, 100)
+  section?: string;
+
+  @IsOptional()
+  @IsString()
+  @Length(0, 100)
+  shelfLocation?: string;
+
+  @IsOptional()
   @IsArray()
   @ArrayNotEmpty()
   @IsString({ each: true })

@@ -31,12 +31,31 @@ function ProductManagementContent() {
 
   const handleSubmit = async (productData: any) => {
     try {
-      const dataToSend = { ...productData };
-      delete (dataToSend as any).stock;
+      const dataToSend: any = { 
+        sku: productData.sku,
+        name: productData.name,
+        description: productData.description,
+        price: productData.price,
+        imageUrl: productData.imageUrl,
+        aisle: productData.aisle,
+        section: productData.section,
+        shelfLocation: productData.shelfLocation,
+      };
+      
+      // Parse categories from comma-separated string to array
+      if (productData.category && typeof productData.category === 'string') {
+        const categories = productData.category.split(',').map((c: string) => c.trim()).filter(Boolean);
+        if (categories.length > 0) {
+          dataToSend.categoryCodes = categories;
+        }
+      }
       
       if (editingProduct) {
-        await ApiClient.put(`/product/${editingProduct.sku}`, dataToSend);
+        // For now, we don't have an update endpoint, so skip
+        console.warn('Update not implemented yet');
       } else {
+        // Include initial stock for new products
+        dataToSend.initialStock = productData.stock || 0;
         await ApiClient.post('/product', dataToSend);
       }
       await loadProducts();
@@ -152,11 +171,27 @@ function ProductManagementContent() {
                     {product.name}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-                    {typeof product.category === 'string' 
-                      ? product.category 
-                      : Array.isArray(product.category) && product.category.length > 0
-                        ? (typeof product.category[0] === 'string' ? product.category[0] : product.category[0].name)
-                        : <span className="text-gray-400 dark:text-gray-500">Uncategorized</span>}
+                    {(() => {
+                      // Handle categories array from backend (Product.categories)
+                      const cats = (product as any).categories || product.category;
+                      if (Array.isArray(cats) && cats.length > 0) {
+                        const firstCat = typeof cats[0] === 'string' ? cats[0] : cats[0]?.name;
+                        return (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                            {firstCat}
+                            {cats.length > 1 && <span className="ml-1 text-blue-600 dark:text-blue-300">+{cats.length - 1}</span>}
+                          </span>
+                        );
+                      }
+                      if (typeof cats === 'string') {
+                        return (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                            {cats}
+                          </span>
+                        );
+                      }
+                      return <span className="text-gray-400 dark:text-gray-500 italic">Uncategorized</span>;
+                    })()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-gray-100">
                     ${product.price.toFixed(2)}

@@ -13,6 +13,7 @@ export interface Product {
   price: number;
   stock: number;
   category?: string | Array<string | { id?: number; name: string }>;
+  categories?: Array<{ id?: number; name: string; code?: string }>;
   imageUrl?: string;
   aisle?: string;
   section?: string;

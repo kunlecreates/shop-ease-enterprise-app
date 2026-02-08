@@ -44,11 +44,15 @@ export default function ProductsPage() {
 
     if (categoryFilter) {
       filtered = filtered.filter((p) => {
-        if (typeof p.category === 'string') {
-          return p.category === categoryFilter;
+        const cats = (p as any).categories || p.category;
+        if (typeof cats === 'string') {
+          return cats === categoryFilter;
         }
-        if (Array.isArray(p.category)) {
-          return p.category.some((c: any) => c.name === categoryFilter || c === categoryFilter);
+        if (Array.isArray(cats)) {
+          return cats.some((c: any) => {
+            const catName = typeof c === 'string' ? c : (c.name || c.code);
+            return catName === categoryFilter;
+          });
         }
         return false;
       });
@@ -66,8 +70,12 @@ export default function ProductsPage() {
   const categories = Array.from(
     new Set(
       products.flatMap((p) => {
-        if (typeof p.category === 'string') return [p.category];
-        if (Array.isArray(p.category)) return p.category.map((c: any) => c.name || c);
+        // Handle both product.category and product.categories from backend
+        const cats = (p as any).categories || p.category;
+        if (typeof cats === 'string') return [cats];
+        if (Array.isArray(cats)) {
+          return cats.map((c: any) => (typeof c === 'string' ? c : c.name || c.code)).filter(Boolean);
+        }
         return [];
       }).filter(Boolean)
     )
@@ -151,15 +159,26 @@ export default function ProductsPage() {
               <div className="p-6">
                 <h3 className="text-xl font-semibold mb-2 dark:text-white">{product.name}</h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">SKU: {product.sku}</p>
-                {product.category && (
-                  <span className="inline-block bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs px-2 py-1 rounded mb-3">
-                    {typeof product.category === 'string' 
-                      ? product.category 
-                      : Array.isArray(product.category) && product.category.length > 0
-                        ? (product.category[0] as any).name || product.category[0]
-                        : ''}
-                  </span>
-                )}
+                {(() => {
+                  const cats = (product as any).categories || product.category;
+                  if (Array.isArray(cats) && cats.length > 0) {
+                    const firstCat = typeof cats[0] === 'string' ? cats[0] : (cats[0]?.name || cats[0]?.code);
+                    return (
+                      <span className="inline-block bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs px-3 py-1 rounded-full mb-3 font-medium">
+                        {firstCat}
+                        {cats.length > 1 && <span className="ml-1 opacity-75">+{cats.length - 1}</span>}
+                      </span>
+                    );
+                  }
+                  if (typeof cats === 'string') {
+                    return (
+                      <span className="inline-block bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs px-3 py-1 rounded-full mb-3 font-medium">
+                        {cats}
+                      </span>
+                    );
+                  }
+                  return null;
+                })()}
                 {product.description && (
                   <p className="text-gray-700 dark:text-gray-300 mb-4 line-clamp-2">{product.description}</p>
                 )}

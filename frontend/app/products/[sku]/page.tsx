@@ -74,15 +74,36 @@ export default function ProductDetailPage() {
         </div>
         <div>
           <div className="mb-2">
-            {product.category && (
-              <span className="inline-block px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-sm rounded-full">
-                {typeof product.category === 'string' 
-                  ? product.category 
-                  : Array.isArray(product.category) && product.category.length > 0
-                    ? (typeof product.category[0] === 'string' ? product.category[0] : product.category[0].name)
-                    : ''}
-              </span>
-            )}
+            {(() => {
+              const cats = (product as any).categories || product.category;
+              if (Array.isArray(cats) && cats.length > 0) {
+                return (
+                  <div className="flex flex-wrap gap-2">
+                    {cats.slice(0, 3).map((cat: any, idx: number) => {
+                      const catName = typeof cat === 'string' ? cat : (cat.name || cat.code);
+                      return (
+                        <span key={idx} className="inline-block px-4 py-2 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-sm font-medium rounded-full">
+                          {catName}
+                        </span>
+                      );
+                    })}
+                    {cats.length > 3 && (
+                      <span className="inline-block px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-sm font-medium rounded-full">
+                        +{cats.length - 3} more
+                      </span>
+                    )}
+                  </div>
+                );
+              }
+              if (typeof cats === 'string') {
+                return (
+                  <span className="inline-block px-4 py-2 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-sm font-medium rounded-full">
+                    {cats}
+                  </span>
+                );
+              }
+              return null;
+            })()}
           </div>
           <h1 className="text-4xl font-bold mb-4 dark:text-white">{product.name}</h1>
           <div className="mb-6"><span className="text-3xl font-bold text-blue-600 dark:text-blue-400">${product.price.toFixed(2)}</span></div>
