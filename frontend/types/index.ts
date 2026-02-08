@@ -41,8 +41,9 @@ export interface Order {
   id: string;
   userRef?: string;  // Backend uses userRef, not userId
   userId?: string;   // Keep for backwards compatibility
-  status: 'PENDING' | 'PAID' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
+  status: 'PENDING' | 'PAID' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED' | 'REFUNDED';
   total: number;     // Backend returns totalCents and calculates getTotal()
+  totalPrice: number; // Alias for total
   totalCents?: number;
   currency?: string;
   placedAt?: string;

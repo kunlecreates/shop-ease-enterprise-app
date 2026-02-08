@@ -30,6 +30,7 @@ export class Product {
   // Use JSONB in production per Flyway migration.
   @Column({ type: 'jsonb', nullable: true }) attributes?: Record<string, any>;
   @Column({ type: 'char', length: 3, default: 'USD' }) currency!: string;
+  @Column({ name: 'image_url', type: 'varchar', length: 500, nullable: true }) imageUrl?: string;
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' }) createdAt!: Date;
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' }) updatedAt!: Date;
   @Column({ name: 'is_active', type: 'boolean', default: true }) active!: boolean;
@@ -53,6 +54,7 @@ export class Product {
       priceCents: this.priceCents,
       currency: this.currency,
       attributes: this.attributes,
+      imageUrl: this.imageUrl,
       active: this.active,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,

@@ -5,21 +5,14 @@ import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { ApiClient } from '@/lib/api-client';
 import { Product } from '@/types';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
+import { ProductFormModal } from '@/components/admin/ProductFormModal';
+import { Edit, Trash2, Plus } from 'lucide-react';
 
 function ProductManagementContent() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [isCreating, setIsCreating] = useState(false);
-  const [formData, setFormData] = useState({
-    sku: '',
-    name: '',
-    description: '',
-    price: 0,
-    stock: 0,
-    category: '',
-  });
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     loadProducts();
@@ -36,22 +29,19 @@ function ProductManagementContent() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (productData: any) => {
     try {
-      const productData = {
-        ...formData,
-        initialStock: formData.stock,
-      };
-      delete (productData as any).stock;
+      const dataToSend = { ...productData };
+      delete (dataToSend as any).stock;
       
       if (editingProduct) {
-        await ApiClient.put(`/product/${editingProduct.sku}`, productData);
+        await ApiClient.put(`/product/${editingProduct.sku}`, dataToSend);
       } else {
-        await ApiClient.post('/product', productData);
+        await ApiClient.post('/product', dataToSend);
       }
       await loadProducts();
-      resetForm();
+      setIsModalOpen(false);
+      setEditingProduct(null);
     } catch (error) {
       console.error('Failed to save product:', error);
     }
@@ -69,136 +59,134 @@ function ProductManagementContent() {
 
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
-    setIsCreating(true);
-    const categoryValue = typeof product.category === 'string' 
-      ? product.category 
-      : Array.isArray(product.category) && product.category.length > 0
-        ? (typeof product.category[0] === 'string' ? product.category[0] : product.category[0].name)
-        : '';
-    setFormData({
-      sku: product.sku,
-      name: product.name,
-      description: product.description || '',
-      price: product.price,
-      stock: product.stock,
-      category: categoryValue,
-    });
+    setIsModalOpen(true);
   };
 
-  const resetForm = () => {
+  const handleCreate = () => {
     setEditingProduct(null);
-    setIsCreating(false);
-    setFormData({
-      sku: '',
-      name: '',
-      description: '',
-      price: 0,
-      stock: 0,
-      category: '',
-    });
+    setIsModalOpen(true);
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-6 max-w-7xl mx-auto bg-gray-50 dark:bg-gray-900 min-h-screen">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Product Management</h1>
-        <Button onClick={() => setIsCreating(true)}>Add New Product</Button>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Product Management</h1>
+          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+            Manage your product catalog, inventory, and pricing
+          </p>
+        </div>
+        <Button 
+          onClick={handleCreate}
+          className="inline-flex items-center gap-2 bg-luxury-500 hover:bg-luxury-600 dark:bg-luxury-600 dark:hover:bg-luxury-700"
+        >
+          <Plus className="w-4 h-4" />
+          Add Product
+        </Button>
       </div>
 
-      {isCreating && (
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h2 className="text-xl font-bold mb-4">
-            {editingProduct ? 'Edit Product' : 'Create New Product'}
-          </h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <Input
-                label="SKU"
-                value={formData.sku}
-                onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
-                required
-                disabled={!!editingProduct}
-              />
-              <Input
-                label="Name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                required
-              />
-            </div>
-            <Input
-              label="Description"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            />
-            <div className="grid grid-cols-3 gap-4">
-              <Input
-                label="Price ($)"
-                type="number"
-                step="0.01"
-                value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })}
-                required
-              />
-              <Input
-                label="Stock"
-                type="number"
-                value={formData.stock}
-                onChange={(e) => setFormData({ ...formData, stock: parseInt(e.target.value) })}
-                required
-              />
-              <Input
-                label="Category"
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-              />
-            </div>
-            <div className="flex space-x-4">
-              <Button type="submit">{editingProduct ? 'Update' : 'Create'} Product</Button>
-              <Button type="button" variant="secondary" onClick={resetForm}>
-                Cancel
-              </Button>
-            </div>
-          </form>
-        </div>
-      )}
-
       {loading ? (
-        <p className="text-center py-8">Loading products...</p>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-12 text-center">
+          <div className="animate-spin h-8 w-8 border-4 border-luxury-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Loading products...</p>
+        </div>
+      ) : products.length === 0 ? (
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-12 text-center">
+          <p className="text-gray-600 dark:text-gray-400 mb-4">No products found</p>
+          <Button onClick={handleCreate}>Create Your First Product</Button>
+        </div>
       ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
           <table className="w-full">
-            <thead className="bg-gray-50 border-b">
+            <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                  Image
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                  SKU
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                  Name
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                  Category
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                  Price
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                  Stock
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
-              {products.map((product) => (
-                <tr key={product.id}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{product.sku}</td>
-                  <td className="px-6 py-4 text-sm">{product.name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+              {products.map((product, index) => (
+                <tr 
+                  key={product.id}
+                  className={`${index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-750'} hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors`}
+                >
+                  <td className="px-6 py-4">
+                    {product.imageUrl ? (
+                      <img 
+                        src={product.imageUrl} 
+                        alt={product.name}
+                        className="w-12 h-12 object-cover rounded-lg"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = 'https://via.placeholder.com/48?text=No+Image';
+                        }}
+                      />
+                    ) : (
+                      <div className="w-12 h-12 bg-gray-200 dark:bg-gray-600 rounded-lg flex items-center justify-center">
+                        <span className="text-xs text-gray-400 dark:text-gray-500">No img</span>
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900 dark:text-gray-100">
+                    {product.sku}
+                  </td>
+                  <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
+                    {product.name}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
                     {typeof product.category === 'string' 
                       ? product.category 
                       : Array.isArray(product.category) && product.category.length > 0
                         ? (typeof product.category[0] === 'string' ? product.category[0] : product.category[0].name)
-                        : 'N/A'}
+                        : <span className="text-gray-400 dark:text-gray-500">Uncategorized</span>}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">${product.price.toFixed(2)}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-gray-100">
+                    ${product.price.toFixed(2)}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <span className={`px-2 py-1 rounded ${product.stock > 10 ? 'bg-green-100 text-green-800' : product.stock > 0 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>
-                      {product.stock}
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      product.stock > 20 
+                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                        : product.stock > 5 
+                        ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' 
+                        : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                    }`}>
+                      {product.stock} units
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2">
-                    <Button size="sm" onClick={() => handleEdit(product)}>Edit</Button>
-                    <Button size="sm" variant="danger" onClick={() => handleDelete(product.sku)}>Delete</Button>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm space-x-2">
+                    <button
+                      onClick={() => handleEdit(product)}
+                      className="inline-flex items-center gap-1 text-luxury-600 dark:text-luxury-400 hover:text-luxury-700 dark:hover:text-luxury-300 font-medium transition-colors"
+                    >
+                      <Edit className="w-4 h-4" />
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(product.sku)}
+                      className="inline-flex items-center gap-1 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Delete
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -206,6 +194,17 @@ function ProductManagementContent() {
           </table>
         </div>
       )}
+
+      <ProductFormModal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingProduct(null);
+        }}
+        onSubmit={handleSubmit}
+        product={editingProduct}
+        title={editingProduct ? 'Edit Product' : 'Create New Product'}
+      />
     </div>
   );
 }
