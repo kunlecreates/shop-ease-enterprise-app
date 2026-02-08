@@ -1,0 +1,71 @@
+# OpenTelemetry Instrumentation for Java services (user-service)
+# Optimized to only enable Spring Boot, JDBC/Oracle, and disable unused libraries
+apiVersion: opentelemetry.io/v1alpha1
+kind: Instrumentation
+metadata:
+  name: java-instrumentation
+  namespace: shopease-user
+spec:
+  exporter:
+    endpoint: http://otel-collector.opentelemetry-system.svc:4318
+  
+  propagators:
+    - tracecontext
+    - baggage
+  
+  sampler:
+    type: parentbased_traceidratio
+    argument: "1"
+  
+  java:
+    resourceRequirements:
+      limits:
+        cpu: 500m
+        memory: 256Mi
+      requests:
+        cpu: 50m
+        memory: 128Mi
+    
+    env:
+      - name: OTEL_SERVICE_NAME
+        value: user-service
+      
+      # OPTIMIZED: Disable all default instrumentations, enable only what's used
+      # This prevents unwanted spans from libraries not in the service (Kafka, Redis, MongoDB, etc.)
+      - name: OTEL_INSTRUMENTATION_COMMON_DEFAULT_ENABLED
+        value: "false"
+      
+      # Enable Spring Boot instrumentations (used)
+      - name: OTEL_INSTRUMENTATION_SPRING_WEB_ENABLED
+        value: "true"
+      
+      - name: OTEL_INSTRUMENTATION_SPRING_WEBMVC_ENABLED
+        value: "true"
+      
+      # Enable RestTemplate (used for calling notification-service)
+      - name: OTEL_INSTRUMENTATION_RESTTEMPLATE_ENABLED
+        value: "true"
+      
+      # Enable JDBC and Hibernate (Oracle database access)
+      - name: OTEL_INSTRUMENTATION_JDBC_ENABLED
+        value: "true"
+      
+      - name: OTEL_INSTRUMENTATION_HIBERNATE_ENABLED
+        value: "true"
+      
+      - name: OTEL_INSTRUMENTATION_SPRING_DATA_ENABLED
+        value: "true"
+      
+      # Enable Tomcat (embedded server)
+      - name: OTEL_INSTRUMENTATION_TOMCAT_ENABLED
+        value: "true"
+      
+      # Enable logging bridge
+      - name: OTEL_INSTRUMENTATION_LOGBACK_APPENDER_ENABLED
+        value: "true"
+      
+      - name: OTEL_LOG_LEVEL
+        value: info
+      
+      - name: OTEL_RESOURCE_ATTRIBUTES
+        value: service.namespace=shopease,service.version=1.0.0,deployment.environment=staging,db.system=oracle

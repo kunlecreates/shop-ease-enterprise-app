@@ -1,0 +1,43 @@
+# OpenTelemetry Instrumentation for Node.js services (product-service)
+# Optimized to only instrument libraries actually used (HTTP, Express, NestJS, PostgreSQL)
+apiVersion: opentelemetry.io/v1alpha1
+kind: Instrumentation
+metadata:
+  name: nodejs-instrumentation
+  namespace: shopease-product
+spec:
+  exporter:
+    endpoint: http://otel-collector.opentelemetry-system.svc:4317
+  
+  propagators:
+    - tracecontext
+    - baggage
+  
+  sampler:
+    type: parentbased_traceidratio
+    argument: "1"
+  
+  nodejs:
+    resourceRequirements:
+      limits:
+        cpu: 500m
+        memory: 128Mi
+      requests:
+        cpu: 50m
+        memory: 64Mi
+    
+    env:
+      - name: OTEL_SERVICE_NAME
+        value: product-service
+      
+      # OPTIMIZED: Only enable instrumentations for libraries actually used
+      # Libraries identified: @nestjs/platform-express, @nestjs/core, pg (PostgreSQL)
+      # Excludes: fs, dns, net, child_process, grpc, kafka, redis, mongodb, mysql
+      - name: OTEL_NODE_ENABLED_INSTRUMENTATIONS
+        value: http,https,express,nestjs-core,pg
+      
+      - name: OTEL_LOG_LEVEL
+        value: info
+      
+      - name: OTEL_RESOURCE_ATTRIBUTES
+        value: service.namespace=shopease,service.version=1.0.0,deployment.environment=staging,db.system=postgresql

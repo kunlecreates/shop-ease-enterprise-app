@@ -35,20 +35,20 @@ ShopEase implements a **4-layer testing architecture** that validates applicatio
                               ↑
 ┌─────────────────────────────────────────────────────────────────┐
 │                   Layer 3: API Contract Tests                   │
-│  Tool: Jest/Supertest | Location: /api-tests | Scope: HTTP APIs│
-│  Validates: Service contracts, schemas, integration points     │
+│  Tool: Jest/Supertest | Location: /api-tests | Scope: HTTP APIs │
+│  Validates: Service contracts, schemas, integration points      │
 └─────────────────────────────────────────────────────────────────┘
                               ↑
 ┌─────────────────────────────────────────────────────────────────┐
 │                   Layer 2: Integration Tests                    │
-│  Tool: Testcontainers | Location: services/*/tests/integration │
+│  Tool: Testcontainers | Location: services/*/tests/integration  │
 │  Validates: DB persistence, repository layer, service boundaries│
 └─────────────────────────────────────────────────────────────────┘
                               ↑
 ┌─────────────────────────────────────────────────────────────────┐
 │                      Layer 1: Unit Tests                        │
-│  Tool: JUnit/Jest/pytest | Location: services/*/tests/unit     │
-│  Validates: Business logic, domain models, isolated functions  │
+│  Tool: JUnit/Jest/pytest | Location: services/*/tests/unit      │
+│  Validates: Business logic, domain models, isolated functions   │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -165,11 +165,11 @@ ShopEase implements an **authoritative coverage system** that:
 ### 2. Coverage Pipeline
 
 ```
-┌──────────────┐    ┌──────────────┐    ┌──────────────┐    ┌──────────────┐
-│   Raw        │    │  Normalize   │    │  Aggregate   │    │   Enforce    │
+┌──────────────┐     ┌──────────────┐    ┌──────────────┐     ┌──────────────┐
+│   Raw        │     │  Normalize   │    │  Aggregate   │     │   Enforce    │
 │  Coverage    │───▶│    (JSON)    │───▶│   Weighted   │───▶│   Policy     │
-│  Reports     │    │  Validation  │    │   Totals     │    │   Gates      │
-└──────────────┘    └──────────────┘    └──────────────┘    └──────────────┘
+│  Reports     │     │  Validation  │    │   Totals     │     │   Gates      │
+└──────────────┘     └──────────────┘    └──────────────┘     └──────────────┘
    JaCoCo XML         coverage.json       aggregate.json      contract.json
    Jest JSON          Schema check        Sum by service       Min threshold
    pytest-cov JSON    jq validation       Coverage %          CI pass/fail

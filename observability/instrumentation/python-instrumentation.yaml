@@ -1,0 +1,50 @@
+# OpenTelemetry Instrumentation for Python services (notification-service)
+# Optimized to only instrument FastAPI and disable unused HTTP clients
+apiVersion: opentelemetry.io/v1alpha1
+kind: Instrumentation
+metadata:
+  name: python-instrumentation
+  namespace: shopease-notification
+spec:
+  exporter:
+    endpoint: http://otel-collector.opentelemetry-system.svc:4318
+  
+  propagators:
+    - tracecontext
+    - baggage
+  
+  sampler:
+    type: parentbased_traceidratio
+    argument: "1"
+  
+  python:
+    resourceRequirements:
+      limits:
+        cpu: 500m
+        memory: 128Mi
+      requests:
+        cpu: 50m
+        memory: 64Mi
+    
+    env:
+      - name: OTEL_SERVICE_NAME
+        value: notification-service
+      
+      # OPTIMIZED: Disable unused HTTP client instrumentations
+      # Service only uses FastAPI (no httpx, requests, aiohttp, urllib)
+      # This reduces overhead and prevents unwanted spans for libraries not in use
+      - name: OTEL_PYTHON_DISABLED_INSTRUMENTATIONS
+        value: httpx,aiohttp-client,requests,urllib,urllib3,tornado
+      
+      # Enable Python logging auto-instrumentation
+      - name: OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
+        value: "true"
+      
+      - name: OTEL_LOGS_EXPORTER
+        value: otlp
+      
+      - name: OTEL_LOG_LEVEL
+        value: info
+      
+      - name: OTEL_RESOURCE_ATTRIBUTES
+        value: service.namespace=shopease,service.version=1.0.0,deployment.environment=staging
