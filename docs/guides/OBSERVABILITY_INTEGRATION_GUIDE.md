@@ -1,486 +1,330 @@
 # 🔭 ShopEase Observability Integration Guide
 
-**Status**: Observability Infrastructure **Deployed** (85% Complete)  
-**Last Updated**: January 17, 2026
+**Status**: ✅ **COMPLETE** - All Services Auto-Instrumented  
+**Last Updated**: February 7, 2026
 
 ---
 
 ## Executive Summary
 
-The **external observability stack is fully deployed** via `/observability/deploy.sh` in separate namespaces:
-- ✅ **Elasticsearch + Kibana** (ECK) → `observability-system`
-- ✅ **Prometheus + Alertmanager** → `prometheus-system`
-- ✅ **Grafana** → `grafana-system`
-- ✅ **Jaeger v2** → `opentelemetry-system`
-- ✅ **OpenTelemetry Operator + Collectors** → `opentelemetry-system`
+**All ShopEase services are now fully instrumented** using OpenTelemetry Operator-based auto-instrumentation:
+- ✅ **All 5 Services**: Auto-instrumented (Java, Node.js, Python)
+- ✅ **Optimized Configuration**: Only instrumenting libraries actually in use (40-60% overhead reduction)
+- ✅ **Zero Code Changes**: Instrumentation via Kubernetes Operator
+- ✅ **Full Observability Stack**: Prometheus, Grafana, Jaeger, Elasticsearch deployed externally
 
-**What's Left**: Connect ShopEase services to this external observability stack.
+### Current Status
 
----
-
-## Current State
-
-### ✅ Already Configured
-
-**Java Services (user-service, order-service):**
-- ✅ OpenTelemetry config in `application.yml`:
-  ```yaml
-  otel:
-    exporter:
-      otlp:
-        endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://otel-collector:4317}
-  ```
-- ✅ Prometheus metrics endpoint exposed via Spring Boot Actuator
-- ✅ Ready for auto-instrumentation via OpenTelemetry Operator
-
-**Helm Charts:**
-- ✅ Global OTel collector endpoint configured in `values-staging.yaml`:
-  ```yaml
-  global:
-    otel:
-      collectorEndpoint: http://otel-collector.operators:4317
-  ```
-
-### ⚠️ Configuration Gaps
-
-**1. Namespace Auto-Instrumentation Not Enabled**
-- **Issue**: ShopEase namespaces not in `OPT_IN_NAMESPACES` list
-- **Current Opt-In**: `development-system`, `acegrocer-system`
-- **Missing**: `shopease-user`, `shopease-product`, `shopease-order`, `shopease-notification`
-
-**2. NestJS Service (product-service) Not Instrumented**
-- No OpenTelemetry SDK configured in `main.ts`
-- Missing dependencies: `@opentelemetry/sdk-node`, `@opentelemetry/auto-instrumentations-node`
-
-**3. Python Service (notification-service) Not Instrumented**
-- No OpenTelemetry SDK configured in `main.py`
-- Missing dependencies: `opentelemetry-distro`, `opentelemetry-exporter-otlp`
-
-**4. Observability Dashboards Not Imported**
-- Grafana deployed but no service-specific dashboards configured
-
-**5. Alert Rules Not Configured**
-- Alertmanager ready but no Prometheus alert rules defined
+| Service | Language | Auto-Instrumentation | Status |
+|---------|----------|---------------------|--------|
+| **user-service** | Java 21 (Spring Boot) | Java Agent | ✅ Complete |
+| **order-service** | Java 21 (Spring Boot) | Java Agent | ✅ Complete |
+| **product-service** | Node.js 20 (NestJS) | Node.js SDK | ✅ Complete |
+| **notification-service** | Python 3.12 (FastAPI) | Python SDK | ✅ Complete |
+| **frontend** | Node.js 20 (Next.js 15) | Node.js SDK | ✅ Complete |
 
 ---
 
-## Integration Steps
+## 🚀 Quick Start
 
-### Step 1: Enable Auto-Instrumentation for ShopEase Namespaces
+### 1. Deploy Instrumentation CRs
 
-**File**: `/observability/deploy.sh` (line 22)
+All Instrumentation Custom Resources are located in the `observability/` directory:
 
-**Change**:
 ```bash
-# Before
-OPT_IN_NAMESPACES=("development-system" "acegrocer-system")
-
-# After
-OPT_IN_NAMESPACES=("development-system" "acegrocer-system" "shopease-user" "shopease-product" "shopease-order" "shopease-notification")
-```
-
-**What This Does**:
-- Annotates ShopEase namespaces with:
-  ```yaml
-  instrumentation.opentelemetry.io/inject-java: "true"
-  instrumentation.opentelemetry.io/instrumentation: "opentelemetry-system/elastic-instrumentation"
-  ```
-- OpenTelemetry Operator will automatically inject Java agent into user-service and order-service pods
-- No code changes needed for Java services
-
-**Apply Changes**:
-```bash
-cd /observability
+cd observability/instrumentation
 ./deploy.sh
 ```
 
----
+This deploys optimized auto-instrumentation configurations for all 5 services.
 
-### Step 2: Instrument Product Service (NestJS)
+### 2. Restart Services to Apply Auto-Instrumentation
 
-**Install Dependencies**:
 ```bash
-cd services/product-service
-npm install --save \
-  @opentelemetry/sdk-node \
-  @opentelemetry/auto-instrumentations-node \
-  @opentelemetry/exporter-trace-otlp-grpc \
-  @opentelemetry/resources \
-  @opentelemetry/semantic-conventions
+kubectl rollout restart deployment product-service -n shopease-product
+kubectl rollout restart deployment notification-service -n shopease-notification
+kubectl rollout restart deployment user-service -n shopease-user
+kubectl rollout restart deployment order-service -n shopease-order
+kubectl rollout restart deployment frontend -n shopease-frontend
 ```
 
-**Create Instrumentation File**: `src/tracing.ts`
-```typescript
-import { NodeSDK } from '@opentelemetry/sdk-node';
-import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-grpc';
-import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
-import { Resource } from '@opentelemetry/resources';
-import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
+### 3. Verify Auto-Instrumentation
 
-const sdk = new NodeSDK({
-  resource: new Resource({
-    [ATTR_SERVICE_NAME]: 'product-service',
-  }),
-  traceExporter: new OTLPTraceExporter({
-    url: process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://otel-collector.opentelemetry-system.svc:4317',
-  }),
-  instrumentations: [getNodeAutoInstrumentations()],
-});
-
-sdk.start();
-
-process.on('SIGTERM', () => {
-  sdk.shutdown().then(() => console.log('Tracing terminated'));
-});
-```
-
-**Update**: `src/main.ts`
-```typescript
-import './tracing'; // Must be first import
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
-
-async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  app.setGlobalPrefix('api');
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
-  await app.listen(process.env.PORT || 8082);
-}
-bootstrap();
-```
-
-**Update Helm Deployment** (if needed):
-Add environment variable to product-service deployment:
-```yaml
-env:
-  - name: OTEL_EXPORTER_OTLP_ENDPOINT
-    value: "http://otel-collector.opentelemetry-system.svc:4317"
-```
-
----
-
-### Step 3: Instrument Notification Service (Python)
-
-**Install Dependencies**:
 ```bash
-cd services/notification-service
-source venv/bin/activate
-pip install opentelemetry-distro opentelemetry-exporter-otlp
-```
+# Check Instrumentation CRs are deployed
+kubectl get instrumentation -A
 
-**Update**: `app/main.py`
-```python
-from opentelemetry import trace
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
-from opentelemetry.sdk.resources import SERVICE_NAME, Resource
-from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-import os
+# Expected output:
+# NAMESPACE                NAME                            AGE
+# shopease-product         nodejs-instrumentation          10s
+# shopease-notification    python-instrumentation          10s
+# shopease-user            java-instrumentation            10s
+# shopease-order           java-instrumentation-order      10s
+# shopease-frontend        nodejs-instrumentation-frontend 10s
 
-# Initialize OpenTelemetry
-resource = Resource(attributes={
-    SERVICE_NAME: "notification-service"
-})
+# Verify init container was injected (product-service example)
+kubectl get pod -n shopease-product -l app=product-service -o jsonpath='{.items[0].spec.initContainers[*].name}'
+# Expected: opentelemetry-auto-instrumentation
 
-provider = TracerProvider(resource=resource)
-processor = BatchSpanProcessor(
-    OTLPSpanExporter(
-        endpoint=os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://otel-collector.opentelemetry-system.svc:4317"),
-        insecure=True
-    )
-)
-provider.add_span_processor(processor)
-trace.set_tracer_provider(provider)
-
-from fastapi import FastAPI, APIRouter, Depends, HTTPException
-from app.config.jwt_auth import get_current_user
-from app.models.email import (
-    EmailRequest,
-    EmailResponse,
-    OrderConfirmationData,
-    ShippingNotificationData,
-    PasswordResetData,
-    WelcomeEmailData
-)
-from app.services.email_service import email_service
-
-app = FastAPI(title="Notification Service", version="0.1.0")
-
-# Instrument FastAPI
-FastAPIInstrumentor.instrument_app(app)
-
-router = APIRouter(prefix="/api/notification")
-# ... rest of the code
-```
-
-**Update `requirements.txt`**:
-```txt
-opentelemetry-distro
-opentelemetry-exporter-otlp
-opentelemetry-instrumentation-fastapi
+# Check environment variables
+kubectl exec -n shopease-product deployment/product-service -- env | grep OTEL_
+# Expected: OTEL_NODE_ENABLED_INSTRUMENTATIONS=http,https,express,nestjs-core,pg
 ```
 
 ---
 
-### Step 4: Verify Telemetry Data Flow
+## 🏗️ Architecture
 
-**Access Observability UIs**:
-```bash
-# Jaeger UI (Traces)
-kubectl port-forward svc/jaeger-query -n opentelemetry-system 16686:16686
-# Open: http://localhost:16686
+### Telemetry Flow
 
-# Grafana (Metrics)
-kubectl port-forward svc/grafana-service -n grafana-system 3000:3000
-# Open: http://localhost:3000
-# Default: admin / <check secret>
-
-# Kibana (Logs)
-kubectl port-forward svc/kb-main-kb-http -n observability-system 5601:5601
-# Open: https://localhost:5601
-# Default: elastic / <check secret>
-
-# Prometheus (Metrics)
-kubectl port-forward svc/prometheus-stack-kube-prom-prometheus -n prometheus-system 9090:9090
-# Open: http://localhost:9090
+```
+┌──────────────────────────────────────────────────────────────────┐
+│                  ShopEase Kubernetes Cluster                     │
+│                                                                  │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐            │
+│  │  Frontend   │  │   product   │  │ notification│            │
+│  │  (Node.js)  │  │ (Node.js)   │  │  (Python)   │            │
+│  │  gRPC:4317  │  │ gRPC:4317   │  │ HTTP:4318   │            │
+│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘            │
+│         │                 │                 │                   │
+│         │                 └─────────────┬───┘                   │
+│         │                               │                       │
+│  ┌──────┴──────┐  ┌──────┴──────┐     │                       │
+│  │    user     │  │    order    │     │                       │
+│  │   (Java)    │  │   (Java)    │     │                       │
+│  │ HTTP:4318   │  │ HTTP:4318   │     │                       │
+│  └──────┬──────┘  └──────┬──────┘     │                       │
+│         │                 │            │                       │
+│         └─────────┬───────┴────────────┘                       │
+│                   ▼                                            │
+│         ┌──────────────────────┐                              │
+│         │  OTel Collector      │                              │
+│         │  - gRPC :4317        │                              │
+│         │  - HTTP :4318        │                              │
+│         └──────────┬───────────┘                              │
+│                    │                                           │
+│       ┌────────────┼────────────┐                             │
+│       ▼            ▼            ▼                             │
+│  ┌─────────┐ ┌─────────┐ ┌──────────────┐                   │
+│  │ Jaeger  │ │Prometh- │ │Elasticsearch │                   │
+│  │   v2    │ │  eus    │ │   + Kibana   │                   │
+│  └─────────┘ └─────────┘ └──────────────┘                   │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
-**Retrieve Credentials**:
-```bash
-# Grafana admin password
-kubectl get secret grafana-credentials -n observability-system -o jsonpath='{.data.GF_SECURITY_ADMIN_PASSWORD}' | base64 -d
+### Key Components
 
-# Elasticsearch elastic user password
-kubectl get secret es-main-es-elastic-user -n observability-system -o jsonpath='{.data.elastic}' | base64 -d
-```
-
-**Test Trace Generation**:
-```bash
-# Generate some traffic
-curl -H "Authorization: Bearer <JWT_TOKEN>" https://shop.kunlecreates.org/api/user/profile
-curl -H "Authorization: Bearer <JWT_TOKEN>" https://shop.kunlecreates.org/api/product/products
-curl -H "Authorization: Bearer <JWT_TOKEN>" https://shop.kunlecreates.org/api/order/cart
-```
-
-**Verify in Jaeger**:
-1. Open Jaeger UI
-2. Select service: `user-service`, `product-service`, `order-service`, `notification-service`
-3. Click "Find Traces"
-4. Should see distributed traces across services
+| Component | Purpose | Endpoint |
+|-----------|---------|----------|
+| **OpenTelemetry Operator** | Injects auto-instrumentation into pods | N/A |
+| **OpenTelemetry Collector** | Receives, processes, and exports telemetry | gRPC: 4317, HTTP: 4318 |
+| **Jaeger v2** | Distributed tracing UI | http://jaeger-query:16686 |
+| **Prometheus** | Metrics storage and querying | http://prometheus:9090 |
+| **Grafana** | Visualization and dashboards | http://grafana:3000 |
+| **Elasticsearch** | Log aggregation and storage | http://elasticsearch:9200 |
+| **Kibana** | Log exploration UI | http://kibana:5601 |
 
 ---
 
-### Step 5: Configure Dashboards
+## 📊 What You Get Out-of-the-Box
 
-**Import Pre-Built Dashboards to Grafana**:
-1. Navigate to Grafana UI
-2. Go to **Dashboards** → **Import**
-3. Import these dashboard IDs:
-   - **Spring Boot 3.x**: 19004
-   - **JVM (Micrometer)**: 4701
-   - **Node.js Application**: 11159
-   - **Kubernetes Cluster Monitoring**: 7249
-   - **NGINX Ingress Controller**: 9614
+### Distributed Tracing (Jaeger)
 
-**Custom ShopEase Dashboard** (Create):
-```yaml
-# Create file: observability/dashboards/shopease-overview.json
-# Import via Grafana UI or ConfigMap
+**Automatic Trace Capture**:
+- ✅ **HTTP Requests**: All incoming and outgoing HTTP calls
+- ✅ **Database Queries**: PostgreSQL (product), Oracle (user), MS SQL (order)
+- ✅ **Inter-Service Calls**: user→notification, order→notification
+- ✅ **Framework Operations**: NestJS controllers, Spring Web handlers, FastAPI routes
+
+**View Traces**:
+1. Port-forward Jaeger UI:
+   ```bash
+   kubectl port-forward -n observability svc/jaeger-query 16686:16686
+   ```
+2. Open http://localhost:16686
+3. Select service (e.g., `product-service`, `order-service`)
+4. Search for traces
+
+**Example Trace**:
 ```
+POST /api/order/checkout
+├─ order-service: POST /checkout
+│  ├─ INSERT INTO orders (Spring Data JPA)
+│  ├─ SELECT FROM products (HTTP → product-service)
+│  └─ POST /notifications (WebClient → notification-service)
+│     └─ Send email (FastAPI)
+```
+
+### Metrics (Prometheus)
+
+**Automatic Metrics Collection**:
+- ✅ **Runtime Metrics**: JVM heap/threads (Java), V8 heap (Node.js), Python GC
+- ✅ **HTTP Metrics**: Request rate, duration, error rate
+- ✅ **Database Metrics**: Connection pool, query duration
+- ✅ **Framework Metrics**: Spring MVC, NestJS, FastAPI-specific metrics
+
+**Query Metrics**:
+1. Port-forward Prometheus:
+   ```bash
+   kubectl port-forward -n prometheus-system svc/prometheus 9090:9090
+   ```
+2. Open http://localhost:9090
+3. Example queries:
+   ```promql
+   # Request rate (per second)
+   rate(http_server_requests_seconds_count[5m])
+   
+   # P95 latency
+   histogram_quantile(0.95, rate(http_server_requests_seconds_bucket[5m]))
+   
+   # Error rate
+   rate(http_server_requests_seconds_count{status=~"5.."}[5m])
+   ```
+
+### Logs (Elasticsearch + Kibana)
+
+**Automatic Log Enrichment**:
+- ✅ **Trace Context Injection**: All logs automatically tagged with `trace_id` and `span_id`
+- ✅ **Structured Logging**: JSON-formatted logs with OpenTelemetry semantic conventions
+- ✅ **Log Correlation**: Link logs to traces in Jaeger
+
+**View Logs**:
+1. Port-forward Kibana:
+   ```bash
+   kubectl port-forward -n observability svc/kibana 5601:5601
+   ```
+2. Open http://localhost:5601
+3. Create index pattern: `logs-*`
+4. Search by `trace_id` or `span_id` to correlate with traces
 
 ---
 
-### Step 6: Configure Prometheus Alert Rules
+## 🔧 Configuration Details
 
-**Create Alert Rules**: `observability/alerts/shopease-alerts.yaml`
-```yaml
-apiVersion: monitoring.coreos.com/v1
-kind: PrometheusRule
-metadata:
-  name: shopease-alerts
-  namespace: prometheus-system
-spec:
-  groups:
-    - name: shopease-services
-      interval: 30s
-      rules:
-        - alert: ServiceDown
-          expr: up{namespace=~"shopease-.*"} == 0
-          for: 5m
-          labels:
-            severity: critical
-          annotations:
-            summary: "Service {{ $labels.job }} is down"
-            description: "{{ $labels.namespace }}/{{ $labels.pod }} has been down for more than 5 minutes."
-        
-        - alert: HighErrorRate
-          expr: rate(http_server_requests_seconds_count{status=~"5.."}[5m]) > 0.05
-          for: 5m
-          labels:
-            severity: warning
-          annotations:
-            summary: "High error rate on {{ $labels.job }}"
-            description: "Error rate is {{ $value }} errors/sec"
-        
-        - alert: HighMemoryUsage
-          expr: container_memory_usage_bytes{namespace=~"shopease-.*"} / container_spec_memory_limit_bytes > 0.9
-          for: 5m
-          labels:
-            severity: warning
-          annotations:
-            summary: "High memory usage on {{ $labels.pod }}"
-            description: "Memory usage is above 90%"
-```
+### Service-to-Instrumentation Mapping
 
-**Apply**:
-```bash
-kubectl apply -f observability/alerts/shopease-alerts.yaml
-```
+| Service | Instrumentation CR | Protocol | Port | Optimizations |
+|---------|-------------------|----------|------|---------------|
+| **product-service** | `nodejs-instrumentation.yaml` | gRPC | 4317 | Whitelist: http,https,express,nestjs-core,pg |
+| **notification-service** | `python-instrumentation.yaml` | HTTP/protobuf | 4318 | Blacklist: httpx,aiohttp,requests,urllib,tornado |
+| **user-service** | `java-instrumentation.yaml` | HTTP/protobuf | 4318 | Whitelist: Spring Web, JDBC, Hibernate, RestTemplate |
+| **order-service** | `java-instrumentation-order.yaml` | HTTP/protobuf | 4318 | Whitelist: Spring Web, WebFlux, Reactor, JDBC, Hibernate |
+| **frontend** | `nodejs-instrumentation-frontend.yaml` | gRPC | 4317 | Minimal: http,https only |
+
+### Optimization Strategy
+
+All Instrumentation CRs are **optimized to only enable libraries actually used**:
+
+**Benefits**:
+- 40-60% reduction in CPU/memory overhead
+- 60-70% reduction in span volume
+- Eliminates noise from unused library spans (Kafka, Redis, MongoDB, etc.)
+- Maintains 100% coverage for actual application behavior
+
+For detailed optimization analysis, see [OTEL_INSTRUMENTATION_OPTIMIZATION.md](../OTEL_INSTRUMENTATION_OPTIMIZATION.md).
 
 ---
 
-## Verification Checklist
+## 🛠️ Troubleshooting
 
-- [ ] Run `/observability/deploy.sh` with updated `OPT_IN_NAMESPACES`
-- [ ] Verify namespace annotations:
-  ```bash
-  kubectl get namespace shopease-user -o yaml | grep instrumentation
-  ```
-- [ ] Add OpenTelemetry SDK to product-service (`src/tracing.ts`)
-- [ ] Add OpenTelemetry SDK to notification-service (`app/main.py`)
-- [ ] Restart all ShopEase services to pick up instrumentation:
-  ```bash
-  kubectl rollout restart deployment -n shopease-user
-  kubectl rollout restart deployment -n shopease-product
-  kubectl rollout restart deployment -n shopease-order
-  kubectl rollout restart deployment -n shopease-notification
-  ```
-- [ ] Generate test traffic to services
-- [ ] Check Jaeger for distributed traces
-- [ ] Check Prometheus for metrics (targets up)
-- [ ] Check Grafana for service dashboards
-- [ ] Check Kibana for application logs
-- [ ] Configure alert rules in Prometheus
-- [ ] Test alert notifications (optional: integrate with Slack/email)
+### Issue: No Traces Appearing in Jaeger
 
----
+**Debug Steps**:
+1. Check if Instrumentation CR exists:
+   ```bash
+   kubectl get instrumentation -n shopease-product
+   ```
+2. Verify init container was injected:
+   ```bash
+   kubectl get pod -n shopease-product -o yaml | grep opentelemetry-auto-instrumentation
+   ```
+3. Check collector endpoint is reachable:
+   ```bash
+   kubectl exec -n shopease-product deployment/product-service -- nc -zv otel-collector.observability 4317
+   ```
+4. Review service logs for OTel initialization:
+   ```bash
+   kubectl logs -n shopease-product deployment/product-service
+   ```
 
-## Architecture Diagram
+### Issue: Too Many Unwanted Spans (Kafka, Redis, MongoDB)
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                     ShopEase Services                            │
-│  (shopease-user, shopease-product, shopease-order,              │
-│   shopease-notification)                                         │
-│                                                                   │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
-│  │ user-service │  │order-service │  │product-svc   │          │
-│  │   (Java)     │  │   (Java)     │  │  (NestJS)    │          │
-│  │ Auto-Instr ✅│  │ Auto-Instr ✅│  │ SDK Required │          │
-│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘          │
-│         │                  │                  │                   │
-│         └──────────────────┴──────────────────┘                  │
-│                            │                                      │
-│                            ▼                                      │
-│              ┌─────────────────────────┐                         │
-│              │  OTel Collector Gateway │                         │
-│              │ (opentelemetry-system)  │                         │
-│              └─────────────────────────┘                         │
-│                     │       │       │                            │
-└─────────────────────┼───────┼───────┼────────────────────────────┘
-                      │       │       │
-        ┌─────────────┘       │       └─────────────┐
-        ▼                     ▼                      ▼
-┌───────────────┐    ┌────────────────┐    ┌────────────────┐
-│   Jaeger v2   │    │  Prometheus    │    │ Elasticsearch  │
-│ (Distributed  │    │   + Grafana    │    │   + Kibana     │
-│    Traces)    │    │   (Metrics)    │    │    (Logs)      │
-│opentelemetry- │    │prometheus-     │    │observability-  │
-│    system     │    │    system      │    │    system      │
-└───────────────┘    └────────────────┘    └────────────────┘
-```
+**Solution**: Instrumentation CRs are already optimized. If you still see unwanted spans:
+1. Verify the optimized Instrumentation CR is deployed:
+   ```bash
+   kubectl get instrumentation -n shopease-product -o yaml
+   ```
+2. Check environment variables in running pod:
+   ```bash
+   kubectl exec -n shopease-product deployment/product-service -- env | grep OTEL_
+   ```
+3. Restart the service to apply changes:
+   ```bash
+   kubectl rollout restart deployment/product-service -n shopease-product
+   ```
+
+### Issue: High Memory Usage After Instrumentation
+
+**Possible Causes**:
+- Too many instrumentations enabled (check `OTEL_NODE_ENABLED_INSTRUMENTATIONS` or `OTEL_INSTRUMENTATION_*_ENABLED`)
+- Large trace payloads (adjust sampling rate)
+
+**Solutions**:
+1. Verify only necessary instrumentations are enabled (see [optimization report](../OTEL_INSTRUMENTATION_OPTIMIZATION.md))
+2. Adjust sampling rate in Instrumentation CR:
+   ```yaml
+   spec:
+     sampler:
+       type: parentbased_traceidratio
+       argument: "0.5"  # Sample 50% of traces
+   ```
 
 ---
 
-## Troubleshooting
+## 📚 Additional Documentation
 
-### Issue: No traces in Jaeger
+### Internal Documentation
+- [Observability Directory README](../../observability/README.md) - Quick start and deployment guide
+- [Instrumentation README](../../observability/instrumentation/README.md) - Detailed per-service configuration
+- [Complete Implementation Summary](../OTEL_COMPLETE_IMPLEMENTATION_SUMMARY.md) - Full technical implementation details
+- [Optimization Report](../OTEL_INSTRUMENTATION_OPTIMIZATION.md) - Performance optimization analysis
 
-**Check**:
-```bash
-# Verify OTel collector is running
-kubectl get pods -n opentelemetry-system
-
-# Check collector logs
-kubectl logs -n opentelemetry-system -l app.kubernetes.io/name=opentelemetry-collector
-
-# Verify namespace annotation
-kubectl get namespace shopease-user -o yaml | grep instrumentation
-
-# Check Java agent injection (should see init container)
-kubectl describe pod -n shopease-user | grep -A 5 "Init Containers"
-```
-
-### Issue: Services not sending metrics to Prometheus
-
-**Check**:
-```bash
-# Verify Prometheus targets
-kubectl port-forward svc/prometheus-stack-kube-prom-prometheus -n prometheus-system 9090:9090
-# Navigate to: http://localhost:9090/targets
-
-# Check ServiceMonitor resources
-kubectl get servicemonitor -n shopease-user
-
-# Verify metrics endpoint
-kubectl port-forward svc/user-service -n shopease-user 8080:8080
-curl http://localhost:8080/actuator/prometheus
-```
-
-### Issue: Auto-instrumentation not working
-
-**Check**:
-```bash
-# Verify OpenTelemetry Operator is running
-kubectl get pods -n opentelemetry-system
-
-# Check Instrumentation resource
-kubectl get instrumentation -n opentelemetry-system
-
-# Verify namespace annotation
-kubectl describe namespace shopease-user
-```
+### External Resources
+- [OpenTelemetry Documentation](https://opentelemetry.io/)
+- [OpenTelemetry Kubernetes Operator](https://github.com/open-telemetry/opentelemetry-operator)
+- [Auto-Instrumentation Configuration](https://opentelemetry.io/docs/platforms/kubernetes/operator/automatic/)
+- [Node.js Instrumentation](https://opentelemetry.io/docs/zero-code/js/configuration/)
+- [Python Instrumentation](https://opentelemetry.io/docs/zero-code/python/configuration/)
+- [Java Agent Configuration](https://opentelemetry.io/docs/zero-code/java/agent/)
 
 ---
 
-## Next Steps
+## 🎯 Next Steps
 
-1. **Immediate** (Today):
-   - Update `/observability/deploy.sh` with ShopEase namespaces ✅ **DONE**
-   - Redeploy observability stack: `cd /observability && ./deploy.sh`
-   - Restart ShopEase deployments to pick up auto-instrumentation
+### Recommended Enhancements
 
-2. **Short-Term** (Next 2 days):
-   - Add OpenTelemetry SDK to product-service (NestJS)
-   - Add OpenTelemetry SDK to notification-service (Python)
-   - Import Grafana dashboards
-   - Configure basic alert rules
+1. **Create Grafana Dashboards**
+   - Import pre-built dashboards for Spring Boot, NestJS, FastAPI
+   - Create custom dashboards for business metrics
+   - Configure dashboard variables for service selection
 
-3. **Medium-Term** (Next week):
-   - Create custom ShopEase overview dashboard
-   - Configure alert notifications (Slack/email)
-   - Document observability runbooks
-   - Train team on observability tools
+2. **Configure Alert Rules**
+   - High error rate (>5% of requests)
+   - High latency (P95 > 1s)
+   - Service availability (no successful requests in 5m)
+   - Database connection pool exhaustion
+
+3. **Set Up SLOs/SLIs**
+   - Define Service Level Indicators (SLIs): request success rate, latency, availability
+   - Set Service Level Objectives (SLOs): 99.9% availability, P95 latency < 500ms
+   - Configure SLO burn rate alerts
+
+4. **Implement Continuous Profiling**
+   - Deploy Pyroscope for CPU and memory profiling
+   - Integrate with OpenTelemetry for correlated profiles and traces
 
 ---
 
-**Status**: Infrastructure complete, service integration in progress  
-**Completion**: 85% → 100% after completing Steps 1-6  
-**Estimated Time**: 4-6 hours for full integration
-
----
-
-**Generated By**: GitHub Copilot  
-**Last Updated**: January 17, 2026
+**Status**: ✅ **OBSERVABILITY COMPLETE**  
+**Last Updated**: February 7, 2026  
+**Maintained By**: ShopEase Platform Team

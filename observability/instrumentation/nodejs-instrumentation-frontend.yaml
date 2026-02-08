@@ -1,0 +1,44 @@
+# OpenTelemetry Instrumentation for Node.js services (frontend - Next.js 15)
+# Optimized for server-side instrumentation only (API routes, server components)
+# Only HTTP/HTTPS enabled - no database, no framework-specific libraries
+apiVersion: opentelemetry.io/v1alpha1
+kind: Instrumentation
+metadata:
+  name: nodejs-instrumentation
+  namespace: shopease-frontend
+spec:
+  exporter:
+    endpoint: http://otel-collector.opentelemetry-system.svc:4317
+  
+  propagators:
+    - tracecontext
+    - baggage
+  
+  sampler:
+    type: parentbased_traceidratio
+    argument: "1"
+  
+  nodejs:
+    resourceRequirements:
+      limits:
+        cpu: 500m
+        memory: 128Mi
+      requests:
+        cpu: 50m
+        memory: 64Mi
+    
+    env:
+      - name: OTEL_SERVICE_NAME
+        value: frontend
+      
+      # OPTIMIZED: Only HTTP/HTTPS for server-side Next.js API routes
+      # Next.js server-side rendering and API routes only need HTTP instrumentation
+      # No database access, no Express/NestJS, no pg/mysql/mongodb
+      - name: OTEL_NODE_ENABLED_INSTRUMENTATIONS
+        value: http,https
+      
+      - name: OTEL_LOG_LEVEL
+        value: info
+      
+      - name: OTEL_RESOURCE_ATTRIBUTES
+        value: service.namespace=shopease,service.version=1.0.0,deployment.environment=staging,service.type=frontend

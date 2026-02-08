@@ -15,6 +15,9 @@ spec:
       labels:
         app.kubernetes.io/name: product-service
         app.kubernetes.io/instance: {{ .Release.Name }}
+      annotations:
+        # OpenTelemetry auto-instrumentation for Node.js/NestJS
+        instrumentation.opentelemetry.io/inject-nodejs: "true"
     spec:
       {{- if .Values.imagePullSecrets }}
       imagePullSecrets:
