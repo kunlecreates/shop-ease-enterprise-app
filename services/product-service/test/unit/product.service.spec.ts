@@ -34,7 +34,7 @@ describe('ProductService', () => {
       { id: 2 } as any,
     ]);
     const res = await service.listProducts();
-    expect(spy).toHaveBeenCalledWith({ relations: ['movements'] });
+    expect(spy).toHaveBeenCalledWith({ relations: ['movements', 'categories'] });
     expect(res).toHaveLength(2);
   });
 
