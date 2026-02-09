@@ -154,6 +154,17 @@ public class UserController {
         Long userId = extractUserIdFromAuth(authentication);
         
         try {
+            // Handle password change separately
+            if (request.currentPassword() != null && request.newPassword() != null) {
+                try {
+                    userService.changePassword(userId, request.currentPassword(), request.newPassword());
+                } catch (IllegalArgumentException e) {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(null);
+                }
+            }
+            
+            // Update profile information
             return userService.updateProfile(userId, request.firstName(), request.lastName(), 
                                            request.email())
                     .map(UserResponse::from)

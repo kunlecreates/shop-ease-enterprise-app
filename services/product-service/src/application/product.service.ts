@@ -86,6 +86,54 @@ export class ProductService {
     return this.products.findOne({ where: { id: saved.id }, relations: ['categories', 'movements'] });
   }
 
+  async updateProduct(sku: string, data: {
+    name?: string;
+    description?: string;
+    price?: number;
+    priceCents?: number;
+    currency?: string;
+    imageUrl?: string;
+    aisle?: string;
+    section?: string;
+    shelfLocation?: string;
+    categoryCodes?: string[];
+  }): Promise<Product | null> {
+    const product = await this.products.findOne({ where: { sku }, relations: ['categories'] });
+    if (!product) {
+      throw new NotFoundException(`Product with sku ${sku} not found`);
+    }
+
+    if (data.name !== undefined) product.name = data.name;
+    if (data.description !== undefined) product.description = data.description;
+    if (data.currency !== undefined) product.currency = data.currency;
+    if (data.imageUrl !== undefined) product.imageUrl = data.imageUrl;
+    if (data.aisle !== undefined) product.aisle = data.aisle;
+    if (data.section !== undefined) product.section = data.section;
+    if (data.shelfLocation !== undefined) product.shelfLocation = data.shelfLocation;
+
+    if (data.priceCents !== undefined) {
+      product.priceCents = data.priceCents;
+    } else if (data.price !== undefined) {
+      product.price = data.price;
+    }
+
+    if (data.categoryCodes !== undefined) {
+      const cats: Category[] = [];
+      for (const code of data.categoryCodes) {
+        let cat = await this.categories.findOne({ where: { name: code } });
+        if (!cat) {
+          cat = this.categories.create({ name: code });
+          cat = await this.categories.save(cat);
+        }
+        cats.push(cat);
+      }
+      product.categories = cats;
+    }
+
+    await this.products.save(product);
+    return this.products.findOne({ where: { sku }, relations: ['categories', 'movements'] });
+  }
+
   async listProducts(options?: ProductSearchOptions): Promise<Product[]> {
     if (!options) {
       return this.products.find({ relations: ['movements', 'categories'] });

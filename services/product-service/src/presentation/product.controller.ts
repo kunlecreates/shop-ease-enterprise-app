@@ -1,6 +1,7 @@
-import { Controller, Get, Post, Body, Patch, Param, Query, UseGuards, Request, Delete, HttpCode, ForbiddenException, NotFoundException, ConflictException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Query, UseGuards, Request, Delete, HttpCode, ForbiddenException, NotFoundException, ConflictException, Put } from '@nestjs/common';
 import { ProductService } from '../application/product.service';
 import { CreateProductDto } from './dto/create-product.dto';
+import { UpdateProductDto } from './dto/update-product.dto';
 import { JwtAuthGuard } from '../config/jwt-auth.guard';
 
 @Controller('product')
@@ -72,6 +73,19 @@ export class ProductController {
       }
       throw error;
     }
+  }
+
+  @Put(':sku')
+  @UseGuards(JwtAuthGuard)
+  async update(@Param('sku') sku: string, @Body() body: UpdateProductDto, @Request() req: any) {
+    if (!this.hasRole(req.user, 'admin')) {
+      throw new ForbiddenException('Only administrators can update products');
+    }
+    const updated = await this.service.updateProduct(sku, body);
+    if (!updated) {
+      throw new NotFoundException(`Product with SKU '${sku}' not found`);
+    }
+    return updated;
   }
 
   @Get('inventory')

@@ -51,8 +51,8 @@ function ProductManagementContent() {
       }
       
       if (editingProduct) {
-        // For now, we don't have an update endpoint, so skip
-        console.warn('Update not implemented yet');
+        // Update existing product (SKU can't be changed)
+        await ApiClient.put(`/product/${editingProduct.sku}`, dataToSend);
       } else {
         // Include initial stock for new products
         dataToSend.initialStock = productData.stock || 0;

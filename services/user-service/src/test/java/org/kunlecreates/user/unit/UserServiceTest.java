@@ -11,6 +11,9 @@ import org.kunlecreates.user.domain.User;
 import org.kunlecreates.user.domain.Role;
 import org.kunlecreates.user.repository.UserRepository;
 import org.kunlecreates.user.repository.RoleRepository;
+import org.kunlecreates.user.repository.EmailVerificationTokenRepository;
+import org.kunlecreates.user.repository.PasswordResetTokenRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Optional;
@@ -28,6 +31,15 @@ class UserServiceTest {
 
     @Mock
     private RoleRepository roleRepository;
+
+    @Mock
+    private EmailVerificationTokenRepository verificationTokenRepository;
+
+    @Mock
+    private PasswordResetTokenRepository passwordResetTokenRepository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private UserService userService;
@@ -178,6 +190,45 @@ class UserServiceTest {
 
         assertThat(result).isEmpty();
         verify(roleRepository, never()).findByNameIgnoreCase(anyString());
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void changePassword_whenCurrentPasswordIsIncorrect_shouldThrowException() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(passwordEncoder.matches("wrongPassword", testUser.getPasswordHash())).thenReturn(false);
+
+        assertThatThrownBy(() -> userService.changePassword(1L, "wrongPassword", "newPassword123"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Current password is incorrect");
+
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void changePassword_whenCurrentPasswordIsCorrect_shouldUpdatePassword() {
+        String originalPasswordHash = testUser.getPasswordHash();
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(passwordEncoder.matches("currentPassword", originalPasswordHash)).thenReturn(true);
+        when(passwordEncoder.encode("newPassword123")).thenReturn("newHashedPassword");
+
+        userService.changePassword(1L, "currentPassword", "newPassword123");
+
+        verify(passwordEncoder).matches("currentPassword", originalPasswordHash);
+        verify(passwordEncoder).encode("newPassword123");
+        verify(userRepository).save(testUser);
+        assertThat(testUser.getPasswordHash()).isEqualTo("newHashedPassword");
+    }
+
+    @Test
+    void changePassword_whenUserNotFound_shouldThrowException() {
+        when(userRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> userService.changePassword(999L, "currentPassword", "newPassword123"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("User not found");
+
+        verify(passwordEncoder, never()).matches(anyString(), anyString());
         verify(userRepository, never()).save(any());
     }
 }
