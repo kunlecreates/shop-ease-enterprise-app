@@ -32,7 +32,6 @@ function ProductManagementContent() {
   const handleSubmit = async (productData: any) => {
     try {
       const dataToSend: any = { 
-        sku: productData.sku,
         name: productData.name,
         description: productData.description,
         price: productData.price,
@@ -51,10 +50,11 @@ function ProductManagementContent() {
       }
       
       if (editingProduct) {
-        // Update existing product (SKU can't be changed)
+        // Update existing product (SKU is in URL path, not body)
         await ApiClient.put(`/product/${editingProduct.sku}`, dataToSend);
       } else {
-        // Include initial stock for new products
+        // Include SKU and initial stock for new products
+        dataToSend.sku = productData.sku;
         dataToSend.initialStock = productData.stock || 0;
         await ApiClient.post('/product', dataToSend);
       }
