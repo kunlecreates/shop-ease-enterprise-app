@@ -107,4 +107,28 @@ public class User {
         this.roles = roles;
         this.updatedAt = LocalDateTime.now();
     }
+
+    /**
+     * Extract first name from fullName field
+     * Returns the first word of fullName, or empty string if fullName is null/empty
+     */
+    public String getFirstName() {
+        if (fullName == null || fullName.trim().isEmpty()) {
+            return "";
+        }
+        String[] parts = fullName.trim().split("\\s+", 2);
+        return parts[0];
+    }
+
+    /**
+     * Extract last name from fullName field
+     * Returns everything after the first word, or empty string if only one word exists
+     */
+    public String getLastName() {
+        if (fullName == null || fullName.trim().isEmpty()) {
+            return "";
+        }
+        String[] parts = fullName.trim().split("\\s+", 2);
+        return parts.length > 1 ? parts[1] : "";
+    }
 }
