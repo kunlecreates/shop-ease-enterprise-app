@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { ApiClient } from '@/lib/api-client';
+import { COUNTRIES, getCountryName } from '@/lib/countries';
 import type { ShippingAddress, PaymentMethod } from '@/types';
 
 export default function CheckoutPage() {
@@ -25,7 +26,7 @@ export default function CheckoutPage() {
     city: '',
     state: '',
     postalCode: '',
-    country: 'Canada',
+    country: 'CA',
     phone: '',
   });
   
@@ -142,12 +143,23 @@ export default function CheckoutPage() {
                 onChange={(e) => setShippingAddress({ ...shippingAddress, postalCode: e.target.value })}
                 required
               />
-              <Input
-                label="Country"
-                value={shippingAddress.country}
-                onChange={(e) => setShippingAddress({ ...shippingAddress, country: e.target.value })}
-                required
-              />
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Country <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={shippingAddress.country}
+                  onChange={(e) => setShippingAddress({ ...shippingAddress, country: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
+                  required
+                >
+                  {COUNTRIES.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
             <Input
               label="Phone Number"
@@ -240,7 +252,7 @@ export default function CheckoutPage() {
                 {shippingAddress.street1}
                 {shippingAddress.street2 && <>, {shippingAddress.street2}</>}<br />
                 {shippingAddress.city}, {shippingAddress.state} {shippingAddress.postalCode}<br />
-                {shippingAddress.country}
+                {getCountryName(shippingAddress.country)}
                 {shippingAddress.phone && <><br />{shippingAddress.phone}</>}
               </p>
             </div>

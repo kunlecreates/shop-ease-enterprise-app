@@ -14,6 +14,7 @@ export interface Product {
   stock: number;
   category?: string | Array<string | { id?: number; name: string }>;
   categories?: Array<{ id?: number; name: string; code?: string }>;
+  unit?: string;
   imageUrl?: string;
   aisle?: string;
   section?: string;

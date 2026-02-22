@@ -48,6 +48,23 @@ export class Product {
   movements!: StockMovement[];
 
   toJSON() {
+    const stock = this.movements?.reduce((sum, m) => sum + m.quantity, 0) ?? 0;
+    
+    // Extract category and unit from attributes if categories array is empty
+    let categoryList: any[] = this.categories || [];
+    let unit = undefined;
+    
+    if (this.attributes) {
+      // If no ManyToMany categories, use the category from attributes
+      if (categoryList.length === 0 && this.attributes.category) {
+        categoryList = [{ name: this.attributes.category }];
+      }
+      // Extract unit from attributes
+      if (this.attributes.unit) {
+        unit = this.attributes.unit;
+      }
+    }
+    
     return {
       id: this.id,
       sku: this.sku,
@@ -64,8 +81,9 @@ export class Product {
       active: this.active,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
-      categories: this.categories,
-      stock: this.movements?.reduce((sum, m) => sum + m.quantity, 0) ?? 0
+      categories: categoryList,
+      unit: unit,
+      stock: stock
     };
   }
 }

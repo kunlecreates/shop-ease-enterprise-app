@@ -111,6 +111,7 @@ export default function ProductDetailPage() {
           <div className="mb-6"><h2 className="text-lg font-semibold mb-2 dark:text-white">Product Details</h2>
             <dl className="space-y-2">
               <div><dt className="inline font-medium dark:text-gray-300">SKU:</dt><dd className="inline ml-2 text-gray-600 dark:text-gray-400">{product.sku}</dd></div>
+              {(product as any).unit && <div><dt className="inline font-medium dark:text-gray-300">Unit:</dt><dd className="inline ml-2 text-gray-600 dark:text-gray-400">{(product as any).unit}</dd></div>}
               <div><dt className="inline font-medium dark:text-gray-300">Availability:</dt><dd className="inline ml-2"><span className={`px-2 py-1 rounded text-sm ${product.stock > 10 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : product.stock > 0 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}`}>{product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}</span></dd></div>
             </dl>
           </div>
