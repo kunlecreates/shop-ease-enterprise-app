@@ -30,16 +30,19 @@ public class JwtService {
         // Build JWT headers with explicit algorithm specification
         JwsHeader headers = JwsHeader.with(() -> "HS256").build();
 
-        JwtClaimsSet claims = JwtClaimsSet.builder()
+        JwtClaimsSet.Builder claimsBuilder = JwtClaimsSet.builder()
                 .issuer(issuer)
                 .issuedAt(now)
                 .expiresAt(expiry)
                 .subject(userId)
                 .claim("email", email)
-                .claim("roles", roles)
-                .claim("fullName", fullName)
-                .build();
+                .claim("roles", roles);
+        
+        // Only add fullName claim if it's not null and not empty
+        if (fullName != null && !fullName.isEmpty()) {
+            claimsBuilder.claim("fullName", fullName);
+        }
 
-        return jwtEncoder.encode(JwtEncoderParameters.from(headers, claims)).getTokenValue();
+        return jwtEncoder.encode(JwtEncoderParameters.from(headers, claimsBuilder.build())).getTokenValue();
     }
 }
