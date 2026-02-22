@@ -1,0 +1,13 @@
+ORDER DELIVERED
+
+Dear {{customer_name}},
+
+Your order #{{order_id}} has been delivered!
+
+We hope you love your purchase. If you have any questions or concerns, please don't hesitate to contact our support team.
+
+We'd love to hear your feedback about your experience!
+
+Leave a review: {{review_url}}
+
+Thank you for choosing ShopEase!

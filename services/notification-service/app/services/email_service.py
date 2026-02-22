@@ -6,9 +6,13 @@ from app.models.email import (
     EmailRequest,
     EmailResponse,
     OrderConfirmationData,
-    ShippingNotificationData,
+    Shipping NotificationData,
     PasswordResetData,
-    WelcomeEmailData
+    WelcomeEmailData,
+    OrderPaidData,
+    OrderDeliveredData,
+    OrderCancelledData,
+    OrderRefundedData
 )
 from app.services.template_service import template_service
 from app.services.email_provider import get_email_provider
@@ -183,6 +187,135 @@ class EmailService:
                 message_id="error",
                 status="failed",
                 recipient=data.email
+            )
+    
+    async def send_order_paid_email(self, data: OrderPaidData) -> EmailResponse:
+        """Send payment confirmation email"""
+        try:
+            html_body, text_body = template_service.render_template(
+                "order_paid",
+                {
+                    "order_id": data.order_id,
+                    "customer_name": data.customer_name,
+                    "order_total": data.order_total,
+                    "order_url": data.order_url or f"https://shopease.com/orders/{data.order_id}"
+                }
+            )
+            
+            result = await self.email_provider.send_email(
+                to=data.customer_email,
+                subject=f"Payment Confirmed - Order #{data.order_id}",
+                html_body=html_body,
+                text_body=text_body
+            )
+            
+            return EmailResponse(
+                message_id=result.get("message_id", "unknown"),
+                status=result.get("status", "failed"),
+                recipient=data.customer_email
+            )
+        except Exception as e:
+            logger.error(f"Failed to send payment confirmation to {data.customer_email}: {str(e)}")
+            return EmailResponse(
+                message_id="error",
+                status="failed",
+                recipient=data.customer_email
+            )
+    
+    async def send_order_delivered_email(self, data: OrderDeliveredData) -> EmailResponse:
+        """Send delivery confirmation email"""
+        try:
+            html_body, text_body = template_service.render_template(
+                "order_delivered",
+                {
+                    "order_id": data.order_id,
+                    "customer_name": data.customer_name,
+                    "review_url": data.review_url or f"https://shopease.com/orders/{data.order_id}/review"
+                }
+            )
+            
+            result = await self.email_provider.send_email(
+                to=data.customer_email,
+                subject=f"Order #{data.order_id} Delivered!",
+                html_body=html_body,
+                text_body=text_body
+            )
+            
+            return EmailResponse(
+                message_id=result.get("message_id", "unknown"),
+                status=result.get("status", "failed"),
+                recipient=data.customer_email
+            )
+        except Exception as e:
+            logger.error(f"Failed to send delivery confirmation to {data.customer_email}: {str(e)}")
+            return EmailResponse(
+                message_id="error",
+                status="failed",
+                recipient=data.customer_email
+            )
+    
+    async def send_order_cancelled_email(self, data: OrderCancelledData) -> EmailResponse:
+        """Send cancellation notification email"""
+        try:
+            html_body, text_body = template_service.render_template(
+                "order_cancelled",
+                {
+                    "order_id": data.order_id,
+                    "customer_name": data.customer_name,
+                    "support_url": data.support_url or "https://shopease.com/support"
+                }
+            )
+            
+            result = await self.email_provider.send_email(
+                to=data.customer_email,
+                subject=f"Order #{data.order_id} Cancelled",
+                html_body=html_body,
+                text_body=text_body
+            )
+            
+            return EmailResponse(
+                message_id=result.get("message_id", "unknown"),
+                status=result.get("status", "failed"),
+                recipient=data.customer_email
+            )
+        except Exception as e:
+            logger.error(f"Failed to send cancellation notice to {data.customer_email}: {str(e)}")
+            return EmailResponse(
+                message_id="error",
+                status="failed",
+                recipient=data.customer_email
+            )
+    
+    async def send_order_refunded_email(self, data: OrderRefundedData) -> EmailResponse:
+        """Send refund confirmation email"""
+        try:
+            html_body, text_body = template_service.render_template(
+                "order_refunded",
+                {
+                    "order_id": data.order_id,
+                    "customer_name": data.customer_name,
+                    "refund_amount": data.refund_amount
+                }
+            )
+            
+            result = await self.email_provider.send_email(
+                to=data.customer_email,
+                subject=f"Refund Processed - Order #{data.order_id}",
+                html_body=html_body,
+                text_body=text_body
+            )
+            
+            return EmailResponse(
+                message_id=result.get("message_id", "unknown"),
+                status=result.get("status", "failed"),
+                recipient=data.customer_email
+            )
+        except Exception as e:
+            logger.error(f"Failed to send refund confirmation to {data.customer_email}: {str(e)}")
+            return EmailResponse(
+                message_id="error",
+                status="failed",
+                recipient=data.customer_email
             )
 
 

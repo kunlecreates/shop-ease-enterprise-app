@@ -133,6 +133,9 @@ public class EmailVerificationService {
                 user.setIsActive(1);
                 userRepository.save(user);
                 
+                // Send welcome email after successful verification
+                sendWelcomeEmail(user);
+                
                 return true;
             }
         }
@@ -195,5 +198,39 @@ public class EmailVerificationService {
             </body>
             </html>
             """, verificationUrl, verificationUrl);
+    }
+    
+    /**
+     * Send welcome email after successful email verification
+     */
+    private void sendWelcomeEmail(User user) {
+        try {
+            // Generate service-to-service JWT token for notification service
+            String serviceToken = jwtService.generateToken(
+                "system",
+                "user-service",
+                List.of("SERVICE")
+            );
+            
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("Authorization", "Bearer " + serviceToken);
+            
+            String username = user.getEmail().split("@")[0];
+            
+            Map<String, Object> welcomeRequest = Map.of(
+                "email", user.getEmail(),
+                "username", username
+            );
+            
+            HttpEntity<Map<String, Object>> request = new HttpEntity<>(welcomeRequest, headers);
+            String url = notificationServiceUrl + "/api/notification/welcome";
+            
+            log.info("Sending welcome email to {} via {}", user.getEmail(), url);
+            restTemplate.postForEntity(url, request, String.class);
+            log.info("Welcome email sent successfully to {}", user.getEmail());
+        } catch (Exception e) {
+            log.error("Failed to send welcome email to {}: {}", user.getEmail(), e.getMessage(), e);
+        }
     }
 }

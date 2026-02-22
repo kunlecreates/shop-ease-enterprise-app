@@ -57,3 +57,40 @@ class WelcomeEmailData(BaseModel):
 
     class Config:
         populate_by_name = True
+
+class OrderPaidData(BaseModel):
+    order_id: Union[int, str] = Field(alias="orderId")
+    customer_name: str = Field(alias="customerName")
+    customer_email: EmailStr = Field(alias="customerEmail")
+    order_total: float = Field(alias="orderTotal", default=0)
+    order_url: Optional[str] = Field(default=None, alias="orderUrl")
+
+    class Config:
+        populate_by_name = True
+
+class OrderDeliveredData(BaseModel):
+    order_id: Union[int, str] = Field(alias="orderId")
+    customer_name: str = Field(alias="customerName")
+    customer_email: EmailStr = Field(alias="customerEmail")
+    review_url: Optional[str] = Field(default=None, alias="reviewUrl")
+
+    class Config:
+        populate_by_name = True
+
+class OrderCancelledData(BaseModel):
+    order_id: Union[int, str] = Field(alias="orderId")
+    customer_name: str = Field(alias="customerName")
+    customer_email: EmailStr = Field(alias="customerEmail")
+    support_url: Optional[str] = Field(default=None, alias="supportUrl")
+
+    class Config:
+        populate_by_name = True
+
+class OrderRefundedData(BaseModel):
+    order_id: Union[int, str] = Field(alias="orderId")
+    customer_name: str = Field(alias="customerName")
+    customer_email: EmailStr = Field(alias="customerEmail")
+    refund_amount: float = Field(alias="refundAmount", default=0)
+
+    class Config:
+        populate_by_name = True

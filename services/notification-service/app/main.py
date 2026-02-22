@@ -6,7 +6,11 @@ from app.models.email import (
     OrderConfirmationData,
     ShippingNotificationData,
     PasswordResetData,
-    WelcomeEmailData
+    WelcomeEmailData,
+    OrderPaidData,
+    OrderDeliveredData,
+    OrderCancelledData,
+    OrderRefundedData
 )
 from app.services.email_service import email_service
 
@@ -73,6 +77,50 @@ async def send_welcome_email_endpoint(
     response = await email_service.send_welcome_email(data)
     if response.status == "failed":
         raise HTTPException(status_code=500, detail="Failed to send welcome email")
+    return response
+
+@router.post("/order-paid", response_model=EmailResponse)
+async def send_order_paid_email(
+    data: OrderPaidData,
+    current_user: dict = Depends(get_current_user)
+):
+    """Send payment confirmation email"""
+    response = await email_service.send_order_paid_email(data)
+    if response.status == "failed":
+        raise HTTPException(status_code=500, detail="Failed to send payment confirmation")
+    return response
+
+@router.post("/order-delivered", response_model=EmailResponse)
+async def send_order_delivered_email(
+    data: OrderDeliveredData,
+    current_user: dict = Depends(get_current_user)
+):
+    """Send delivery confirmation email"""
+    response = await email_service.send_order_delivered_email(data)
+    if response.status == "failed":
+        raise HTTPException(status_code=500, detail="Failed to send delivery confirmation")
+    return response
+
+@router.post("/order-cancelled", response_model=EmailResponse)
+async def send_order_cancelled_email(
+    data: OrderCancelledData,
+    current_user: dict = Depends(get_current_user)
+):
+    """Send cancellation notification email"""
+    response = await email_service.send_order_cancelled_email(data)
+    if response.status == "failed":
+        raise HTTPException(status_code=500, detail="Failed to send cancellation notification")
+    return response
+
+@router.post("/order-refunded", response_model=EmailResponse)
+async def send_order_refunded_email(
+    data: OrderRefundedData,
+    current_user: dict = Depends(get_current_user)
+):
+    """Send refund confirmation email"""
+    response = await email_service.send_order_refunded_email(data)
+    if response.status == "failed":
+        raise HTTPException(status_code=500, detail="Failed to send refund confirmation")
     return response
 
 app.include_router(router)

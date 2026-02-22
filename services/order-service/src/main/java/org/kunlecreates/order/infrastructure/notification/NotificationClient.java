@@ -119,6 +119,156 @@ public class NotificationClient {
         }
     }
     
+    /**
+     * Send payment confirmation email
+     */
+    public void sendOrderPaidNotification(Order order, String jwtToken) {
+        if (!enabled) {
+            logger.debug("Notification service disabled, skipping payment confirmation email");
+            return;
+        }
+        
+        try {
+            String userEmail = order.getUserRef() + "@example.com";
+            
+            OrderPaidRequest request = new OrderPaidRequest(
+                    order.getId().intValue(),
+                    order.getUserRef(),
+                    userEmail,
+                    order.getTotal()
+            );
+            
+            webClient.post()
+                    .uri("/api/notification/order-paid")
+                    .header("Authorization", "Bearer " + jwtToken)
+                    .bodyValue(request)
+                    .retrieve()
+                    .bodyToMono(EmailResponse.class)
+                    .timeout(Duration.ofSeconds(5))
+                    .doOnSuccess(response -> logger.info("Payment confirmation email sent for order {}: {}", 
+                            order.getId(), response.message_id()))
+                    .doOnError(error -> logger.error("Failed to send payment confirmation email for order {}: {}", 
+                            order.getId(), error.getMessage()))
+                    .onErrorResume(throwable -> Mono.empty())
+                    .subscribe();
+                    
+        } catch (Exception e) {
+            logger.error("Error sending payment confirmation for order {}: {}", order.getId(), e.getMessage());
+        }
+    }
+    
+    /**
+     * Send delivery confirmation email
+     */
+    public void sendOrderDeliveredNotification(Order order, String jwtToken) {
+        if (!enabled) {
+            logger.debug("Notification service disabled, skipping delivery confirmation email");
+            return;
+        }
+        
+        try {
+            String userEmail = order.getUserRef() + "@example.com";
+            
+            OrderDeliveredRequest request = new OrderDeliveredRequest(
+                    order.getId().intValue(),
+                    order.getUserRef(),
+                    userEmail
+            );
+            
+            webClient.post()
+                    .uri("/api/notification/order-delivered")
+                    .header("Authorization", "Bearer " + jwtToken)
+                    .bodyValue(request)
+                    .retrieve()
+                    .bodyToMono(EmailResponse.class)
+                    .timeout(Duration.ofSeconds(5))
+                    .doOnSuccess(response -> logger.info("Delivery confirmation email sent for order {}: {}", 
+                            order.getId(), response.message_id()))
+                    .doOnError(error -> logger.error("Failed to send delivery confirmation email for order {}: {}", 
+                            order.getId(), error.getMessage()))
+                    .onErrorResume(throwable -> Mono.empty())
+                    .subscribe();
+                    
+        } catch (Exception e) {
+            logger.error("Error sending delivery confirmation for order {}: {}", order.getId(), e.getMessage());
+        }
+    }
+    
+    /**
+     * Send cancellation notification email
+     */
+    public void sendOrderCancelledNotification(Order order, String jwtToken) {
+        if (!enabled) {
+            logger.debug("Notification service disabled, skipping cancellation notification email");
+            return;
+        }
+        
+        try {
+            String userEmail = order.getUserRef() + "@example.com";
+            
+            OrderCancelledRequest request = new OrderCancelledRequest(
+                    order.getId().intValue(),
+                    order.getUserRef(),
+                    userEmail
+            );
+            
+            webClient.post()
+                    .uri("/api/notification/order-cancelled")
+                    .header("Authorization", "Bearer " + jwtToken)
+                    .bodyValue(request)
+                    .retrieve()
+                    .bodyToMono(EmailResponse.class)
+                    .timeout(Duration.ofSeconds(5))
+                    .doOnSuccess(response -> logger.info("Cancellation notification email sent for order {}: {}", 
+                            order.getId(), response.message_id()))
+                    .doOnError(error -> logger.error("Failed to send cancellation notification email for order {}: {}", 
+                            order.getId(), error.getMessage()))
+                    .onErrorResume(throwable -> Mono.empty())
+                    .subscribe();
+                    
+        } catch (Exception e) {
+            logger.error("Error sending cancellation notification for order {}: {}", order.getId(), e.getMessage());
+        }
+    }
+    
+    /**
+     * Send refund confirmation email
+     */
+    public void sendOrderRefundedNotification(Order order, String jwtToken) {
+        if (!enabled) {
+            logger.debug("Notification service disabled, skipping refund confirmation email");
+            return;
+        }
+        
+        try {
+            String userEmail = order.getUserRef() + "@example.com";
+            
+            OrderRefundedRequest request = new OrderRefundedRequest(
+                    order.getId().intValue(),
+                    order.getUserRef(),
+                    userEmail,
+                    order.getTotal()
+            );
+            
+            webClient.post()
+                    .uri("/api/notification/order-refunded")
+                    .header("Authorization", "Bearer " + jwtToken)
+                    .bodyValue(request)
+                    .retrieve()
+                    .bodyToMono(EmailResponse.class)
+                    .timeout(Duration.ofSeconds(5))
+                    .doOnSuccess(response -> logger.info("Refund confirmation email sent for order {}: {}", 
+                            order.getId(), response.message_id()))
+                    .doOnError(error -> logger.error("Failed to send refund confirmation email for order {}: {}", 
+                            order.getId(), error.getMessage()))
+                    .onErrorResume(throwable -> Mono.empty())
+                    .subscribe();
+                    
+        } catch (Exception e) {
+            logger.error("Error sending refund confirmation for order {}: {}", order.getId(), e.getMessage());
+        }
+    }
+    
     private String formatInstant(Instant instant) {
         return DATE_FORMATTER.format(instant);
     }
@@ -145,6 +295,32 @@ public class NotificationClient {
             String customer_email,
             String tracking_number,
             String estimated_delivery
+    ) {}
+    
+    record OrderPaidRequest(
+            Integer order_id,
+            String customer_name,
+            String customer_email,
+            Double order_total
+    ) {}
+    
+    record OrderDeliveredRequest(
+            Integer order_id,
+            String customer_name,
+            String customer_email
+    ) {}
+    
+    record OrderCancelledRequest(
+            Integer order_id,
+            String customer_name,
+            String customer_email
+    ) {}
+    
+    record OrderRefundedRequest(
+            Integer order_id,
+            String customer_name,
+            String customer_email,
+            Double refund_amount
     ) {}
     
     record EmailResponse(

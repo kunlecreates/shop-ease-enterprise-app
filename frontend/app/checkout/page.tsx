@@ -18,6 +18,8 @@ export default function CheckoutPage() {
   const [step, setStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [orderId, setOrderId] = useState<string | null>(null);
   
   const [shippingAddress, setShippingAddress] = useState<ShippingAddress>({
     recipient: '',
@@ -65,9 +67,11 @@ export default function CheckoutPage() {
         paymentMethod,
       };
 
-      await ApiClient.post('/order', orderData);
+      const response = await ApiClient.post<{id: string}>('/order', orderData);
       clearCart();
-      router.push('/orders?success=true');
+      setOrderId(response?.id || 'N/A');
+      setSuccess('Your order has been placed successfully! You will receive a confirmation email shortly.');
+      setStep(4); // Move to success step
     } catch (err: any) {
       console.error('Order submission failed:', err);
       setError(err.message || 'Failed to process order. Please try again.');
@@ -80,20 +84,22 @@ export default function CheckoutPage() {
     <main className="p-6 max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold mb-6">Checkout</h1>
 
-      <div className="flex mb-8">
-        {[1, 2, 3].map((s) => (
-          <div key={s} className="flex-1 flex items-center">
-            <div
-              className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
-                step >= s ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-600'
-              }`}
-            >
-              {s}
+      {step < 4 && (
+        <div className="flex mb-8">
+          {[1, 2, 3].map((s) => (
+            <div key={s} className="flex-1 flex items-center">
+              <div
+                className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
+                  step >= s ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-600'
+                }`}
+              >
+                {s}
+              </div>
+              <div className={`flex-1 h-1 ${step > s ? 'bg-blue-600' : 'bg-gray-300'}`} />
             </div>
-            <div className={`flex-1 h-1 ${step > s ? 'bg-blue-600' : 'bg-gray-300'}`} />
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded mb-6">
@@ -294,6 +300,58 @@ export default function CheckoutPage() {
             <Button onClick={handleSubmitOrder} isLoading={isProcessing} className="flex-1">
               Place Order
             </Button>
+          </div>
+        </div>
+      )}
+
+      {step === 4 && success && (
+        <div className="space-y-6">
+          <div className="bg-green-50 border border-green-200 text-green-800 px-6 py-4 rounded-lg">
+            <div className="flex items-start">
+              <svg className="w-6 h-6 text-green-600 mr-3 mt-0.5" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <div>
+                <h3 className="font-semibold text-lg mb-1">Order Placed Successfully!</h3>
+                <p className="mb-2">{success}</p>
+                {orderId && (
+                  <p className="text-sm text-green-700">Order ID: <span className="font-mono font-semibold">#{orderId}</span></p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-2xl font-bold mb-4">What&apos;s Next?</h2>
+            <ul className="space-y-3 mb-6">
+              <li className="flex items-start">
+                <svg className="w-5 h-5 text-blue-600 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                <span>You will receive an order confirmation email with details</span>
+              </li>
+              <li className="flex items-start">
+                <svg className="w-5 h-5 text-blue-600 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                <span>We&apos;ll notify you when your order ships</span>
+              </li>
+              <li className="flex items-start">
+                <svg className="w-5 h-5 text-blue-600 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                <span>Track your order anytime from your orders page</span>
+              </li>
+            </ul>
+
+            <div className="flex space-x-4">
+              <Button onClick={() => router.push('/orders')} className="flex-1">
+                View My Orders
+              </Button>
+              <Button variant="secondary" onClick={() => router.push('/products')} className="flex-1">
+                Continue Shopping
+              </Button>
+            </div>
           </div>
         </div>
       )}

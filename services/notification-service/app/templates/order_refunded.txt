@@ -1,0 +1,13 @@
+REFUND PROCESSED
+
+Dear {{customer_name}},
+
+Your refund for order #{{order_id}} has been processed.
+
+Refund Amount: ${{refund_amount}}
+
+The refund will appear in your original payment method within 5-7 business days.
+
+If you have any questions, please contact our support team.
+
+Thank you for your patience!

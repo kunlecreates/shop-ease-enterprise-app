@@ -1,0 +1,13 @@
+ORDER CANCELLED
+
+Dear {{customer_name}},
+
+Your order #{{order_id}} has been cancelled.
+
+If you didn't request this cancellation or have any questions, please contact our support team immediately.
+
+Any charges made will be refunded to your original payment method within 5-7 business days.
+
+Contact Support: {{support_url}}
+
+We hope to serve you again soon!

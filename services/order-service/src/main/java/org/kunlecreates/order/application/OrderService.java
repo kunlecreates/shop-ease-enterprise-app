@@ -113,10 +113,30 @@ public class OrderService {
             order.clearDomainEvents();
         }
         
-        if (newStatus == OrderStatus.SHIPPED && jwtToken != null) {
-            String trackingNumber = generateTrackingNumber(orderId);
-            String estimatedDelivery = calculateEstimatedDelivery();
-            notificationClient.sendShippingNotification(saved, trackingNumber, estimatedDelivery, jwtToken);
+        // Send appropriate email notification based on new status
+        if (jwtToken != null) {
+            switch (newStatus) {
+                case PAID:
+                    notificationClient.sendOrderPaidNotification(saved, jwtToken);
+                    break;
+                case SHIPPED:
+                    String trackingNumber = generateTrackingNumber(orderId);
+                    String estimatedDelivery = calculateEstimatedDelivery();
+                    notificationClient.sendShippingNotification(saved, trackingNumber, estimatedDelivery, jwtToken);
+                    break;
+                case DELIVERED:
+                    notificationClient.sendOrderDeliveredNotification(saved, jwtToken);
+                    break;
+                case CANCELLED:
+                    notificationClient.sendOrderCancelledNotification(saved, jwtToken);
+                    break;
+                case REFUNDED:
+                    notificationClient.sendOrderRefundedNotification(saved, jwtToken);
+                    break;
+                default:
+                    // No notification for other statuses
+                    break;
+            }
         }
         
         return saved;
@@ -154,6 +174,8 @@ public class OrderService {
             order.clearDomainEvents();
         }
         
+        // Note: Cancellation notification sent separately via updateStatus method when called with CANCELLED status
+        
         return saved;
     }
     
@@ -170,6 +192,8 @@ public class OrderService {
             orderEventRepository.saveAll(events);
             order.clearDomainEvents();
         }
+        
+        // Note: Refund notification sent separately via updateStatus method when called with REFUNDED status
         
         return saved;
     }
