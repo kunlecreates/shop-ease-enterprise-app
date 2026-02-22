@@ -43,7 +43,7 @@ function ProfileContent() {
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">My Profile</h1>
+        <h1 className="text-3xl font-bold dark:text-white">My Profile</h1>
         {!isEditing && (
           <Button onClick={() => setIsEditing(true)}>Edit Profile</Button>
         )}
@@ -52,20 +52,20 @@ function ProfileContent() {
       {message && (
         <div className={`mb-4 px-4 py-3 rounded ${
           message.includes('success') 
-            ? 'bg-green-50 border border-green-200 text-green-700' 
-            : 'bg-red-50 border border-red-200 text-red-600'
+            ? 'bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300' 
+            : 'bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-300'
         }`}>
           {message}
         </div>
       )}
 
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">Account Information</h2>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-gray-700 p-6 mb-6">
+        <h2 className="text-xl font-semibold mb-4 dark:text-white">Account Information</h2>
         {isEditing ? (
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium text-gray-600">Username</label>
-              <p className="text-lg text-gray-500">{user?.username} (cannot be changed)</p>
+              <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Username</label>
+              <p className="text-lg text-gray-500 dark:text-gray-400">{user?.username} (cannot be changed)</p>
             </div>
             <Input
               label="Email"
@@ -73,8 +73,8 @@ function ProfileContent() {
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             />
-            <div className="border-t pt-4 mt-4">
-              <h3 className="font-semibold mb-3">Change Password (optional)</h3>
+            <div className="border-t dark:border-gray-700 pt-4 mt-4">
+              <h3 className="font-semibold mb-3 dark:text-white">Change Password (optional)</h3>
               <div className="space-y-4">
                 <Input
                   label="Current Password"

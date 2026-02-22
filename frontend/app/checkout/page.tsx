@@ -39,14 +39,19 @@ export default function CheckoutPage() {
   });
 
   useEffect(() => {
+    // Don't redirect if we're on the success step
+    if (step === 4) {
+      return;
+    }
+    
     if (items.length === 0) {
       router.push('/cart');
     } else if (!isAuthenticated) {
       router.push('/login?redirect=/checkout');
     }
-  }, [items.length, isAuthenticated, router]);
+  }, [items.length, isAuthenticated, router, step]);
 
-  if (items.length === 0 || !isAuthenticated) {
+  if ((items.length === 0 && step !== 4) || !isAuthenticated) {
     return <main className="flex justify-center items-center min-h-screen">Loading...</main>;
   }
 

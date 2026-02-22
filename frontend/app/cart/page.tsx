@@ -11,11 +11,11 @@ export default function CartPage() {
   if (items.length === 0) {
     return (
       <main className="flex flex-col items-center justify-center min-h-[60vh] p-6">
-        <svg className="w-24 h-24 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-24 h-24 text-gray-400 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
         </svg>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Your cart is empty</h2>
-        <p className="text-gray-600 mb-6">Add some products to get started</p>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Your cart is empty</h2>
+        <p className="text-gray-600 dark:text-gray-400 mb-6">Add some products to get started</p>
         <Link href="/products">
           <Button>Browse Products</Button>
         </Link>
@@ -26,7 +26,7 @@ export default function CartPage() {
   return (
     <main className="p-6 max-w-5xl mx-auto">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Shopping Cart</h1>
+        <h1 className="text-3xl font-bold dark:text-white">Shopping Cart</h1>
         <Button variant="danger" size="sm" onClick={clearCart}>
           Clear Cart
         </Button>
@@ -35,11 +35,11 @@ export default function CartPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-4">
           {items.map((item) => (
-            <div key={item.id} data-testid="cart-item" className="bg-white rounded-lg shadow p-4 flex items-center space-x-4">
+            <div key={item.id} data-testid="cart-item" className="bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-gray-700 p-4 flex items-center space-x-4">
               <div className="flex-1">
-                <h3 className="font-semibold text-lg">{item.product.name}</h3>
-                <p className="text-sm text-gray-600">SKU: {item.product.sku}</p>
-                <p className="text-lg font-bold text-blue-600 mt-2">
+                <h3 className="font-semibold text-lg dark:text-white">{item.product.name}</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">SKU: {item.product.sku}</p>
+                <p className="text-lg font-bold text-blue-600 dark:text-blue-400 mt-2">
                   ${item.price.toFixed(2)}
                 </p>
               </div>
@@ -47,15 +47,15 @@ export default function CartPage() {
               <div className="flex items-center space-x-2">
                 <button
                   onClick={() => updateQuantity(item.productId, item.quantity - 1)}
-                  className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
+                  className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 flex items-center justify-center dark:text-white"
                   disabled={item.quantity <= 1}
                 >
                   −
                 </button>
-                <span className="w-12 text-center font-semibold">{item.quantity}</span>
+                <span className="w-12 text-center font-semibold dark:text-white">{item.quantity}</span>
                 <button
                   onClick={() => updateQuantity(item.productId, item.quantity + 1)}
-                  className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
+                  className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 flex items-center justify-center dark:text-white"
                   disabled={item.quantity >= item.product.stock}
                 >
                   +
@@ -63,7 +63,7 @@ export default function CartPage() {
               </div>
               
               <div className="text-right">
-                <p className="font-bold text-lg">
+                <p className="font-bold text-lg dark:text-white">
                   ${(item.price * item.quantity).toFixed(2)}
                 </p>
                 <Button
@@ -80,21 +80,21 @@ export default function CartPage() {
         </div>
 
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-lg shadow p-6 sticky top-6">
-            <h2 className="text-xl font-bold mb-4">Order Summary</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-gray-700 p-6 sticky top-6">
+            <h2 className="text-xl font-bold mb-4 dark:text-white">Order Summary</h2>
             
             <div className="space-y-2 mb-4">
-              <div className="flex justify-between">
+              <div className="flex justify-between dark:text-gray-300">
                 <span>Subtotal</span>
                 <span>${getTotal().toFixed(2)}</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between dark:text-gray-300">
                 <span>Shipping</span>
                 <span>Free</span>
               </div>
-              <div className="border-t pt-2 flex justify-between font-bold text-lg">
-                <span>Total</span>
-                <span className="text-blue-600">${getTotal().toFixed(2)}</span>
+              <div className="border-t dark:border-gray-700 pt-2 flex justify-between font-bold text-lg">
+                <span className="dark:text-white">Total</span>
+                <span className="text-blue-600 dark:text-blue-400">${getTotal().toFixed(2)}</span>
               </div>
             </div>
 

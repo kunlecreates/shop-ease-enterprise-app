@@ -61,15 +61,15 @@ function VerifyEmailContent() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
+      <Card className="w-full max-w-md bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            {status === 'loading' && <Loader2 className="h-16 w-16 text-blue-500 animate-spin" />}
-            {status === 'success' && <CheckCircle2 className="h-16 w-16 text-green-500" />}
-            {status === 'error' && <XCircle className="h-16 w-16 text-red-500" />}
+            {status === 'loading' && <Loader2 className="h-16 w-16 text-blue-500 dark:text-blue-400 animate-spin" />}
+            {status === 'success' && <CheckCircle2 className="h-16 w-16 text-green-500 dark:text-green-400" />}
+            {status === 'error' && <XCircle className="h-16 w-16 text-red-500 dark:text-red-400" />}
           </div>
-          <CardTitle>
+          <CardTitle className="dark:text-white">
             {status === 'loading' && 'Verifying your email...'}
             {status === 'success' && 'Email Verified!'}
             {status === 'error' && 'Verification Failed'}

@@ -61,9 +61,9 @@ function UserManagementContent() {
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">User Management</h1>
+        <h1 className="text-3xl font-bold dark:text-white">User Management</h1>
         <select
-          className="px-4 py-2 border rounded-lg"
+          className="px-4 py-2 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
         >

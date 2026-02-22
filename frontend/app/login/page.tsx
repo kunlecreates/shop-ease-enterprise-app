@@ -64,16 +64,16 @@ export default function LoginPage() {
 
   return (
     <main className="flex items-center justify-center min-h-[calc(100vh-4rem)] px-4">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow">
+      <div className="max-w-md w-full space-y-8 bg-white dark:bg-gray-800 p-8 rounded-lg shadow dark:shadow-gray-700">
         <div>
-          <h2 className="text-3xl font-bold text-center text-gray-900">
+          <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white">
             Sign in
           </h2>
         </div>
         
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded space-y-2">
+            <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-300 px-4 py-3 rounded space-y-2">
               <div className="flex items-start gap-2">
                 <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
                 <p>{error}</p>

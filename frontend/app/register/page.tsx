@@ -74,20 +74,20 @@ export default function RegisterPage() {
   if (registrationComplete) {
     return (
       <main className="flex items-center justify-center min-h-[calc(100vh-4rem)] px-4">
-        <div className="max-w-md w-full space-y-6 bg-white p-8 rounded-lg shadow text-center">
+        <div className="max-w-md w-full space-y-6 bg-white dark:bg-gray-800 p-8 rounded-lg shadow dark:shadow-gray-700 text-center">
           <div className="flex justify-center">
-            <Mail className="h-16 w-16 text-blue-500" />
+            <Mail className="h-16 w-16 text-blue-500 dark:text-blue-400" />
           </div>
           
-          <h2 className="text-3xl font-bold text-gray-900">
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
             Check your email
           </h2>
           
-          <div className="space-y-4 text-gray-600">
+          <div className="space-y-4 text-gray-600 dark:text-gray-300">
             <p>
               We've sent a verification email to:
             </p>
-            <p className="font-semibold text-gray-900 text-lg">
+            <p className="font-semibold text-gray-900 dark:text-white text-lg">
               {email}
             </p>
             <p>
@@ -132,7 +132,7 @@ export default function RegisterPage() {
         
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded">
+            <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-300 px-4 py-3 rounded">
               {error}
             </div>
           )}

@@ -1,6 +1,8 @@
 package org.kunlecreates.order.infrastructure.notification;
 
 import org.kunlecreates.order.domain.Order;
+import org.kunlecreates.order.infrastructure.user.UserClient;
+import org.kunlecreates.order.infrastructure.user.UserResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,18 +24,51 @@ public class NotificationClient {
             .withZone(ZoneId.systemDefault());
     
     private final WebClient webClient;
+    private final UserClient userClient;
     private final boolean enabled;
     
     public NotificationClient(
             @Value("${notification.service.url:http://localhost:8003}") String notificationServiceUrl,
             @Value("${notification.service.enabled:true}") boolean enabled,
-            WebClient.Builder webClientBuilder
+            WebClient.Builder webClientBuilder,
+            UserClient userClient
     ) {
         this.webClient = webClientBuilder
                 .baseUrl(notificationServiceUrl)
                 .build();
+        this.userClient = userClient;
         this.enabled = enabled;
         logger.info("NotificationClient initialized with URL: {} (enabled: {})", notificationServiceUrl, enabled);
+    }
+
+    /**
+     * Fetch user email from user-service using userRef (which contains userId as string)
+     * Returns email if found, otherwise returns a fallback email with warning
+     */
+    private String fetchUserEmail(Order order, String jwtToken) {
+        try {
+            // Parse userRef as Long (it contains the user ID as a string)
+            Long userId = Long.parseLong(order.getUserRef());
+            
+            UserResponse user = userClient.getUserById(userId, jwtToken)
+                    .block(Duration.ofSeconds(3));
+            
+            if (user != null && user.email() != null) {
+                logger.debug("Fetched email {} for userId {}", user.email(), userId);
+                return user.email();
+            } else {
+                logger.warn("User {} not found or has no email. Using fallback.", userId);
+                return order.getUserRef() + "@example.com";
+            }
+        } catch (NumberFormatException e) {
+            logger.warn("Order {} has non-numeric userRef '{}', cannot parse as userId. Using fallback.", 
+                    order.getId(), order.getUserRef());
+            return order.getUserRef() + "@example.com";
+        } catch (Exception e) {
+            logger.error("Failed to fetch user for order {}: {}. Using fallback email.", 
+                    order.getId(), e.getMessage());
+            return order.getUserRef() + "@example.com";
+        }
     }
     
     /**
@@ -48,9 +83,7 @@ public class NotificationClient {
         }
         
         try {
-            // Use userRef as email (assuming it's the user's email or ID)
-            // In production, we'd fetch user details from user-service
-            String userEmail = order.getUserRef() + "@example.com"; // Temporary: append domain if needed
+            String userEmail = fetchUserEmail(order, jwtToken);
             
             OrderConfirmationRequest request = new OrderConfirmationRequest(
                     order.getId().intValue(),
@@ -90,7 +123,7 @@ public class NotificationClient {
         }
         
         try {
-            String userEmail = order.getUserRef() + "@example.com";
+            String userEmail = fetchUserEmail(order, jwtToken);
             
             ShippingNotificationRequest request = new ShippingNotificationRequest(
                     order.getId().intValue(),
@@ -129,7 +162,7 @@ public class NotificationClient {
         }
         
         try {
-            String userEmail = order.getUserRef() + "@example.com";
+            String userEmail = fetchUserEmail(order, jwtToken);
             
             OrderPaidRequest request = new OrderPaidRequest(
                     order.getId().intValue(),
@@ -167,7 +200,7 @@ public class NotificationClient {
         }
         
         try {
-            String userEmail = order.getUserRef() + "@example.com";
+            String userEmail = fetchUserEmail(order, jwtToken);
             
             OrderDeliveredRequest request = new OrderDeliveredRequest(
                     order.getId().intValue(),
@@ -204,7 +237,7 @@ public class NotificationClient {
         }
         
         try {
-            String userEmail = order.getUserRef() + "@example.com";
+            String userEmail = fetchUserEmail(order, jwtToken);
             
             OrderCancelledRequest request = new OrderCancelledRequest(
                     order.getId().intValue(),
@@ -241,7 +274,7 @@ public class NotificationClient {
         }
         
         try {
-            String userEmail = order.getUserRef() + "@example.com";
+            String userEmail = fetchUserEmail(order, jwtToken);
             
             OrderRefundedRequest request = new OrderRefundedRequest(
                     order.getId().intValue(),

@@ -24,6 +24,9 @@ notification:
   service:
     url: ${NOTIFICATION_SERVICE_URL:http://localhost:8003}
     enabled: ${NOTIFICATION_SERVICE_ENABLED:true}
+user:
+  service:
+    url: ${USER_SERVICE_URL:http://localhost:8081}
 management:
   endpoints:
     web:
