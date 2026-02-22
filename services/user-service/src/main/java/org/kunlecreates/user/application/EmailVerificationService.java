@@ -90,8 +90,7 @@ public class EmailVerificationService {
                 "system",
                 "user-service",
                 List.of("SERVICE"),
-                "System",
-                "Service"
+                "System Service"
             );
             
             HttpHeaders headers = new HttpHeaders();
