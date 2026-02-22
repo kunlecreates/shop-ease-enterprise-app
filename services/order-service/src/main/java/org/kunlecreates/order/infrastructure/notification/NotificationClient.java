@@ -63,11 +63,34 @@ public class NotificationClient {
             return "noreply@example.com";
         }
     }
+
+    /**
+     * Extract customer full name from JWT token claims
+     * Returns "firstName lastName" or "Customer" as fallback
+     */
+    private String extractCustomerNameFromJwt(String jwtToken) {
+        try {
+            Jwt jwt = jwtDecoder.decode(jwtToken);
+            String firstName = jwt.getClaimAsString("firstName");
+            String lastName = jwt.getClaimAsString("lastName");
+            
+            if (firstName != null && lastName != null) {
+                return firstName + " " + lastName;
+            } else if (firstName != null) {
+                return firstName;
+            } else {
+                logger.warn("JWT token does not contain firstName/lastName claims. Using fallback.");
+                return "Customer";
+            }
+        } catch (Exception e) {
+            logger.error("Failed to decode JWT or extract name: {}. Using fallback.", e.getMessage());
+            return "Customer";
+        }
+    }
     
     /**
      * Send order confirmation email
-     * Note: Currently uses userRef for customer name/email as a temporary solution
-     * TODO: Add proper customer fields to Order entity
+     * Extracts customer name and email from JWT token claims
      */
     public void sendOrderConfirmation(Order order, String jwtToken) {
         if (!enabled) {
@@ -77,10 +100,11 @@ public class NotificationClient {
         
         try {
             String userEmail = extractEmailFromJwt(jwtToken);
+            String customerName = extractCustomerNameFromJwt(jwtToken);
             
             OrderConfirmationRequest request = new OrderConfirmationRequest(
                     order.getId().intValue(),
-                    order.getUserRef(), // Using userRef as customer name temporarily
+                    customerName,
                     userEmail,
                     order.getTotal(),
                     List.of(), // Empty items list for now - TODO: fetch from OrderItem repository
@@ -117,10 +141,11 @@ public class NotificationClient {
         
         try {
             String userEmail = extractEmailFromJwt(jwtToken);
+            String customerName = extractCustomerNameFromJwt(jwtToken);
             
             ShippingNotificationRequest request = new ShippingNotificationRequest(
                     order.getId().intValue(),
-                    order.getUserRef(),
+                    customerName,
                     userEmail,
                     trackingNumber,
                     estimatedDelivery
@@ -156,10 +181,11 @@ public class NotificationClient {
         
         try {
             String userEmail = extractEmailFromJwt(jwtToken);
+            String customerName = extractCustomerNameFromJwt(jwtToken);
             
             OrderPaidRequest request = new OrderPaidRequest(
                     order.getId().intValue(),
-                    order.getUserRef(),
+                    customerName,
                     userEmail,
                     order.getTotal()
             );
@@ -194,10 +220,11 @@ public class NotificationClient {
         
         try {
             String userEmail = extractEmailFromJwt(jwtToken);
+            String customerName = extractCustomerNameFromJwt(jwtToken);
             
             OrderDeliveredRequest request = new OrderDeliveredRequest(
                     order.getId().intValue(),
-                    order.getUserRef(),
+                    customerName,
                     userEmail
             );
             
@@ -231,10 +258,11 @@ public class NotificationClient {
         
         try {
             String userEmail = extractEmailFromJwt(jwtToken);
+            String customerName = extractCustomerNameFromJwt(jwtToken);
             
             OrderCancelledRequest request = new OrderCancelledRequest(
                     order.getId().intValue(),
-                    order.getUserRef(),
+                    customerName,
                     userEmail
             );
             
@@ -268,10 +296,11 @@ public class NotificationClient {
         
         try {
             String userEmail = extractEmailFromJwt(jwtToken);
+            String customerName = extractCustomerNameFromJwt(jwtToken);
             
             OrderRefundedRequest request = new OrderRefundedRequest(
                     order.getId().intValue(),
-                    order.getUserRef(),
+                    customerName,
                     userEmail,
                     order.getTotal()
             );

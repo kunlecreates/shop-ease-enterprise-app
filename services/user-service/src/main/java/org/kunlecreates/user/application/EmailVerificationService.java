@@ -89,7 +89,9 @@ public class EmailVerificationService {
             String serviceToken = jwtService.generateToken(
                 "system",
                 "user-service",
-                List.of("SERVICE")
+                List.of("SERVICE"),
+                "System",
+                "Service"
             );
             
             HttpHeaders headers = new HttpHeaders();
@@ -209,7 +211,9 @@ public class EmailVerificationService {
             String serviceToken = jwtService.generateToken(
                 "system",
                 "user-service",
-                List.of("SERVICE")
+                List.of("SERVICE"),
+                "System",
+                "Service"
             );
             
             HttpHeaders headers = new HttpHeaders();
