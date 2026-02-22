@@ -76,9 +76,14 @@ spec:
             kubernetes.io/metadata.name: {{ $ns | quote }}
       {{- end }}
       {{- else }}
+      # Allow traffic from frontend namespace
       - namespaceSelector:
           matchLabels:
             kubernetes.io/metadata.name: {{ ($global.frontendNamespace | default "shopease-frontend") | quote }}
+      # Allow traffic from order-service for UserClient API calls
+      - namespaceSelector:
+          matchLabels:
+            kubernetes.io/metadata.name: shopease-order
       {{- end }}
       - podSelector:
           matchLabels:
