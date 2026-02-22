@@ -6,7 +6,7 @@ from app.models.email import (
     EmailRequest,
     EmailResponse,
     OrderConfirmationData,
-    Shipping NotificationData,
+    ShippingNotificationData,
     PasswordResetData,
     WelcomeEmailData,
     OrderPaidData,
