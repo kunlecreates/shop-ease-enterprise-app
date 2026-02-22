@@ -1,11 +1,11 @@
 package org.kunlecreates.order.infrastructure.notification;
 
 import org.kunlecreates.order.domain.Order;
-import org.kunlecreates.order.infrastructure.user.UserClient;
-import org.kunlecreates.order.infrastructure.user.UserResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -24,50 +24,43 @@ public class NotificationClient {
             .withZone(ZoneId.systemDefault());
     
     private final WebClient webClient;
-    private final UserClient userClient;
+    private final JwtDecoder jwtDecoder;
     private final boolean enabled;
     
     public NotificationClient(
             @Value("${notification.service.url:http://localhost:8003}") String notificationServiceUrl,
             @Value("${notification.service.enabled:true}") boolean enabled,
             WebClient.Builder webClientBuilder,
-            UserClient userClient
+            JwtDecoder jwtDecoder
     ) {
         this.webClient = webClientBuilder
                 .baseUrl(notificationServiceUrl)
                 .build();
-        this.userClient = userClient;
+        this.jwtDecoder = jwtDecoder;
         this.enabled = enabled;
         logger.info("NotificationClient initialized with URL: {} (enabled: {})", notificationServiceUrl, enabled);
     }
 
     /**
-     * Fetch user email from user-service using userRef (which contains userId as string)
+     * Extract user email from JWT token claims
+     * The email is already authenticated and included in the JWT by user-service
      * Returns email if found, otherwise returns a fallback email with warning
      */
-    private String fetchUserEmail(Order order, String jwtToken) {
+    private String extractEmailFromJwt(String jwtToken) {
         try {
-            // Parse userRef as Long (it contains the user ID as a string)
-            Long userId = Long.parseLong(order.getUserRef());
+            Jwt jwt = jwtDecoder.decode(jwtToken);
+            String email = jwt.getClaimAsString("email");
             
-            UserResponse user = userClient.getUserById(userId, jwtToken)
-                    .block(Duration.ofSeconds(3));
-            
-            if (user != null && user.email() != null) {
-                logger.debug("Fetched email {} for userId {}", user.email(), userId);
-                return user.email();
+            if (email != null && !email.isEmpty()) {
+                logger.debug("Extracted email {} from JWT", email);
+                return email;
             } else {
-                logger.warn("User {} not found or has no email. Using fallback.", userId);
-                return order.getUserRef() + "@example.com";
+                logger.warn("JWT token does not contain email claim. Using fallback.");
+                return "noreply@example.com";
             }
-        } catch (NumberFormatException e) {
-            logger.warn("Order {} has non-numeric userRef '{}', cannot parse as userId. Using fallback.", 
-                    order.getId(), order.getUserRef());
-            return order.getUserRef() + "@example.com";
         } catch (Exception e) {
-            logger.error("Failed to fetch user for order {}: {}. Using fallback email.", 
-                    order.getId(), e.getMessage());
-            return order.getUserRef() + "@example.com";
+            logger.error("Failed to decode JWT or extract email: {}. Using fallback email.", e.getMessage());
+            return "noreply@example.com";
         }
     }
     
@@ -83,7 +76,7 @@ public class NotificationClient {
         }
         
         try {
-            String userEmail = fetchUserEmail(order, jwtToken);
+            String userEmail = extractEmailFromJwt(jwtToken);
             
             OrderConfirmationRequest request = new OrderConfirmationRequest(
                     order.getId().intValue(),
@@ -123,7 +116,7 @@ public class NotificationClient {
         }
         
         try {
-            String userEmail = fetchUserEmail(order, jwtToken);
+            String userEmail = extractEmailFromJwt(jwtToken);
             
             ShippingNotificationRequest request = new ShippingNotificationRequest(
                     order.getId().intValue(),
@@ -162,7 +155,7 @@ public class NotificationClient {
         }
         
         try {
-            String userEmail = fetchUserEmail(order, jwtToken);
+            String userEmail = extractEmailFromJwt(jwtToken);
             
             OrderPaidRequest request = new OrderPaidRequest(
                     order.getId().intValue(),
@@ -200,7 +193,7 @@ public class NotificationClient {
         }
         
         try {
-            String userEmail = fetchUserEmail(order, jwtToken);
+            String userEmail = extractEmailFromJwt(jwtToken);
             
             OrderDeliveredRequest request = new OrderDeliveredRequest(
                     order.getId().intValue(),
@@ -237,7 +230,7 @@ public class NotificationClient {
         }
         
         try {
-            String userEmail = fetchUserEmail(order, jwtToken);
+            String userEmail = extractEmailFromJwt(jwtToken);
             
             OrderCancelledRequest request = new OrderCancelledRequest(
                     order.getId().intValue(),
@@ -274,7 +267,7 @@ public class NotificationClient {
         }
         
         try {
-            String userEmail = fetchUserEmail(order, jwtToken);
+            String userEmail = extractEmailFromJwt(jwtToken);
             
             OrderRefundedRequest request = new OrderRefundedRequest(
                     order.getId().intValue(),

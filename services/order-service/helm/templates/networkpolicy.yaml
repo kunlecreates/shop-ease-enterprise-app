@@ -12,56 +12,6 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: order-allow-egress
-spec:
-  podSelector:
-    matchLabels:
-      app.kubernetes.io/name: order-service
-  policyTypes:
-    - Egress
-  egress:
-    # Allow DNS resolution
-    - to:
-      - namespaceSelector:
-          matchLabels:
-            kubernetes.io/metadata.name: kube-system
-      ports:
-      - protocol: UDP
-        port: 53
-    # Allow traffic to user-service for email lookup
-    - to:
-      - namespaceSelector:
-          matchLabels:
-            kubernetes.io/metadata.name: shopease-user
-      ports:
-      - protocol: TCP
-        port: 80
-      - protocol: TCP
-        port: 8081
-    # Allow traffic to notification-service
-    - to:
-      - namespaceSelector:
-          matchLabels:
-            kubernetes.io/metadata.name: shopease-notification
-      ports:
-      - protocol: TCP
-        port: 80
-      - protocol: TCP
-        port: 8080
-      - protocol: TCP
-        port: 8084
-    # Allow traffic to MSSQL database
-    - to:
-      - namespaceSelector:
-          matchLabels:
-            kubernetes.io/metadata.name: mssql-system
-      ports:
-      - protocol: TCP
-        port: 1433
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
   name: order-allow-from-frontend-and-curl
 spec:
   podSelector:
