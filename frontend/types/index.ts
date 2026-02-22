@@ -46,6 +46,7 @@ export interface Order {
   id: string;
   userRef?: string;  // Backend uses userRef, not userId
   userId?: string;   // Keep for backwards compatibility
+  customerName?: string; // Customer full name extracted from JWT
   status: 'PENDING' | 'PAID' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED' | 'REFUNDED';
   total: number;     // Backend returns totalCents and calculates getTotal()
   totalPrice: number; // Alias for total

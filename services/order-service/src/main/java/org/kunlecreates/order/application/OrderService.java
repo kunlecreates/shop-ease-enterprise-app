@@ -6,6 +6,8 @@ import org.kunlecreates.order.domain.OrderStatus;
 import org.kunlecreates.order.infrastructure.notification.NotificationClient;
 import org.kunlecreates.order.repository.OrderEventRepository;
 import org.kunlecreates.order.repository.OrderRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +18,8 @@ import java.util.Optional;
 
 @Service
 public class OrderService {
+    private static final Logger logger = LoggerFactory.getLogger(OrderService.class);
+    
     private final OrderRepository orderRepository;
     private final OrderEventRepository orderEventRepository;
     private final PaymentService paymentService;
@@ -41,7 +45,7 @@ public class OrderService {
     public Optional<Order> findById(Long id) {
         return orderRepository.findById(id);
     }
-
+    
     @Transactional
     public Order createOrder(String userRef, Long userId, String status, double total, String jwtToken,
                            String shippingRecipient, String shippingStreet1, String shippingStreet2,

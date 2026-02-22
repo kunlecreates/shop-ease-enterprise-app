@@ -1,6 +1,8 @@
 package org.kunlecreates.order.infrastructure.notification;
 
 import org.kunlecreates.order.domain.Order;
+import org.kunlecreates.order.domain.OrderItem;
+import org.kunlecreates.order.repository.OrderItemRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,6 +17,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class NotificationClient {
@@ -25,18 +28,21 @@ public class NotificationClient {
     
     private final WebClient webClient;
     private final JwtDecoder jwtDecoder;
+    private final OrderItemRepository orderItemRepository;
     private final boolean enabled;
     
     public NotificationClient(
             @Value("${notification.service.url:http://localhost:8003}") String notificationServiceUrl,
             @Value("${notification.service.enabled:true}") boolean enabled,
             WebClient.Builder webClientBuilder,
-            JwtDecoder jwtDecoder
+            JwtDecoder jwtDecoder,
+            OrderItemRepository orderItemRepository
     ) {
         this.webClient = webClientBuilder
                 .baseUrl(notificationServiceUrl)
                 .build();
         this.jwtDecoder = jwtDecoder;
+        this.orderItemRepository = orderItemRepository;
         this.enabled = enabled;
         logger.info("NotificationClient initialized with URL: {} (enabled: {})", notificationServiceUrl, enabled);
     }
@@ -73,14 +79,20 @@ public class NotificationClient {
             Jwt jwt = jwtDecoder.decode(jwtToken);
             String fullName = jwt.getClaimAsString("fullName");
             
+            // Enhanced debug logging to understand JWT contents
+            logger.debug("JWT claims: {}", jwt.getClaims().keySet());
+            logger.debug("Extracted fullName claim: '{}'", fullName);
+            
             if (fullName != null && !fullName.isEmpty()) {
+                logger.info("Using customer name from JWT: {}", fullName);
                 return fullName;
             } else {
-                logger.warn("JWT token does not contain fullName claim. Using fallback.");
+                logger.warn("JWT token does not contain fullName claim or it is empty. Using fallback 'Customer'.");
+                logger.debug("Available JWT claims: {}", jwt.getClaims());
                 return "Customer";
             }
         } catch (Exception e) {
-            logger.error("Failed to decode JWT or extract name: {}. Using fallback.", e.getMessage());
+            logger.error("Failed to decode JWT or extract name: {}. Using fallback 'Customer'.", e.getMessage(), e);
             return "Customer";
         }
     }
@@ -99,12 +111,25 @@ public class NotificationClient {
             String userEmail = extractEmailFromJwt(jwtToken);
             String customerName = extractCustomerNameFromJwt(jwtToken);
             
+            // Fetch order items from database
+            List<OrderItem> orderItems = orderItemRepository.findByOrderId(order.getId());
+            List<OrderItemDto> itemDtos = orderItems.stream()
+                    .map(item -> new OrderItemDto(
+                            item.getProductRef(),  // Using productRef as name (TODO: fetch product details)
+                            item.getProductRef(),  // Using productRef as SKU
+                            item.getQuantity(),
+                            item.getUnitPriceCents() / 100.0  // Convert cents to dollars
+                    ))
+                    .collect(Collectors.toList());
+            
+            logger.debug("Fetched {} order items for order {}", itemDtos.size(), order.getId());
+            
             OrderConfirmationRequest request = new OrderConfirmationRequest(
                     order.getId().intValue(),
                     customerName,
                     userEmail,
                     order.getTotal(),
-                    List.of(), // Empty items list for now - TODO: fetch from OrderItem repository
+                    itemDtos,
                     formatInstant(order.getCreatedAt())
             );
             

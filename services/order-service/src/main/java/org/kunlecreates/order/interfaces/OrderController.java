@@ -31,20 +31,23 @@ public class OrderController {
      * Users see only their own orders; admins see all orders
      */
     @GetMapping
-    public List<Order> list(Authentication authentication) {
+    public List<OrderResponse> list(Authentication authentication) {
         String currentUserId = extractUserIdFromAuth(authentication);
         boolean isAdmin = hasRole(authentication, "ADMIN");
+        String customerName = extractCustomerNameFromAuth(authentication);
         
         List<Order> orders = orderService.listOrders();
         
         // Admins can see all orders, regular users only see their own
-        if (isAdmin) {
-            return orders;
+        if (!isAdmin) {
+            orders = orders.stream()
+                .filter(order -> currentUserId.equals(order.getUserRef()))
+                .collect(Collectors.toList());
         }
         
-        // Filter orders to only those belonging to the authenticated user
+        // Map to OrderResponse with customerName extracted from JWT
         return orders.stream()
-                .filter(order -> currentUserId.equals(order.getUserRef()))
+                .map(order -> toOrderResponse(order, customerName))
                 .collect(Collectors.toList());
     }
 
@@ -53,19 +56,21 @@ public class OrderController {
      * Users can only view their own orders unless they are admin
      */
     @GetMapping("/{id}")
-    public ResponseEntity<Order> get(@PathVariable Long id, Authentication authentication) {
+    public ResponseEntity<OrderResponse> get(@PathVariable Long id, Authentication authentication) {
         String currentUserId = extractUserIdFromAuth(authentication);
         boolean isAdmin = hasRole(authentication, "ADMIN");
+        String customerName = extractCustomerNameFromAuth(authentication);
         
         return orderService.findById(id)
                 .map(order -> {
                     // Check ownership: user must own the order OR be an admin
                     if (!currentUserId.equals(order.getUserRef()) && !isAdmin) {
-                        return ResponseEntity.status(HttpStatus.FORBIDDEN).<Order>body(null);
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).<OrderResponse>body(null);
                     }
-                    return ResponseEntity.ok(order);
+                    OrderResponse response = toOrderResponse(order, customerName);
+                    return ResponseEntity.ok(response);
                 })
-                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).<Order>body(null));
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).<OrderResponse>body(null));
     }
 
     /**
@@ -108,10 +113,14 @@ public class OrderController {
         
         URI location = uriBuilder.path("/api/order/{id}").buildAndExpand(created.getId()).toUri();
         
+        // Extract customer name from JWT for response
+        String customerName = extractCustomerNameFromAuth(authentication);
+        
         // Return order details in response body for frontend confirmation
         OrderResponse response = new OrderResponse(
             created.getId(),
             created.getUserRef(),
+            customerName,
             created.getStatus(),
             created.getTotalCents(),
             created.getCurrency(),
@@ -147,6 +156,50 @@ public class OrderController {
     private boolean hasRole(Authentication authentication, String role) {
         return authentication.getAuthorities().stream()
                 .anyMatch(auth -> auth.getAuthority().equals("ROLE_" + role));
+    }
+    
+    /**
+     * Extract customer full name from JWT token claims
+     * Returns fullName or "Customer" as fallback
+     */
+    private String extractCustomerNameFromAuth(Authentication authentication) {
+        if (authentication.getPrincipal() instanceof Jwt jwt) {
+            String fullName = jwt.getClaimAsString("fullName");
+            return (fullName != null && !fullName.isEmpty()) ? fullName : "Customer";
+        }
+        return "Customer";
+    }
+    
+    /**
+     * Convert Order entity to OrderResponse DTO with customerName
+     */
+    private OrderResponse toOrderResponse(Order order, String customerName) {
+        return new OrderResponse(
+            order.getId(),
+            order.getUserRef(),
+            customerName,
+            order.getStatus(),
+            order.getTotalCents(),
+            order.getCurrency(),
+            order.getPlacedAt(),
+            order.getCreatedAt(),
+            order.getUpdatedAt(),
+            new org.kunlecreates.order.interfaces.dto.ShippingAddress(
+                order.getShippingRecipient(),
+                order.getShippingStreet1(),
+                order.getShippingStreet2(),
+                order.getShippingCity(),
+                order.getShippingState(),
+                order.getShippingPostalCode(),
+                order.getShippingCountry(),
+                order.getShippingPhone()
+            ),
+            new org.kunlecreates.order.interfaces.dto.PaymentMethod(
+                order.getPaymentMethodType(),
+                order.getPaymentLast4(),
+                order.getPaymentBrand()
+            )
+        );
     }
     
     /**
