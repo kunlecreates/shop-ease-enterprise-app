@@ -8,6 +8,8 @@ imagePullSecrets: []
 env:
   OTEL_EXPORTER_OTLP_ENDPOINT: "${global.otel.collectorEndpoint}"
   SPRING_PROFILES_ACTIVE: "staging"
+  # Notification service URL - use full Kubernetes service DNS for cross-namespace communication
+  NOTIFICATION_SERVICE_URL: "http://notification-service.shopease-notification.svc.cluster.local:80"
   PAYMENT:
     PROVIDERS:
       - name: "mock"
