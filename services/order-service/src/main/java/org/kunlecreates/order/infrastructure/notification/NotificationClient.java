@@ -66,20 +66,17 @@ public class NotificationClient {
 
     /**
      * Extract customer full name from JWT token claims
-     * Returns "firstName lastName" or "Customer" as fallback
+     * Returns fullName or "Customer" as fallback
      */
     private String extractCustomerNameFromJwt(String jwtToken) {
         try {
             Jwt jwt = jwtDecoder.decode(jwtToken);
-            String firstName = jwt.getClaimAsString("firstName");
-            String lastName = jwt.getClaimAsString("lastName");
+            String fullName = jwt.getClaimAsString("fullName");
             
-            if (firstName != null && lastName != null) {
-                return firstName + " " + lastName;
-            } else if (firstName != null) {
-                return firstName;
+            if (fullName != null && !fullName.isEmpty()) {
+                return fullName;
             } else {
-                logger.warn("JWT token does not contain firstName/lastName claims. Using fallback.");
+                logger.warn("JWT token does not contain fullName claim. Using fallback.");
                 return "Customer";
             }
         } catch (Exception e) {

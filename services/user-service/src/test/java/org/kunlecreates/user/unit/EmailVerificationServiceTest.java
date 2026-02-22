@@ -93,7 +93,7 @@ class EmailVerificationServiceTest {
         emailVerificationService.sendVerificationEmail(testUser, rawToken);
 
         verify(restTemplate, never()).postForEntity(anyString(), any(), any());
-        verify(jwtService, never()).generateToken(anyString(), anyString(), anyList(), anyString(), anyString());
+        verify(jwtService, never()).generateToken(anyString(), anyString(), anyList(), anyString());
     }
 
     @Test
@@ -101,11 +101,11 @@ class EmailVerificationServiceTest {
         ReflectionTestUtils.setField(emailVerificationService, "testMode", false);
         String rawToken = "test-token";
         
-        when(jwtService.generateToken(anyString(), anyString(), anyList(), anyString(), anyString())).thenReturn("service-jwt");
+        when(jwtService.generateToken(anyString(), anyString(), anyList(), anyString())).thenReturn("service-jwt");
 
         emailVerificationService.sendVerificationEmail(testUser, rawToken);
 
-        verify(jwtService).generateToken("system", "user-service", List.of("SERVICE"), "System", "Service");
+        verify(jwtService).generateToken("system", "user-service", List.of("SERVICE"), "System Service");
         verify(restTemplate).postForEntity(
             eq("http://notification:8080/api/notification/email"),
             any(),

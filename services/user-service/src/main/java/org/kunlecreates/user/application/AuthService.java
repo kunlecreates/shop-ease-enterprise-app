@@ -83,8 +83,7 @@ public class AuthService {
                 String.valueOf(user.getId()),
                 user.getEmail(),
                 roleList,
-                user.getFirstName(),
-                user.getLastName()
+                user.getFullName()
             );
         }
         
@@ -128,8 +127,7 @@ public class AuthService {
             String.valueOf(user.getId()),
             user.getEmail(),
             roles,
-            user.getFirstName(),
-            user.getLastName()
+            user.getFullName()
         );
 
         String primaryRole = roles.isEmpty() ? "CUSTOMER" : roles.get(0);

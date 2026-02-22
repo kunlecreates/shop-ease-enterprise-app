@@ -23,7 +23,7 @@ public class JwtService {
         this.jwtEncoder = jwtEncoder;
     }
 
-    public String generateToken(String userId, String email, List<String> roles, String firstName, String lastName) {
+    public String generateToken(String userId, String email, List<String> roles, String fullName) {
         Instant now = Instant.now();
         Instant expiry = now.plus(expiryMinutes, ChronoUnit.MINUTES);
 
@@ -37,8 +37,7 @@ public class JwtService {
                 .subject(userId)
                 .claim("email", email)
                 .claim("roles", roles)
-                .claim("firstName", firstName)
-                .claim("lastName", lastName)
+                .claim("fullName", fullName)
                 .build();
 
         return jwtEncoder.encode(JwtEncoderParameters.from(headers, claims)).getTokenValue();
