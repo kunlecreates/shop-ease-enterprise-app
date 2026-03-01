@@ -18,6 +18,12 @@ export class ApiClient {
 
   private static async handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
+      // Fire a global event so AuthContext can clear the stale session — covers Cloudflare re-auth scenarios
+      // where the backend JWT is rejected but localStorage still contains the old credentials
+      if (response.status === 401 && typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('auth:unauthorized'));
+      }
+
       let error: ApiError;
       try {
         error = await response.json();

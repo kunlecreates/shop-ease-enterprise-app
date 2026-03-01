@@ -116,6 +116,7 @@ function ProductManagementContent() {
         </div>
       ) : (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+          <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
@@ -227,6 +228,7 @@ function ProductManagementContent() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 

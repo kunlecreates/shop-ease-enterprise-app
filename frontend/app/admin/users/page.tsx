@@ -77,6 +77,7 @@ function UserManagementContent() {
         <p className="text-center py-8 dark:text-white">Loading users...</p>
       ) : (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+          <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50 dark:bg-gray-700 border-b dark:border-gray-600">
               <tr>
@@ -132,6 +133,7 @@ function UserManagementContent() {
               No users found for the selected filter.
             </div>
           )}
+          </div>
         </div>
       )}
     </div>
