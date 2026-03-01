@@ -20,7 +20,7 @@ function OrdersContent() {
   }, []);
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
+    <div className="p-6 max-w-5xl mx-auto dark:bg-gray-900 min-h-screen">
       <h1 className="text-3xl font-bold mb-6 dark:text-white">Order History</h1>
 
       {success && (
@@ -55,10 +55,10 @@ function OrdersContent() {
                   </p>
                 </div>
                 <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                  order.status === 'DELIVERED' ? 'bg-green-100 text-green-800' :
-                  order.status === 'SHIPPED' ? 'bg-blue-100 text-blue-800' :
-                  order.status === 'PAID' ? 'bg-yellow-100 text-yellow-800' :
-                  'bg-gray-100 text-gray-800'
+                  order.status === 'DELIVERED' ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' :
+                  order.status === 'SHIPPED' ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200' :
+                  order.status === 'PAID' ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200' :
+                  'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
                 }`}>
                   {order.status}
                 </span>
@@ -75,7 +75,7 @@ function OrdersContent() {
                     <p className="text-sm dark:text-gray-300">
                       {order.shippingCity}{order.shippingState && `, ${order.shippingState}`} {order.shippingPostalCode}
                     </p>
-                    {order.shippingCountry && <p className="text-sm">{order.shippingCountry}</p>}
+                    {order.shippingCountry && <p className="text-sm dark:text-gray-300">{order.shippingCountry}</p>}
                   </div>
                 )}
                 

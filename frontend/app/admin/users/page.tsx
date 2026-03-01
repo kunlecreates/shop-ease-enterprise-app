@@ -59,7 +59,7 @@ function UserManagementContent() {
     : users.filter(u => !u.isActive);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-6 max-w-7xl mx-auto dark:bg-gray-900 min-h-screen">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold dark:text-white">User Management</h1>
         <select
@@ -91,7 +91,7 @@ function UserManagementContent() {
             </thead>
             <tbody>
               {filteredUsers.map((user, index) => (
-                <tr key={user.id} className={`${index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-750'} border-b dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors`}>
+                <tr key={user.id} className={`${index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900'} border-b dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors`}>
                   <td className="px-6 py-4 whitespace-nowrap font-medium dark:text-white">{user.username}</td>
                   <td className="px-6 py-4 dark:text-gray-300">{user.email}</td>
                   <td className="px-6 py-4">

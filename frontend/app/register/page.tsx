@@ -123,9 +123,9 @@ export default function RegisterPage() {
 
   return (
     <main className="flex items-center justify-center min-h-[calc(100vh-4rem)] px-4">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow">
+      <div className="max-w-md w-full space-y-8 bg-white dark:bg-gray-800 p-8 rounded-lg shadow dark:shadow-gray-700">
         <div>
-          <h2 className="text-3xl font-bold text-center text-gray-900">
+          <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white">
             Create your account
           </h2>
         </div>
@@ -179,9 +179,9 @@ export default function RegisterPage() {
             Create account
           </Button>
           
-          <p className="text-center text-sm text-gray-600">
+          <p className="text-center text-sm text-gray-600 dark:text-gray-400">
             Already have an account?{' '}
-            <Link href="/login" className="font-medium text-blue-600 hover:text-blue-500">
+            <Link href="/login" className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300">
               Sign in here
             </Link>
           </p>

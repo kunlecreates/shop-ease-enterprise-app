@@ -24,7 +24,7 @@ export default function CartPage() {
   }
 
   return (
-    <main className="p-6 max-w-5xl mx-auto">
+    <main className="p-6 max-w-5xl mx-auto dark:bg-gray-900 min-h-screen">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold dark:text-white">Shopping Cart</h1>
         <Button variant="danger" size="sm" onClick={clearCart}>

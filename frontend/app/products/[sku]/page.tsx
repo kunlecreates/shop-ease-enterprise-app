@@ -52,7 +52,7 @@ export default function ProductDetailPage() {
   if (!product) return null;
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="p-6 max-w-6xl mx-auto dark:bg-gray-900 min-h-screen">
       <Link href="/products"><Button variant="ghost" className="mb-6">← Back to Products</Button></Link>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
         <div className="bg-gray-100 dark:bg-gray-900 rounded-lg aspect-square flex items-center justify-center overflow-hidden">

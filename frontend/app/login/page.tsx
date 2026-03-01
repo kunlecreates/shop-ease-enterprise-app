@@ -117,16 +117,16 @@ export default function LoginPage() {
             Sign in
           </Button>
           
-          <div className="text-center text-sm text-gray-600 space-y-1">
+          <div className="text-center text-sm text-gray-600 dark:text-gray-400 space-y-1">
             <p>
               Forgot your password?{' '}
-              <Link href="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
+              <Link href="/forgot-password" className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300">
                 Reset it
               </Link>
             </p>
             <p>
               Don't have an account?{' '}
-              <Link href="/register" className="font-medium text-blue-600 hover:text-blue-500">
+              <Link href="/register" className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300">
                 Register here
               </Link>
             </p>

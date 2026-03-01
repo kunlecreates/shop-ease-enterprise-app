@@ -41,7 +41,7 @@ function ProfileContent() {
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
+    <div className="p-6 max-w-4xl mx-auto dark:bg-gray-900 min-h-screen">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold dark:text-white">My Profile</h1>
         {!isEditing && (
@@ -105,18 +105,20 @@ function ProfileContent() {
         ) : (
           <div className="space-y-3">
             <div>
-              <label className="text-sm font-medium text-gray-600">Username</label>
-              <p className="text-lg">{user?.username}</p>
+              <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Username</label>
+              <p className="text-lg dark:text-white">{user?.username}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-600">Email</label>
-              <p className="text-lg">{user?.email}</p>
+              <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Email</label>
+              <p className="text-lg dark:text-white">{user?.email}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-600">Role</label>
+              <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Role</label>
               <p className="text-lg">
                 <span className={`inline-block px-3 py-1 rounded-full text-sm ${
-                  user?.role === 'ADMIN' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+                  user?.role === 'ADMIN'
+                    ? 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200'
+                    : 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200'
                 }`}>
                   {user?.role}
                 </span>
@@ -128,17 +130,17 @@ function ProfileContent() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Link href="/orders" className="block">
-          <div className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer">
-            <h3 className="text-lg font-semibold mb-2">Order History</h3>
-            <p className="text-gray-600">View your past orders and track current ones</p>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-gray-700 p-6 hover:shadow-lg dark:hover:shadow-gray-600 transition-shadow cursor-pointer">
+            <h3 className="text-lg font-semibold mb-2 dark:text-white">Order History</h3>
+            <p className="text-gray-600 dark:text-gray-400">View your past orders and track current ones</p>
           </div>
         </Link>
         
         {user?.role === 'ADMIN' && (
           <Link href="/admin" className="block">
-            <div className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer">
-              <h3 className="text-lg font-semibold mb-2">Admin Dashboard</h3>
-              <p className="text-gray-600">Manage products, orders, and users</p>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-gray-700 p-6 hover:shadow-lg dark:hover:shadow-gray-600 transition-shadow cursor-pointer">
+              <h3 className="text-lg font-semibold mb-2 dark:text-white">Admin Dashboard</h3>
+              <p className="text-gray-600 dark:text-gray-400">Manage products, orders, and users</p>
             </div>
           </Link>
         )}

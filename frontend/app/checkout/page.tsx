@@ -86,8 +86,8 @@ export default function CheckoutPage() {
   };
 
   return (
-    <main className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Checkout</h1>
+    <main className="p-6 max-w-4xl mx-auto dark:bg-gray-900 min-h-screen">
+      <h1 className="text-3xl font-bold mb-6 dark:text-white">Checkout</h1>
 
       {step < 4 && (
         <div className="flex mb-8">
@@ -95,26 +95,26 @@ export default function CheckoutPage() {
             <div key={s} className="flex-1 flex items-center">
               <div
                 className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
-                  step >= s ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-600'
+                  step >= s ? 'bg-blue-600 text-white' : 'bg-gray-300 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
                 }`}
               >
                 {s}
               </div>
-              <div className={`flex-1 h-1 ${step > s ? 'bg-blue-600' : 'bg-gray-300'}`} />
+              <div className={`flex-1 h-1 ${step > s ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-700'}`} />
             </div>
           ))}
         </div>
       )}
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded mb-6">
+        <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-300 px-4 py-3 rounded mb-6">
           {error}
         </div>
       )}
 
       {step === 1 && (
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-2xl font-bold mb-4">Shipping Address</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-gray-700 p-6">
+          <h2 className="text-2xl font-bold mb-4 dark:text-white">Shipping Address</h2>
           <div className="space-y-4">
             <Input
               label="Recipient Name"
@@ -155,7 +155,7 @@ export default function CheckoutPage() {
                 required
               />
               <div>
-                <label className="block text-sm font-medium mb-1">
+                <label className="block text-sm font-medium mb-1 dark:text-gray-300">
                   Country <span className="text-red-500">*</span>
                 </label>
                 <select
@@ -202,10 +202,10 @@ export default function CheckoutPage() {
       )}
 
       {step === 2 && (
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-2xl font-bold mb-4">Payment Method</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-gray-700 p-6">
+          <h2 className="text-2xl font-bold mb-4 dark:text-white">Payment Method</h2>
           <div className="space-y-4">
-            <label className="flex items-center space-x-3 p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+            <label className="flex items-center space-x-3 p-4 border border-gray-200 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
               <input
                 type="radio"
                 name="payment"
@@ -215,11 +215,11 @@ export default function CheckoutPage() {
                 className="w-4 h-4"
               />
               <div>
-                <div className="font-semibold">Credit Card</div>
-                <div className="text-sm text-gray-600">Visa, Mastercard, Amex</div>
+                <div className="font-semibold dark:text-white">Credit Card</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">Visa, Mastercard, Amex</div>
               </div>
             </label>
-            <label className="flex items-center space-x-3 p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+            <label className="flex items-center space-x-3 p-4 border border-gray-200 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
               <input
                 type="radio"
                 name="payment"
@@ -229,14 +229,14 @@ export default function CheckoutPage() {
                 className="w-4 h-4"
               />
               <div>
-                <div className="font-semibold">PayPal</div>
-                <div className="text-sm text-gray-600">Pay with your PayPal account</div>
+                <div className="font-semibold dark:text-white">PayPal</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">Pay with your PayPal account</div>
               </div>
             </label>
             {paymentMethod.type === 'CREDIT_CARD' && (
-              <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-600 mb-2">Test Mode - Using mock card</p>
-                <p className="text-sm font-mono">Visa •••• {paymentMethod.last4}</p>
+              <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Test Mode - Using mock card</p>
+                <p className="text-sm font-mono dark:text-gray-300">Visa •••• {paymentMethod.last4}</p>
               </div>
             )}
           </div>
@@ -253,12 +253,12 @@ export default function CheckoutPage() {
 
       {step === 3 && (
         <div className="space-y-6">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-2xl font-bold mb-4">Order Review</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-gray-700 p-6">
+            <h2 className="text-2xl font-bold mb-4 dark:text-white">Order Review</h2>
             
             <div className="mb-6">
-              <h3 className="font-semibold mb-2">Shipping Address</h3>
-              <p className="text-gray-700">
+              <h3 className="font-semibold mb-2 dark:text-white">Shipping Address</h3>
+              <p className="text-gray-700 dark:text-gray-300">
                 {shippingAddress.recipient}<br />
                 {shippingAddress.street1}
                 {shippingAddress.street2 && <>, {shippingAddress.street2}</>}<br />
@@ -269,8 +269,8 @@ export default function CheckoutPage() {
             </div>
 
             <div className="mb-6">
-              <h3 className="font-semibold mb-2">Payment Method</h3>
-              <p className="text-gray-700">
+              <h3 className="font-semibold mb-2 dark:text-white">Payment Method</h3>
+              <p className="text-gray-700 dark:text-gray-300">
                 {paymentMethod.type === 'CREDIT_CARD' ? 'Credit Card' : paymentMethod.type}
                 {paymentMethod.last4 && paymentMethod.brand && 
                   ` - ${paymentMethod.brand} ••••${paymentMethod.last4}`
@@ -279,21 +279,21 @@ export default function CheckoutPage() {
             </div>
 
             <div className="mb-6">
-              <h3 className="font-semibold mb-2">Order Items</h3>
+              <h3 className="font-semibold mb-2 dark:text-white">Order Items</h3>
               {items.map((item) => (
-                <div key={item.id} className="flex justify-between py-2 border-b">
+                <div key={item.id} className="flex justify-between py-2 border-b dark:border-gray-600">
                   <div>
-                    <div>{item.product.name}</div>
-                    <div className="text-sm text-gray-600">Qty: {item.quantity}</div>
+                    <div className="dark:text-white">{item.product.name}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">Qty: {item.quantity}</div>
                   </div>
-                  <div className="font-semibold">
+                  <div className="font-semibold dark:text-white">
                     ${(item.price * item.quantity).toFixed(2)}
                   </div>
                 </div>
               ))}
               <div className="flex justify-between py-4 text-xl font-bold">
-                <span>Total</span>
-                <span className="text-blue-600">${getTotal().toFixed(2)}</span>
+                <span className="dark:text-white">Total</span>
+                <span className="text-blue-600 dark:text-blue-400">${getTotal().toFixed(2)}</span>
               </div>
             </div>
           </div>
@@ -311,7 +311,7 @@ export default function CheckoutPage() {
 
       {step === 4 && success && (
         <div className="space-y-6">
-          <div className="bg-green-50 border border-green-200 text-green-800 px-6 py-4 rounded-lg">
+          <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-200 px-6 py-4 rounded-lg">
             <div className="flex items-start">
               <svg className="w-6 h-6 text-green-600 mr-3 mt-0.5" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
                 <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -320,32 +320,32 @@ export default function CheckoutPage() {
                 <h3 className="font-semibold text-lg mb-1">Order Placed Successfully!</h3>
                 <p className="mb-2">{success}</p>
                 {orderId && (
-                  <p className="text-sm text-green-700">Order ID: <span className="font-mono font-semibold">#{orderId}</span></p>
+                  <p className="text-sm text-green-700 dark:text-green-300">Order ID: <span className="font-mono font-semibold">#{orderId}</span></p>
                 )}
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-2xl font-bold mb-4">What&apos;s Next?</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-gray-700 p-6">
+            <h2 className="text-2xl font-bold mb-4 dark:text-white">What&apos;s Next?</h2>
             <ul className="space-y-3 mb-6">
               <li className="flex items-start">
-                <svg className="w-5 h-5 text-blue-600 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                <span>You will receive an order confirmation email with details</span>
+                <span className="dark:text-gray-300">You will receive an order confirmation email with details</span>
               </li>
               <li className="flex items-start">
-                <svg className="w-5 h-5 text-blue-600 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                <span>We&apos;ll notify you when your order ships</span>
+                <span className="dark:text-gray-300">We&apos;ll notify you when your order ships</span>
               </li>
               <li className="flex items-start">
-                <svg className="w-5 h-5 text-blue-600 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                <span>Track your order anytime from your orders page</span>
+                <span className="dark:text-gray-300">Track your order anytime from your orders page</span>
               </li>
             </ul>
 

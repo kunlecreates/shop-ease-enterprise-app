@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button';
 
 function AdminContent() {
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-6 max-w-7xl mx-auto dark:bg-gray-900 min-h-screen">
       <h1 className="text-3xl font-bold mb-6 dark:text-white">Admin Dashboard</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -31,7 +31,7 @@ function AdminContent() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
-            <p className="text-gray-600 dark:text-gray-300 mb-4">View and manage customer orders and transactions</p>
+            <p className="text-gray-600 dark:text-gray-300 mb-4">View/manage customer orders and transactions</p>
             <Button size="sm" className="w-full">Manage Orders</Button>
           </div>
         </Link>

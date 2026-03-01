@@ -173,7 +173,7 @@ function OrderManagementContent() {
                 {filteredOrders.map((order, index) => (
                   <tr 
                     key={order.id}
-                    className={`${index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-750'} hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors`}
+                    className={`${index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900'} hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors`}
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-mono font-semibold text-gray-900 dark:text-gray-100">
