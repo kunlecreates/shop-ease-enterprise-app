@@ -92,6 +92,9 @@ spec:
             {{- end }}
 
             {{- if .Values.env }}
+            {{- $root := . }}
+            {{- range $key, $val := .Values.env }}
+            - name: {{ $key }}
               {{- if eq $key "OTEL_EXPORTER_OTLP_ENDPOINT" }}
               {{- /* Resolve ${global.otel.collectorEndpoint} placeholder if present; fall back to raw value */ -}}
               {{- $raw := printf "%v" $val }}
