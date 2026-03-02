@@ -34,7 +34,6 @@ public class OrderController {
     public List<OrderResponse> list(Authentication authentication) {
         String currentUserId = extractUserIdFromAuth(authentication);
         boolean isAdmin = hasRole(authentication, "ADMIN");
-        String customerName = extractCustomerNameFromAuth(authentication);
         
         List<Order> orders = orderService.listOrders();
         
@@ -45,9 +44,8 @@ public class OrderController {
                 .collect(Collectors.toList());
         }
         
-        // Map to OrderResponse with customerName extracted from JWT
         return orders.stream()
-                .map(order -> toOrderResponse(order, customerName))
+                .map(this::toOrderResponse)
                 .collect(Collectors.toList());
     }
 
@@ -59,7 +57,6 @@ public class OrderController {
     public ResponseEntity<OrderResponse> get(@PathVariable Long id, Authentication authentication) {
         String currentUserId = extractUserIdFromAuth(authentication);
         boolean isAdmin = hasRole(authentication, "ADMIN");
-        String customerName = extractCustomerNameFromAuth(authentication);
         
         return orderService.findById(id)
                 .map(order -> {
@@ -67,8 +64,7 @@ public class OrderController {
                     if (!currentUserId.equals(order.getUserRef()) && !isAdmin) {
                         return ResponseEntity.status(HttpStatus.FORBIDDEN).<OrderResponse>body(null);
                     }
-                    OrderResponse response = toOrderResponse(order, customerName);
-                    return ResponseEntity.ok(response);
+                    return ResponseEntity.ok(toOrderResponse(order));
                 })
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).<OrderResponse>body(null));
     }
@@ -125,21 +121,7 @@ public class OrderController {
         
         URI location = uriBuilder.path("/api/order/{id}").buildAndExpand(created.getId()).toUri();
         
-        // Return order details in response body for frontend confirmation
-        OrderResponse response = new OrderResponse(
-            created.getId(),
-            created.getUserRef(),
-            customerName,
-            created.getStatus(),
-            created.getTotalCents(),
-            created.getCurrency(),
-            created.getPlacedAt(),
-            created.getCreatedAt(),
-            created.getUpdatedAt(),
-            req.shippingAddress(),
-            req.paymentMethod()
-        );
-        return ResponseEntity.created(location).body(response);
+        return ResponseEntity.created(location).body(toOrderResponse(created));
     }
 
     /**
@@ -191,9 +173,14 @@ public class OrderController {
     }
     
     /**
-     * Convert Order entity to OrderResponse DTO with customerName
+     * Convert Order entity to OrderResponse DTO using the customer name stored on the order,
+     * which was captured from the customer's JWT at creation time.
      */
-    private OrderResponse toOrderResponse(Order order, String customerName) {
+    private OrderResponse toOrderResponse(Order order) {
+        String customerName = order.getCustomerName();
+        if (customerName == null || customerName.isEmpty()) {
+            customerName = order.getShippingRecipient();
+        }
         return new OrderResponse(
             order.getId(),
             order.getUserRef(),
