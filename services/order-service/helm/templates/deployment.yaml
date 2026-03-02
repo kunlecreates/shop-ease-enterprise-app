@@ -83,6 +83,15 @@ spec:
               value: {{ .Values.jwt.dev.JWT_SECRET | quote }}
             {{- end }}
 
+            {{- if .Values.internalApiKey.secretName }}
+            # Internal service-to-service API key (used by ProductServiceClient for stock reconciliation)
+            - name: INTERNAL_SERVICE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.internalApiKey.secretName }}
+                  key: INTERNAL_SERVICE_API_KEY
+            {{- end }}
+
             {{- if .Values.env }}
             {{- $root := . }}
             {{- range $key, $val := .Values.env }}

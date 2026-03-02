@@ -82,10 +82,16 @@ spec:
               value: {{ .Values.jwt.dev.JWT_SECRET | quote }}
             {{- end }}
 
+            {{- if .Values.internalApiKey.secretName }}
+            # Internal service-to-service API key (shared with order-service for stock reconciliation)
+            - name: INTERNAL_SERVICE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.internalApiKey.secretName }}
+                  key: INTERNAL_SERVICE_API_KEY
+            {{- end }}
+
             {{- if .Values.env }}
-            {{- $root := . }}
-            {{- range $key, $val := .Values.env }}
-            - name: {{ $key }}
               {{- if eq $key "OTEL_EXPORTER_OTLP_ENDPOINT" }}
               {{- /* Resolve ${global.otel.collectorEndpoint} placeholder if present; fall back to raw value */ -}}
               {{- $raw := printf "%v" $val }}

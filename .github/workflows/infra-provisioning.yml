@@ -71,6 +71,8 @@ on:
         required: false
       NOTIFICATION_MAIL_FROM:
         required: false
+      INTERNAL_SERVICE_API_KEY:
+        required: false
       CF_ACCESS_CLIENT_ID:
         required: false
       CF_ACCESS_CLIENT_SECRET:
@@ -147,6 +149,7 @@ jobs:
           NOTIFICATION_MAIL_USER: ${{ secrets.NOTIFICATION_MAIL_USER }}
           NOTIFICATION_MAIL_PASSWORD: ${{ secrets.NOTIFICATION_MAIL_PASSWORD }}
           NOTIFICATION_MAIL_FROM: ${{ secrets.NOTIFICATION_MAIL_FROM }}
+          INTERNAL_SERVICE_API_KEY: ${{ secrets.INTERNAL_SERVICE_API_KEY }}
           CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
           CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
         uses: actions/github-script@v7
@@ -258,6 +261,12 @@ jobs:
               if ((svc === 'user' || svc === 'product' || svc === 'order' || svc === 'notification') && env.JWT_SECRET) {
                 console.log(`Creating JWT secret for ${svc}-service in ${NS}`);
                 run(`kubectl -n ${NS} create secret generic ${svc}-jwt --from-literal=JWT_SECRET='${env.JWT_SECRET}' --dry-run=client -o yaml | kubectl apply -f -`);
+              }
+
+              // Create shared internal service API key secret for order-service and product-service
+              if ((svc === 'order' || svc === 'product') && env.INTERNAL_SERVICE_API_KEY) {
+                console.log(`Creating internal API key secret in ${NS}`);
+                run(`kubectl -n ${NS} create secret generic shopease-internal-api-key --from-literal=INTERNAL_SERVICE_API_KEY='${env.INTERNAL_SERVICE_API_KEY}' --dry-run=client -o yaml | kubectl apply -f -`);
               }
 
               // migration secret
