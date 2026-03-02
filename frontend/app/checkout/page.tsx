@@ -64,7 +64,7 @@ export default function CheckoutPage() {
         status: 'PENDING',
         total: getTotal(),
         items: items.map(item => ({
-          productRef: String(item.productId),
+          productRef: item.product?.sku ?? String(item.productId),
           productName: item.product?.name ?? '',
           quantity: item.quantity,
           unitPrice: item.price,

@@ -7,6 +7,7 @@ import org.kunlecreates.order.domain.OrderEvent;
 import org.kunlecreates.order.domain.OrderItem;
 import org.kunlecreates.order.domain.OrderStatus;
 import org.kunlecreates.order.infrastructure.notification.NotificationClient;
+import org.kunlecreates.order.infrastructure.product.ProductServiceClient;
 import org.kunlecreates.order.repository.OrderEventRepository;
 import org.kunlecreates.order.repository.OrderItemRepository;
 import org.kunlecreates.order.repository.OrderRepository;
@@ -30,18 +31,21 @@ public class OrderService {
     private final OrderItemRepository orderItemRepository;
     private final PaymentService paymentService;
     private final NotificationClient notificationClient;
+    private final ProductServiceClient productServiceClient;
 
     public OrderService(
             OrderRepository orderRepository, 
             OrderEventRepository orderEventRepository,
             OrderItemRepository orderItemRepository,
             PaymentService paymentService,
-            NotificationClient notificationClient) {
+            NotificationClient notificationClient,
+            ProductServiceClient productServiceClient) {
         this.orderRepository = orderRepository;
         this.orderEventRepository = orderEventRepository;
         this.orderItemRepository = orderItemRepository;
         this.paymentService = paymentService;
         this.notificationClient = notificationClient;
+        this.productServiceClient = productServiceClient;
     }
 
     @Transactional(readOnly = true)
@@ -142,6 +146,24 @@ public class OrderService {
         if (!events.isEmpty()) {
             orderEventRepository.saveAll(events);
             order.clearDomainEvents();
+        }
+
+        // Reconcile stock with the product service based on the transition
+        List<OrderItem> items = orderItemRepository.findByOrderId(orderId);
+        if (newStatus == OrderStatus.PAID) {
+            // Decrement stock when payment is confirmed — items are now committed
+            items.forEach(item -> productServiceClient.adjustStock(
+                    item.getProductRef(), -item.getQuantity(),
+                    "Order #" + orderId + " paid"));
+        } else if (newStatus == OrderStatus.CANCELLED || newStatus == OrderStatus.REFUNDED) {
+            // Restore stock only if it was previously decremented (i.e. order reached PAID)
+            boolean wasDeducted = previousStatus == OrderStatus.PAID
+                    || previousStatus == OrderStatus.SHIPPED;
+            if (wasDeducted) {
+                items.forEach(item -> productServiceClient.adjustStock(
+                        item.getProductRef(), item.getQuantity(),
+                        "Order #" + orderId + " " + newStatus.getValue().toLowerCase()));
+            }
         }
         
         // Send appropriate email notification based on new status

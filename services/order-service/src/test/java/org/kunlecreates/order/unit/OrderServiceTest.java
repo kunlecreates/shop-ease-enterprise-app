@@ -15,6 +15,7 @@ import org.kunlecreates.order.repository.OrderRepository;
 import org.kunlecreates.order.repository.OrderEventRepository;
 import org.kunlecreates.order.repository.OrderItemRepository;
 import org.kunlecreates.order.infrastructure.notification.NotificationClient;
+import org.kunlecreates.order.infrastructure.product.ProductServiceClient;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Optional;
@@ -42,6 +43,9 @@ class OrderServiceTest {
 
     @Mock
     private NotificationClient notificationClient;
+
+    @Mock
+    private ProductServiceClient productServiceClient;
 
     @InjectMocks
     private OrderService orderService;

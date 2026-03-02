@@ -3,6 +3,7 @@ import { ProductService } from '../application/product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { JwtAuthGuard } from '../config/jwt-auth.guard';
+import { InternalApiKeyGuard } from '../guards/internal-api-key.guard';
 
 @Controller('product')
 export class ProductController {
@@ -120,6 +121,20 @@ export class ProductController {
     }
     const adjustment = body.adjustment ?? body.quantity ?? 0;
     return this.service.adjustStock(sku, adjustment, body.reason || 'Manual adjustment');
+  }
+
+  /**
+   * Internal service-to-service stock adjustment endpoint.
+   * Secured by X-Internal-Api-Key header — not accessible to end users.
+   * Called by order-service to reconcile stock on PAID, CANCELLED, and REFUNDED transitions.
+   */
+  @Patch('internal/:sku/stock')
+  @UseGuards(InternalApiKeyGuard)
+  async adjustStockInternal(
+    @Param('sku') sku: string,
+    @Body() body: { adjustment: number; reason?: string },
+  ) {
+    return this.service.adjustStock(sku, body.adjustment, body.reason || 'Order fulfillment');
   }
 
   @Delete(':sku')
