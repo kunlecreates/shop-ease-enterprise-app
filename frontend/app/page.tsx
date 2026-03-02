@@ -8,206 +8,295 @@ export const metadata: Metadata = {
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-gray-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      {/* Hero Section - Vibrant & Modern */}
-      <section className="relative overflow-hidden w-full min-h-[90vh] flex items-center">
-        {/* Animated Gradient Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 via-cyan-500 to-blue-500 opacity-90 dark:opacity-80" />
-        <div className="absolute inset-0">
-          <div className="absolute top-0 left-0 w-96 h-96 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob" />
-          <div className="absolute top-0 right-0 w-96 h-96 bg-yellow-400 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000" />
-          <div className="absolute bottom-0 left-1/3 w-96 h-96 bg-pink-400 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000" />
-        </div>
-        
-        <div className="max-w-7xl mx-auto px-8 relative z-10 w-full">
-          <div className="max-w-4xl">
-            <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-xl px-6 py-3 rounded-full text-sm font-bold mb-8 border border-white/30 text-white shadow-2xl">
-              <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-              NEW ARRIVALS DAILY
+    <div className="bg-white dark:bg-slate-950">
+
+      {/* ── Hero ─────────────────────────────────────────────────── */}
+      <section className="relative isolate overflow-hidden bg-slate-950">
+        {/* Subtle grid pattern overlay */}
+        <svg
+          aria-hidden="true"
+          className="absolute inset-0 -z-10 h-full w-full stroke-slate-700/30 [mask-image:radial-gradient(100%_100%_at_top_right,white,transparent)]"
+        >
+          <defs>
+            <pattern id="hero-grid" width={200} height={200} x="50%" y={-1} patternUnits="userSpaceOnUse">
+              <path d="M.5 200V.5H200" fill="none" />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" strokeWidth={0} fill="url(#hero-grid)" />
+        </svg>
+
+        {/* Radial glow */}
+        <div
+          aria-hidden="true"
+          className="absolute left-[max(50%,25rem)] top-0 -z-10 h-[64rem] w-[128rem] -translate-x-1/2 [mask-image:radial-gradient(64rem_64rem_at_top,white,transparent)] bg-gradient-to-tr from-indigo-900/40 via-indigo-600/20 to-transparent"
+        />
+
+        <div className="mx-auto max-w-7xl px-6 pb-24 pt-20 sm:pb-32 lg:flex lg:items-center lg:gap-x-16 lg:px-8 lg:pt-32">
+          <div className="mx-auto max-w-2xl lg:mx-0 lg:max-w-xl lg:flex-shrink-0">
+            <div className="inline-flex items-center gap-x-2 rounded-full bg-indigo-500/10 px-4 py-1.5 ring-1 ring-inset ring-indigo-500/20 mb-8">
+              <span className="text-xs font-semibold text-indigo-400 tracking-widest uppercase">New arrivals daily</span>
+              <svg className="h-3.5 w-3.5 text-indigo-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+              </svg>
             </div>
 
-            <h1 className="text-6xl md:text-8xl lg:text-9xl font-black mb-6 leading-tight text-white tracking-tighter drop-shadow-2xl">
-              Fresh For
-              <br />
-              <span className="bg-gradient-to-r from-yellow-300 via-orange-400 to-pink-500 bg-clip-text text-transparent">
-                Your Family
-              </span>
+            <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl lg:text-7xl">
+              Premium groceries,{' '}
+              <span className="text-indigo-400">delivered fresh</span>
             </h1>
-            
-            <p className="text-xl md:text-2xl mb-10 text-white/95 max-w-2xl leading-relaxed font-medium drop-shadow-lg">
-              🥬 Fresh groceries, 🏠 quality essentials, and 🎯 everything you need delivered to your door
+
+            <p className="mt-6 text-lg leading-8 text-slate-300 max-w-lg">
+              Everything your household needs — from farm-fresh produce to everyday essentials — sourced with care and delivered to your door.
             </p>
-            
-            <div className="flex gap-4 flex-wrap items-center">
-              <Link href="/products">
-                <button className="bg-white text-gray-900 px-12 py-5 text-lg font-bold rounded-2xl border-none cursor-pointer shadow-2xl hover:shadow-3xl hover:bg-yellow-50 transition-all duration-300 ease-out tracking-wide hover:scale-105 hover:-translate-y-1">
-                  🛒 Shop Now
-                </button>
+
+            <div className="mt-10 flex items-center gap-x-4">
+              <Link
+                href="/products"
+                className="rounded-lg bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-colors duration-200"
+              >
+                Browse products
               </Link>
-              <Link href="/register">
-                <button className="bg-gray-900/80 backdrop-blur-md text-white px-12 py-5 text-lg font-bold rounded-2xl border-2 border-white/40 cursor-pointer hover:bg-gray-900 transition-all duration-300 ease-out tracking-wide hover:scale-105">
-                  Join Free
-                </button>
+              <Link
+                href="/register"
+                className="text-sm font-semibold text-slate-300 hover:text-white transition-colors duration-200 flex items-center gap-x-1"
+              >
+                Create free account
+                <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+                </svg>
               </Link>
             </div>
+          </div>
 
-            {/* Vibrant Stats */}
-            <div className="grid grid-cols-3 gap-6 mt-16 pt-10 border-t-2 border-white/30 max-w-2xl">
-              <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/20">
-                <div className="text-5xl font-black text-yellow-300 mb-2">10K+</div>
-                <div className="text-sm text-white/90 font-semibold uppercase tracking-wider">Products</div>
-              </div>
-              <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/20">
-                <div className="text-5xl font-black text-green-300 mb-2">50K+</div>
-                <div className="text-sm text-white/90 font-semibold uppercase tracking-wider">Customers</div>
-              </div>
-              <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/20">
-                <div className="text-5xl font-black text-pink-300 mb-2">24/7</div>
-                <div className="text-sm text-white/90 font-semibold uppercase tracking-wider">Support</div>
-              </div>
+          {/* Stats panel */}
+          <div className="mx-auto mt-16 lg:mt-0 lg:flex-1">
+            <div className="grid grid-cols-2 gap-4 sm:gap-6">
+              {[
+                { value: '10,000+', label: 'Products in catalogue', description: 'Across every grocery category' },
+                { value: '50,000+', label: 'Happy customers', description: 'And growing every week' },
+                { value: 'Same-day', label: 'Delivery available', description: 'Order before 3 pm' },
+                { value: '24 / 7', label: 'Customer support', description: 'Real humans, always on' },
+              ].map((stat) => (
+                <div
+                  key={stat.label}
+                  className="rounded-2xl bg-slate-800/50 ring-1 ring-slate-700/50 p-6 backdrop-blur-sm"
+                >
+                  <p className="text-3xl font-bold tracking-tight text-white">{stat.value}</p>
+                  <p className="mt-1 text-sm font-semibold text-slate-300">{stat.label}</p>
+                  <p className="mt-1 text-xs text-slate-500">{stat.description}</p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </section>
 
-      {/* Features Section - Colorful Cards */}
-      <section className="max-w-7xl mx-auto px-8 py-24 relative">
-        <div className="text-center mb-16">
-          <h2 className="text-5xl md:text-6xl font-black text-gray-900 dark:text-white mb-4 tracking-tighter">
-            Why Shop With Us? 🌟
+      {/* ── Trust strip ──────────────────────────────────────────── */}
+      <div className="border-y border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
+        <div className="mx-auto max-w-7xl px-6 py-5 lg:px-8">
+          <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
+            {[
+              { label: 'Secure checkout', icon: (
+                <svg className="h-4 w-4 text-slate-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                </svg>
+              )},
+              { label: '100% satisfaction guarantee', icon: (
+                <svg className="h-4 w-4 text-slate-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.745 3.745 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.745 3.745 0 013.296-1.043A3.745 3.745 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.745 3.745 0 013.296 1.043 3.745 3.745 0 011.043 3.296A3.745 3.745 0 0121 12z" />
+                </svg>
+              )},
+              { label: 'Free shipping on orders over $50', icon: (
+                <svg className="h-4 w-4 text-slate-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
+                </svg>
+              )},
+              { label: 'Sourced from local farms', icon: (
+                <svg className="h-4 w-4 text-slate-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+                </svg>
+              )},
+            ].map((item) => (
+              <div key={item.label} className="flex items-center gap-x-2 text-sm text-slate-600 dark:text-slate-400 font-medium">
+                {item.icon}
+                {item.label}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Features ─────────────────────────────────────────────── */}
+      <section className="mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-8">
+        <div className="mx-auto max-w-2xl text-center mb-16">
+          <p className="text-sm font-semibold text-indigo-600 dark:text-indigo-400 tracking-widest uppercase mb-3">
+            Why ShopEase
+          </p>
+          <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
+            A smarter way to shop for groceries
           </h2>
-          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Experience grocery shopping reimagined for modern families
+          <p className="mt-4 text-lg text-slate-600 dark:text-slate-400">
+            Built around the things that matter most — quality, convenience, and transparency.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {/* Feature 1 - Green/Fresh Theme */}
-          <div className="group bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20 p-10 rounded-3xl border-2 border-green-200 dark:border-green-700 hover:border-green-400 hover:shadow-2xl hover:shadow-green-200/50 transition-all duration-300 hover:-translate-y-2">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center mb-6 shadow-xl shadow-green-500/50 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
-              <span className="text-4xl">🥬</span>
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          {[
+            {
+              title: 'Farm-fresh produce',
+              description: 'Sourced directly from trusted local farms. Every item is picked for freshness and delivered within 24 hours of harvest.',
+              icon: (
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 3c-4.97 0-9 .5-9 5s4.03 5 9 5 9-.5 9-5-4.03-5-9-5zm0 10c-4.97 0-9 .5-9 5s4.03 5 9 5 9-.5 9-5-4.03-5-9-5zm0-5v5M9 9l3 3 3-3" />
+                </svg>
+              ),
+            },
+            {
+              title: 'Same-day delivery',
+              description: 'Order before 3 pm and receive your groceries at your door the same evening. No waiting, no planning ahead.',
+              icon: (
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
+                </svg>
+              ),
+            },
+            {
+              title: 'Quality guaranteed',
+              description: "Not satisfied with an item? We'll replace it or refund it — no questions asked. Your trust is our highest priority.",
+              icon: (
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.745 3.745 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.745 3.745 0 013.296-1.043A3.745 3.745 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.745 3.745 0 013.296 1.043 3.745 3.745 0 011.043 3.296A3.745 3.745 0 0121 12z" />
+                </svg>
+              ),
+            },
+            {
+              title: 'In-store location finder',
+              description: 'Every product lists its exact aisle, section, and shelf number — so you can pick up in-store without searching.',
+              icon: (
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                </svg>
+              ),
+            },
+            {
+              title: 'Transparent pricing',
+              description: 'No hidden fees, no surprise charges. The price you see at browse is the price you pay at checkout.',
+              icon: (
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
+                </svg>
+              ),
+            },
+            {
+              title: '24/7 live support',
+              description: 'Reach a real person at any time via chat, phone, or email. We are always available to resolve your issue.',
+              icon: (
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 9.75a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375m-13.5 3.01c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 01.778-.332 48.294 48.294 0 005.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
+                </svg>
+              ),
+            },
+          ].map((feature) => (
+            <div
+              key={feature.title}
+              className="relative rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-lg transition-all duration-200"
+            >
+              <div className="mb-5 inline-flex items-center justify-center rounded-xl bg-indigo-50 dark:bg-indigo-950 p-3 text-indigo-600 dark:text-indigo-400">
+                {feature.icon}
+              </div>
+              <h3 className="text-base font-semibold text-slate-900 dark:text-white mb-2">
+                {feature.title}
+              </h3>
+              <p className="text-sm leading-6 text-slate-600 dark:text-slate-400">
+                {feature.description}
+              </p>
             </div>
-            <h3 className="text-2xl font-black mb-3 text-gray-900 dark:text-white">
-              Farm Fresh Daily
-            </h3>
-            <p className="text-gray-700 dark:text-gray-300 text-base leading-relaxed">
-              Sourced directly from local farms. Fresh produce delivered within 24 hours of harvest.
+          ))}
+        </div>
+      </section>
+
+      {/* ── Testimonials ─────────────────────────────────────────── */}
+      <section className="bg-slate-50 dark:bg-slate-900 border-y border-slate-200 dark:border-slate-800">
+        <div className="mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-8">
+          <div className="mx-auto max-w-2xl text-center mb-16">
+            <p className="text-sm font-semibold text-indigo-600 dark:text-indigo-400 tracking-widest uppercase mb-3">
+              Testimonials
             </p>
+            <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
+              Trusted by thousands of households
+            </h2>
           </div>
 
-          {/* Feature 2 - Blue/Fast Theme */}
-          <div className="group bg-gradient-to-br from-blue-50 to-cyan-100 dark:from-blue-900/20 dark:to-cyan-900/20 p-10 rounded-3xl border-2 border-blue-200 dark:border-blue-700 hover:border-blue-400 hover:shadow-2xl hover:shadow-blue-200/50 transition-all duration-300 hover:-translate-y-2">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center mb-6 shadow-xl shadow-blue-500/50 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
-              <span className="text-4xl">⚡</span>
-            </div>
-            <h3 className="text-2xl font-black mb-3 text-gray-900 dark:text-white">
-              Lightning Delivery
-            </h3>
-            <p className="text-gray-700 dark:text-gray-300 text-base leading-relaxed">
-              Same-day delivery available. Order before 3pm and get it by dinner time!
-            </p>
-          </div>
-
-          {/* Feature 3 - Purple/Quality Theme */}
-          <div className="group bg-gradient-to-br from-purple-50 to-pink-100 dark:from-purple-900/20 dark:to-pink-900/20 p-10 rounded-3xl border-2 border-purple-200 dark:border-purple-700 hover:border-purple-400 hover:shadow-2xl hover:shadow-purple-200/50 transition-all duration-300 hover:-translate-y-2">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center mb-6 shadow-xl shadow-purple-500/50 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
-              <span className="text-4xl">✨</span>
-            </div>
-            <h3 className="text-2xl font-black mb-3 text-gray-900 dark:text-white">
-              Quality Guaranteed
-            </h3>
-            <p className="text-gray-700 dark:text-gray-300 text-base leading-relaxed">
-              100% satisfaction guarantee. Don't love it? We'll refund or replace it!
-            </p>
-          </div>
-
-          {/* Feature 4 - Orange/Location Theme */}
-          <div className="group bg-gradient-to-br from-orange-50 to-yellow-100 dark:from-orange-900/20 dark:to-yellow-900/20 p-10 rounded-3xl border-2 border-orange-200 dark:border-orange-700 hover:border-orange-400 hover:shadow-2xl hover:shadow-orange-200/50 transition-all duration-300 hover:-translate-y-2">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500 to-yellow-600 flex items-center justify-center mb-6 shadow-xl shadow-orange-500/50 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
-              <span className="text-4xl">📍</span>
-            </div>
-            <h3 className="text-2xl font-black mb-3 text-gray-900 dark:text-white">
-              Find In-Store
-            </h3>
-            <p className="text-gray-700 dark:text-gray-300 text-base leading-relaxed">
-              Every product shows exact aisle and shelf location for easy in-store pickup.
-            </p>
-          </div>
-
-          {/* Feature 5 - Red/Price Theme */}
-          <div className="group bg-gradient-to-br from-red-50 to-rose-100 dark:from-red-900/20 dark:to-rose-900/20 p-10 rounded-3xl border-2 border-red-200 dark:border-red-700 hover:border-red-400 hover:shadow-2xl hover:shadow-red-200/50 transition-all duration-300 hover:-translate-y-2">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center mb-6 shadow-xl shadow-red-500/50 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
-              <span className="text-4xl">💰</span>
-            </div>
-            <h3 className="text-2xl font-black mb-3 text-gray-900 dark:text-white">
-              Best Prices
-            </h3>
-            <p className="text-gray-700 dark:text-gray-300 text-base leading-relaxed">
-              Competitive prices + weekly deals. Save more on the things you buy most.
-            </p>
-          </div>
-
-          {/* Feature 6 - Indigo/Support Theme */}
-          <div className="group bg-gradient-to-br from-indigo-50 to-violet-100 dark:from-indigo-900/20 dark:to-violet-900/20 p-10 rounded-3xl border-2 border-indigo-200 dark:border-indigo-700 hover:border-indigo-400 hover:shadow-2xl hover:shadow-indigo-200/50 transition-all duration-300 hover:-translate-y-2">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center mb-6 shadow-xl shadow-indigo-500/50 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
-              <span className="text-4xl">💬</span>
-            </div>
-            <h3 className="text-2xl font-black mb-3 text-gray-900 dark:text-white">
-              24/7 Support
-            </h3>
-            <p className="text-gray-700 dark:text-gray-300 text-base leading-relaxed">
-              Real humans ready to help anytime. Chat, call, or email - we're here!
-            </p>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              {
+                quote: "I switched to ShopEase three months ago and haven't looked back. The produce quality is noticeably better than anywhere else I've tried.",
+                name: 'Sarah M.',
+                role: 'Customer since 2024',
+              },
+              {
+                quote: "The same-day delivery is genuinely impressive. I ordered at 2 pm and dinner ingredients were at my door by 5:30. That kind of reliability is hard to find.",
+                name: 'James O.',
+                role: 'Customer since 2023',
+              },
+              {
+                quote: "I love the in-store location feature. I can order online or just use the app to navigate straight to the shelf — saves me ten minutes every single trip.",
+                name: 'Priya L.',
+                role: 'Customer since 2025',
+              },
+            ].map((t) => (
+              <figure
+                key={t.name}
+                className="rounded-2xl bg-white dark:bg-slate-800 ring-1 ring-slate-200 dark:ring-slate-700 p-8"
+              >
+                <svg className="h-6 w-6 text-indigo-400 mb-4" fill="currentColor" viewBox="0 0 32 32" aria-hidden="true">
+                  <path d="M9.352 4C4.456 7.456 1 13.12 1 19.36c0 5.088 3.072 8.064 6.624 8.064 3.36 0 5.856-2.688 5.856-5.856 0-3.168-2.208-5.472-5.088-5.472-.576 0-1.344.096-1.536.192.48-3.264 3.552-7.104 6.624-9.024L9.352 4zm16.512 0c-4.8 3.456-8.256 9.12-8.256 15.36 0 5.088 3.072 8.064 6.624 8.064 3.264 0 5.856-2.688 5.856-5.856 0-3.168-2.304-5.472-5.184-5.472-.576 0-1.248.096-1.44.192.48-3.264 3.456-7.104 6.528-9.024L25.864 4z" />
+                </svg>
+                <blockquote className="text-sm leading-7 text-slate-700 dark:text-slate-300">
+                  {t.quote}
+                </blockquote>
+                <figcaption className="mt-6 border-t border-slate-200 dark:border-slate-700 pt-4">
+                  <div className="text-sm font-semibold text-slate-900 dark:text-white">{t.name}</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-500 mt-0.5">{t.role}</div>
+                </figcaption>
+              </figure>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* CTA Section - Vibrant Gradient */}
-      <section className="relative py-32 px-8 text-center overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-violet-600 via-fuchsia-600 to-pink-600" />
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNnptMCA0NGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNnpNMTIgMzZjMy4zMTQgMCA2IDIuNjg2IDYgNnMtMi42ODYgNi02IDYtNi0yLjY4Ni02LTYgMi42ODYtNiA2LTZ6IiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMiIgb3BhY2l0eT0iLjEiLz48L2c+PC9zdmc+')] opacity-20" />
-        
-        <div className="max-w-4xl mx-auto relative z-10">
-          <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-6 py-3 rounded-full text-sm font-bold mb-6 text-white">
-            <span className="text-xl">🎉</span>
-            SPECIAL OFFER
+      {/* ── Final CTA ────────────────────────────────────────────── */}
+      <section className="bg-indigo-600 dark:bg-indigo-700">
+        <div className="mx-auto max-w-7xl px-6 py-20 sm:py-28 lg:px-8 lg:flex lg:items-center lg:justify-between">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+              Ready to shop smarter?
+            </h2>
+            <p className="mt-3 text-lg text-indigo-100 max-w-xl">
+              Join over 50,000 customers who receive fresh groceries and household essentials every week.
+            </p>
           </div>
-          <h2 className="text-5xl md:text-7xl font-black text-white mb-6 tracking-tighter drop-shadow-2xl">
-            Ready to Start?
-          </h2>
-          <p className="text-2xl text-white/95 mb-10 leading-relaxed font-medium drop-shadow-lg">
-            Join 50,000+ satisfied customers enjoying fresh groceries delivered daily
-          </p>
-          <div className="flex gap-4 justify-center flex-wrap">
-            <Link href="/products">
-              <button className="bg-white text-violet-600 px-14 py-6 text-xl font-black rounded-2xl border-none cursor-pointer shadow-2xl hover:shadow-3xl hover:bg-yellow-50 transition-all duration-300 ease-out tracking-wide hover:scale-110 hover:-translate-y-2">
-                Browse Products →
-              </button>
+          <div className="mt-10 lg:mt-0 flex flex-col sm:flex-row items-start sm:items-center gap-4 flex-shrink-0">
+            <Link
+              href="/products"
+              className="rounded-lg bg-white px-6 py-3 text-sm font-semibold text-indigo-600 shadow-sm hover:bg-indigo-50 transition-colors duration-200"
+            >
+              Browse products
             </Link>
-            <Link href="/register">
-              <button className="bg-transparent backdrop-blur-md text-white px-14 py-6 text-xl font-black rounded-2xl border-4 border-white cursor-pointer hover:bg-white hover:text-violet-600 transition-all duration-300 ease-out tracking-wide hover:scale-110 hover:-translate-y-2">
-                Sign Up Free
-              </button>
+            <Link
+              href="/register"
+              className="text-sm font-semibold text-white hover:text-indigo-100 transition-colors duration-200 flex items-center gap-x-1"
+            >
+              Create an account
+              <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+              </svg>
             </Link>
-          </div>
-          
-          {/* Trust Badges */}
-          <div className="flex gap-8 justify-center mt-16 flex-wrap">
-            <div className="flex items-center gap-2 text-white/90 font-semibold">
-              <span className="text-2xl">🔒</span>
-              <span>Secure Checkout</span>
-            </div>
-            <div className="flex items-center gap-2 text-white/90 font-semibold">
-              <span className="text-2xl">⭐</span>
-              <span>4.9/5 Rating</span>
-            </div>
-            <div className="flex items-center gap-2 text-white/90 font-semibold">
-              <span className="text-2xl">🚚</span>
-              <span>Free Shipping</span>
-            </div>
           </div>
         </div>
       </section>
+
     </div>
   );
 }
