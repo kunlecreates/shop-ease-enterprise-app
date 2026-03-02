@@ -44,26 +44,17 @@ export interface Cart {
 
 export interface Order {
   id: string;
-  userRef?: string;  // Backend uses userRef, not userId
-  userId?: string;   // Keep for backwards compatibility
-  customerName?: string; // Customer full name extracted from JWT
+  userRef?: string;
+  userId?: string;
+  customerName?: string;
   status: 'PENDING' | 'PAID' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED' | 'REFUNDED';
-  total: number;     // Backend returns totalCents and calculates getTotal()
-  totalPrice: number; // Alias for total
+  total: number;
+  totalPrice: number;
   totalCents?: number;
   currency?: string;
   placedAt?: string;
-  shippingRecipient?: string;
-  shippingStreet1?: string;
-  shippingStreet2?: string;
-  shippingCity?: string;
-  shippingState?: string;
-  shippingPostalCode?: string;
-  shippingCountry?: string;
-  shippingPhone?: string;
-  paymentMethodType?: string;
-  paymentLast4?: string;
-  paymentBrand?: string;
+  shippingAddress?: ShippingAddress;
+  paymentMethod?: PaymentMethod;
   createdAt: string;
   updatedAt: string;
 }

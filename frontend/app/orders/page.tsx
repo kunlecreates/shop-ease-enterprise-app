@@ -66,26 +66,26 @@ function OrdersContent() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 {/* Shipping Information */}
-                {order.shippingRecipient && (
+                {order.shippingAddress?.recipient && (
                   <div className="border dark:border-gray-700 rounded-lg p-3 bg-gray-50 dark:bg-gray-700">
                     <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Shipping To</h4>
-                    <p className="text-sm font-medium dark:text-white">{order.shippingRecipient}</p>
-                    {order.shippingStreet1 && <p className="text-sm dark:text-gray-300">{order.shippingStreet1}</p>}
-                    {order.shippingStreet2 && <p className="text-sm dark:text-gray-300">{order.shippingStreet2}</p>}
+                    <p className="text-sm font-medium dark:text-white">{order.shippingAddress.recipient}</p>
+                    {order.shippingAddress.street1 && <p className="text-sm dark:text-gray-300">{order.shippingAddress.street1}</p>}
+                    {order.shippingAddress.street2 && <p className="text-sm dark:text-gray-300">{order.shippingAddress.street2}</p>}
                     <p className="text-sm dark:text-gray-300">
-                      {order.shippingCity}{order.shippingState && `, ${order.shippingState}`} {order.shippingPostalCode}
+                      {order.shippingAddress.city}{order.shippingAddress.state && `, ${order.shippingAddress.state}`} {order.shippingAddress.postalCode}
                     </p>
-                    {order.shippingCountry && <p className="text-sm dark:text-gray-300">{order.shippingCountry}</p>}
+                    {order.shippingAddress.country && <p className="text-sm dark:text-gray-300">{order.shippingAddress.country}</p>}
                   </div>
                 )}
-                
+
                 {/* Payment Information */}
-                {order.paymentMethodType && (
+                {order.paymentMethod?.type && (
                   <div className="border dark:border-gray-700 rounded-lg p-3 bg-gray-50 dark:bg-gray-700">
                     <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Payment Method</h4>
                     <p className="text-sm font-medium dark:text-white">
-                      {order.paymentBrand || order.paymentMethodType}
-                      {order.paymentLast4 && ` •••• ${order.paymentLast4}`}
+                      {order.paymentMethod.brand || order.paymentMethod.type}
+                      {order.paymentMethod.last4 && ` •••• ${order.paymentMethod.last4}`}
                     </p>
                   </div>
                 )}
