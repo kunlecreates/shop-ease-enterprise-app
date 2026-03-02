@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/Button';
 
 interface User {
   id: string;
-  username: string;
+  firstName: string;
+  lastName: string;
   email: string;
-  role: string;
+  roles: string[];
   isActive: boolean;
   createdAt: string;
 }
@@ -92,15 +93,17 @@ function UserManagementContent() {
             <tbody>
               {filteredUsers.map((user, index) => (
                 <tr key={user.id} className={`${index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900'} border-b dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors`}>
-                  <td className="px-6 py-4 whitespace-nowrap font-medium dark:text-white">{user.username}</td>
+                  <td className="px-6 py-4 whitespace-nowrap font-medium dark:text-white">
+                    {`${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email}
+                  </td>
                   <td className="px-6 py-4 dark:text-gray-300">{user.email}</td>
                   <td className="px-6 py-4">
                     <select
                       className="px-2 py-1 border dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                      value={user.role}
+                      value={user.roles?.find(r => r.toUpperCase() === 'ADMIN') ? 'ADMIN' : 'CUSTOMER'}
                       onChange={(e) => handleRoleChange(user.id, e.target.value)}
                     >
-                      <option value="USER">User</option>
+                      <option value="CUSTOMER">Customer</option>
                       <option value="ADMIN">Admin</option>
                     </select>
                   </td>

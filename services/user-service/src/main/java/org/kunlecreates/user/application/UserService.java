@@ -134,6 +134,15 @@ public class UserService {
     }
 
     @Transactional
+    public Optional<User> updateUserStatus(Long userId, boolean isActive) {
+        return userRepository.findById(userId)
+                .map(user -> {
+                    user.setIsActive(isActive ? 1 : 0);
+                    return userRepository.save(user);
+                });
+    }
+
+    @Transactional
     public void updateLastLogin(Long userId) {
         userRepository.findById(userId).ifPresent(user -> {
             user.setLastLoginAt(LocalDateTime.now());

@@ -9,6 +9,7 @@ import org.kunlecreates.user.interfaces.dto.CreateUserRequest;
 import org.kunlecreates.user.interfaces.dto.LoginRequest;
 import org.kunlecreates.user.interfaces.dto.UpdateProfileRequest;
 import org.kunlecreates.user.interfaces.dto.UpdateRoleRequest;
+import org.kunlecreates.user.interfaces.dto.UpdateStatusRequest;
 import org.kunlecreates.user.interfaces.dto.UserResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -213,6 +214,20 @@ public class UserController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
+    }
+
+    /**
+     * Update user active status - admin only
+     */
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<UserResponse> updateStatus(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateStatusRequest request) {
+        return userService.updateUserStatus(id, request.isActive())
+                .map(UserResponse::from)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body(null));
     }
 
     /**
