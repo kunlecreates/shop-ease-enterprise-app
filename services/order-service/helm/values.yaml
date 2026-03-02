@@ -10,6 +10,8 @@ env:
   SPRING_PROFILES_ACTIVE: "staging"
   # Notification service URL - use full Kubernetes service DNS for cross-namespace communication
   NOTIFICATION_SERVICE_URL: "http://notification-service.shopease-notification.svc.cluster.local:80"
+  # Product service URL - required for stock reconciliation on order status changes
+  PRODUCT_SERVICE_URL: "http://product-service.shopease-product.svc.cluster.local"
   PAYMENT:
     PROVIDERS:
       - name: "mock"

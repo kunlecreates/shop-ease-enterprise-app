@@ -293,10 +293,17 @@ jobs:
 
           # Add network policy configuration for arc-runners namespace (test automation)
           case "${{ matrix.service }}" in
-            user|product|order)
+            user|order)
               HELM_ARGS+=( --set "networkPolicy.allowedNamespaces[0]=shopease-frontend" )
               HELM_ARGS+=( --set "networkPolicy.allowedNamespaces[1]=arc-system" )
               HELM_ARGS+=( --set "networkPolicy.allowedNamespaces[2]=arc-runners" )
+              ;;
+            product)
+              # shopease-order needs access for service-to-service stock reconciliation
+              HELM_ARGS+=( --set "networkPolicy.allowedNamespaces[0]=shopease-frontend" )
+              HELM_ARGS+=( --set "networkPolicy.allowedNamespaces[1]=shopease-order" )
+              HELM_ARGS+=( --set "networkPolicy.allowedNamespaces[2]=arc-system" )
+              HELM_ARGS+=( --set "networkPolicy.allowedNamespaces[3]=arc-runners" )
               ;;
             notification)
               HELM_ARGS+=( --set "networkPolicy.allowedNamespaces[0]=shopease-frontend" )
