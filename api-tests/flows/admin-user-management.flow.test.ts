@@ -68,7 +68,7 @@ describe('Admin User Management Flow', () => {
 
     try {
       const disableResp = await userHttp.patch(`/api/user/${userId}/status`, {
-        enabled: false
+        isActive: false
       }, {
         headers: { Authorization: `Bearer ${adminToken}` },
         validateStatus: (status) => status < 500
@@ -80,7 +80,7 @@ describe('Admin User Management Flow', () => {
       }
 
       expect(disableResp.status).toBe(200);
-      expect(disableResp.data).toHaveProperty('enabled', false);
+      expect(disableResp.data).toHaveProperty('isActive', false);
     } catch (error: any) {
       if (error.response?.status === 404) {
         console.warn('Status endpoint not implemented (404) - skipping test');
