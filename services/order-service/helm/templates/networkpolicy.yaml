@@ -40,6 +40,16 @@ spec:
         port: 8080
       - protocol: TCP
         port: 8084
+    # Allow traffic to product-service for stock reconciliation on order status changes
+    - to:
+      - namespaceSelector:
+          matchLabels:
+            kubernetes.io/metadata.name: shopease-product
+      ports:
+      - protocol: TCP
+        port: 80
+      - protocol: TCP
+        port: 3000
     # Allow traffic to MSSQL database
     - to:
       - namespaceSelector:
