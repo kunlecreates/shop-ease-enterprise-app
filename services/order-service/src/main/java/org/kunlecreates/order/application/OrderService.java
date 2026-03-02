@@ -93,7 +93,7 @@ public class OrderService {
         // Persist order line items
         if (items != null && !items.isEmpty()) {
             List<OrderItem> orderItems = items.stream()
-                    .map(item -> new OrderItem(saved, item.productRef(), item.quantity(),
+                    .map(item -> new OrderItem(saved, item.productRef(), item.productName(), item.quantity(),
                             Math.round(item.unitPrice() * 100)))
                     .toList();
             orderItemRepository.saveAll(orderItems);
@@ -109,7 +109,7 @@ public class OrderService {
     }
 
     /** Simple input record for order line items, used within the application layer */
-    public record OrderItemInput(String productRef, int quantity, double unitPrice) {}
+    public record OrderItemInput(String productRef, String productName, int quantity, double unitPrice) {}
 
     @Transactional
     public Order processCheckout(Long userId, double total, String jwtToken,

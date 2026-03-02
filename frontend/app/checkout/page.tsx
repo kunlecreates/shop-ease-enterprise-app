@@ -65,6 +65,7 @@ export default function CheckoutPage() {
         total: getTotal(),
         items: items.map(item => ({
           productRef: String(item.productId),
+          productName: item.product?.name ?? '',
           quantity: item.quantity,
           unitPrice: item.price,
         })),

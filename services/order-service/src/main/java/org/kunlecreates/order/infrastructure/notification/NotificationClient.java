@@ -146,10 +146,10 @@ public class NotificationClient {
             List<OrderItem> orderItems = orderItemRepository.findByOrderId(order.getId());
             List<OrderItemDto> itemDtos = orderItems.stream()
                     .map(item -> new OrderItemDto(
-                            item.getProductRef(),  // Using productRef as name (TODO: fetch product details)
-                            item.getProductRef(),  // Using productRef as SKU
+                            item.getProductName() != null ? item.getProductName() : item.getProductRef(),
+                            item.getProductRef(),
                             item.getQuantity(),
-                            item.getUnitPriceCents() / 100.0  // Convert cents to dollars
+                            item.getUnitPriceCents() / 100.0
                     ))
                     .collect(Collectors.toList());
             

@@ -110,7 +110,7 @@ public class OrderController {
         // Map request items to service layer input objects
         List<OrderService.OrderItemInput> orderItems = req.items() != null
                 ? req.items().stream()
-                        .map(i -> new OrderService.OrderItemInput(i.productRef(), i.quantity(), i.unitPrice()))
+                        .map(i -> new OrderService.OrderItemInput(i.productRef(), i.productName(), i.quantity(), i.unitPrice()))
                         .collect(Collectors.toList())
                 : java.util.Collections.emptyList();
         
