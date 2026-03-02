@@ -59,6 +59,12 @@ public class Order {
     
     @Column(name = "payment_brand", length = 50)
     private String paymentBrand;
+
+    @Column(name = "customer_email", length = 255)
+    private String customerEmail;
+
+    @Column(name = "customer_name", length = 255)
+    private String customerName;
     
     @Column(name = "created_at", nullable = false)
     private Instant createdAt = Instant.now();
@@ -111,6 +117,12 @@ public class Order {
     public void setPaymentMethodType(String paymentMethodType) { this.paymentMethodType = paymentMethodType; }
     public void setPaymentLast4(String paymentLast4) { this.paymentLast4 = paymentLast4; }
     public void setPaymentBrand(String paymentBrand) { this.paymentBrand = paymentBrand; }
+
+    public String getCustomerEmail() { return customerEmail; }
+    public void setCustomerEmail(String customerEmail) { this.customerEmail = customerEmail; }
+
+    public String getCustomerName() { return customerName; }
+    public void setCustomerName(String customerName) { this.customerName = customerName; }
     
     public double getTotal() { 
         return (totalCents == null) ? 0.0 : totalCents / 100.0; 

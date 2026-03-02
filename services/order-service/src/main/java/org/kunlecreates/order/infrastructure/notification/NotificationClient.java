@@ -98,6 +98,37 @@ public class NotificationClient {
     }
     
     /**
+     * Resolve the customer email for notifications.
+     * Prefers the email stored on the order (set at creation time from the customer's JWT),
+     * falls back to extracting from the provided JWT for backwards compatibility.
+     */
+    private String resolveCustomerEmail(Order order, String jwtToken) {
+        String stored = order.getCustomerEmail();
+        if (stored != null && !stored.isEmpty()) {
+            return stored;
+        }
+        logger.warn("Order {} has no stored customer email, falling back to JWT extraction", order.getId());
+        return extractEmailFromJwt(jwtToken);
+    }
+
+    /**
+     * Resolve the customer display name for notifications.
+     * Prefers the name stored on the order, falls back to JWT extraction or shipping recipient.
+     */
+    private String resolveCustomerName(Order order, String jwtToken) {
+        String stored = order.getCustomerName();
+        if (stored != null && !stored.isEmpty() && !stored.equals("Customer")) {
+            return stored;
+        }
+        // Try shipping recipient as a human-readable fallback
+        String recipient = order.getShippingRecipient();
+        if (recipient != null && !recipient.isEmpty()) {
+            return recipient;
+        }
+        return extractCustomerNameFromJwt(jwtToken);
+    }
+
+    /**
      * Send order confirmation email
      * Extracts customer name and email from JWT token claims
      */
@@ -108,8 +139,8 @@ public class NotificationClient {
         }
         
         try {
-            String userEmail = extractEmailFromJwt(jwtToken);
-            String customerName = extractCustomerNameFromJwt(jwtToken);
+            String userEmail = resolveCustomerEmail(order, jwtToken);
+            String customerName = resolveCustomerName(order, jwtToken);
             
             // Fetch order items from database
             List<OrderItem> orderItems = orderItemRepository.findByOrderId(order.getId());
@@ -162,8 +193,8 @@ public class NotificationClient {
         }
         
         try {
-            String userEmail = extractEmailFromJwt(jwtToken);
-            String customerName = extractCustomerNameFromJwt(jwtToken);
+            String userEmail = resolveCustomerEmail(order, jwtToken);
+            String customerName = resolveCustomerName(order, jwtToken);
             
             ShippingNotificationRequest request = new ShippingNotificationRequest(
                     order.getId().intValue(),
@@ -202,8 +233,8 @@ public class NotificationClient {
         }
         
         try {
-            String userEmail = extractEmailFromJwt(jwtToken);
-            String customerName = extractCustomerNameFromJwt(jwtToken);
+            String userEmail = resolveCustomerEmail(order, jwtToken);
+            String customerName = resolveCustomerName(order, jwtToken);
             
             OrderPaidRequest request = new OrderPaidRequest(
                     order.getId().intValue(),
@@ -241,8 +272,8 @@ public class NotificationClient {
         }
         
         try {
-            String userEmail = extractEmailFromJwt(jwtToken);
-            String customerName = extractCustomerNameFromJwt(jwtToken);
+            String userEmail = resolveCustomerEmail(order, jwtToken);
+            String customerName = resolveCustomerName(order, jwtToken);
             
             OrderDeliveredRequest request = new OrderDeliveredRequest(
                     order.getId().intValue(),
@@ -279,8 +310,8 @@ public class NotificationClient {
         }
         
         try {
-            String userEmail = extractEmailFromJwt(jwtToken);
-            String customerName = extractCustomerNameFromJwt(jwtToken);
+            String userEmail = resolveCustomerEmail(order, jwtToken);
+            String customerName = resolveCustomerName(order, jwtToken);
             
             OrderCancelledRequest request = new OrderCancelledRequest(
                     order.getId().intValue(),
@@ -317,8 +348,8 @@ public class NotificationClient {
         }
         
         try {
-            String userEmail = extractEmailFromJwt(jwtToken);
-            String customerName = extractCustomerNameFromJwt(jwtToken);
+            String userEmail = resolveCustomerEmail(order, jwtToken);
+            String customerName = resolveCustomerName(order, jwtToken);
             
             OrderRefundedRequest request = new OrderRefundedRequest(
                     order.getId().intValue(),

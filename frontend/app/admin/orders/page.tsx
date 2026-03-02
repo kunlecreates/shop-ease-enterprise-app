@@ -66,6 +66,18 @@ function OrderManagementContent() {
     );
 
   const statusOptions = ['PENDING', 'PAID', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'REFUNDED'];
+
+  const VALID_TRANSITIONS: Record<string, string[]> = {
+    PENDING:   ['PAID', 'CANCELLED'],
+    PAID:      ['SHIPPED', 'REFUNDED', 'CANCELLED'],
+    SHIPPED:   ['DELIVERED'],
+    DELIVERED: [],
+    CANCELLED: [],
+    REFUNDED:  [],
+  };
+
+  const getValidNextStatuses = (currentStatus: string): string[] =>
+    VALID_TRANSITIONS[currentStatus] ?? [];
   const statusCounts = {
     all: orders.length,
     ...statusOptions.reduce((acc, status) => ({
@@ -211,16 +223,23 @@ function OrderManagementContent() {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                      <select
-                        value={order.status}
-                        onChange={(e) => handleStatusUpdate(order.id.toString(), e.target.value)}
-                        className="px-3 py-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-luxury-500"
-                        disabled={order.status === 'DELIVERED' || order.status === 'CANCELLED' || order.status === 'REFUNDED'}
-                      >
-                        {statusOptions.map(status => (
-                          <option key={status} value={status}>{status}</option>
-                        ))}
-                      </select>
+                      {getValidNextStatuses(order.status).length === 0 ? (
+                        <span className="text-xs text-gray-500 dark:text-gray-400 italic">No actions</span>
+                      ) : (
+                        <select
+                          defaultValue=""
+                          onChange={(e) => {
+                            if (e.target.value) handleStatusUpdate(order.id.toString(), e.target.value);
+                            e.target.value = '';
+                          }}
+                          className="px-3 py-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-luxury-500"
+                        >
+                          <option value="" disabled>Move to...</option>
+                          {getValidNextStatuses(order.status).map(status => (
+                            <option key={status} value={status}>{status}</option>
+                          ))}
+                        </select>
+                      )}
                     </td>
                   </tr>
                 ))}

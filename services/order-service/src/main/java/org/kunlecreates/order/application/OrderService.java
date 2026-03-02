@@ -1,10 +1,14 @@
 package org.kunlecreates.order.application;
 
+import org.kunlecreates.order.domain.Cart;
+import org.kunlecreates.order.domain.CartItem;
 import org.kunlecreates.order.domain.Order;
 import org.kunlecreates.order.domain.OrderEvent;
+import org.kunlecreates.order.domain.OrderItem;
 import org.kunlecreates.order.domain.OrderStatus;
 import org.kunlecreates.order.infrastructure.notification.NotificationClient;
 import org.kunlecreates.order.repository.OrderEventRepository;
+import org.kunlecreates.order.repository.OrderItemRepository;
 import org.kunlecreates.order.repository.OrderRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,16 +27,19 @@ public class OrderService {
     
     private final OrderRepository orderRepository;
     private final OrderEventRepository orderEventRepository;
+    private final OrderItemRepository orderItemRepository;
     private final PaymentService paymentService;
     private final NotificationClient notificationClient;
 
     public OrderService(
             OrderRepository orderRepository, 
             OrderEventRepository orderEventRepository,
+            OrderItemRepository orderItemRepository,
             PaymentService paymentService,
             NotificationClient notificationClient) {
         this.orderRepository = orderRepository;
         this.orderEventRepository = orderEventRepository;
+        this.orderItemRepository = orderItemRepository;
         this.paymentService = paymentService;
         this.notificationClient = notificationClient;
     }
@@ -51,7 +59,9 @@ public class OrderService {
                            String shippingRecipient, String shippingStreet1, String shippingStreet2,
                            String shippingCity, String shippingState, String shippingPostalCode,
                            String shippingCountry, String shippingPhone,
-                           String paymentMethodType, String paymentLast4, String paymentBrand) {
+                           String paymentMethodType, String paymentLast4, String paymentBrand,
+                           String customerEmail, String customerName,
+                           List<OrderItemInput> items) {
         String ref;
         if (userRef != null && !userRef.isBlank()) {
             ref = userRef;
@@ -75,8 +85,20 @@ public class OrderService {
         o.setPaymentMethodType(paymentMethodType);
         o.setPaymentLast4(paymentLast4);
         o.setPaymentBrand(paymentBrand);
+        o.setCustomerEmail(customerEmail);
+        o.setCustomerName(customerName);
         
         Order saved = orderRepository.save(o);
+        
+        // Persist order line items
+        if (items != null && !items.isEmpty()) {
+            List<OrderItem> orderItems = items.stream()
+                    .map(item -> new OrderItem(saved, item.productRef(), item.quantity(),
+                            Math.round(item.unitPrice() * 100)))
+                    .toList();
+            orderItemRepository.saveAll(orderItems);
+            logger.debug("Saved {} items for order {}", orderItems.size(), saved.getId());
+        }
         
         // Send order confirmation email asynchronously (non-blocking)
         if (jwtToken != null) {
@@ -86,12 +108,16 @@ public class OrderService {
         return saved;
     }
 
+    /** Simple input record for order line items, used within the application layer */
+    public record OrderItemInput(String productRef, int quantity, double unitPrice) {}
+
     @Transactional
     public Order processCheckout(Long userId, double total, String jwtToken,
                                 String shippingRecipient, String shippingStreet1, String shippingStreet2,
                                 String shippingCity, String shippingState, String shippingPostalCode,
                                 String shippingCountry, String shippingPhone,
-                                String paymentMethodType, String paymentLast4, String paymentBrand) {
+                                String paymentMethodType, String paymentLast4, String paymentBrand,
+                                String customerEmail, String customerName) {
         boolean paid = paymentService.charge(userId, total);
         if (!paid) {
             throw new RuntimeException("Payment failed");
@@ -99,7 +125,8 @@ public class OrderService {
         return createOrder(null, userId, "PAID", total, jwtToken,
                 shippingRecipient, shippingStreet1, shippingStreet2, shippingCity,
                 shippingState, shippingPostalCode, shippingCountry, shippingPhone,
-                paymentMethodType, paymentLast4, paymentBrand);
+                paymentMethodType, paymentLast4, paymentBrand,
+                customerEmail, customerName, Collections.emptyList());
     }
     
     @Transactional

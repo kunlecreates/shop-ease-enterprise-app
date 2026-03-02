@@ -88,6 +88,10 @@ public class OrderController {
         // Extract JWT token from Authorization header for notification service
         String jwtToken = extractJwtToken(request);
         
+        // Extract customer identity from JWT for notifications and display
+        String customerName = extractCustomerNameFromAuth(authentication);
+        String customerEmail = extractCustomerEmailFromAuth(authentication);
+        
         // Extract shipping address fields
         String shippingRecipient = req.shippingAddress() != null ? req.shippingAddress().recipient() : null;
         String shippingStreet1 = req.shippingAddress() != null ? req.shippingAddress().street1() : null;
@@ -103,18 +107,23 @@ public class OrderController {
         String paymentLast4 = req.paymentMethod() != null ? req.paymentMethod().last4() : null;
         String paymentBrand = req.paymentMethod() != null ? req.paymentMethod().brand() : null;
         
+        // Map request items to service layer input objects
+        List<OrderService.OrderItemInput> orderItems = req.items() != null
+                ? req.items().stream()
+                        .map(i -> new OrderService.OrderItemInput(i.productRef(), i.quantity(), i.unitPrice()))
+                        .collect(Collectors.toList())
+                : java.util.Collections.emptyList();
+        
         // Create order with authenticated user's ID (ignore userId from request body for security)
         Order created = orderService.createOrder(
             authenticatedUserId, null, req.status(), req.total(), jwtToken,
             shippingRecipient, shippingStreet1, shippingStreet2, shippingCity,
             shippingState, shippingPostalCode, shippingCountry, shippingPhone,
-            paymentMethodType, paymentLast4, paymentBrand
+            paymentMethodType, paymentLast4, paymentBrand,
+            customerEmail, customerName, orderItems
         );
         
         URI location = uriBuilder.path("/api/order/{id}").buildAndExpand(created.getId()).toUri();
-        
-        // Extract customer name from JWT for response
-        String customerName = extractCustomerNameFromAuth(authentication);
         
         // Return order details in response body for frontend confirmation
         OrderResponse response = new OrderResponse(
@@ -168,6 +177,17 @@ public class OrderController {
             return (fullName != null && !fullName.isEmpty()) ? fullName : "Customer";
         }
         return "Customer";
+    }
+
+    /**
+     * Extract customer email from JWT token claims
+     */
+    private String extractCustomerEmailFromAuth(Authentication authentication) {
+        if (authentication.getPrincipal() instanceof Jwt jwt) {
+            String email = jwt.getClaimAsString("email");
+            return (email != null && !email.isEmpty()) ? email : null;
+        }
+        return null;
     }
     
     /**
