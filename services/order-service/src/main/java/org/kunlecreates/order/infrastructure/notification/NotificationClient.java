@@ -147,7 +147,6 @@ public class NotificationClient {
             List<OrderItemDto> itemDtos = orderItems.stream()
                     .map(item -> new OrderItemDto(
                             item.getProductName() != null ? item.getProductName() : item.getProductRef(),
-                            item.getProductRef(),
                             item.getQuantity(),
                             item.getUnitPriceCents() / 100.0
                     ))
@@ -392,7 +391,6 @@ public class NotificationClient {
     
     record OrderItemDto(
             String name,
-            String sku,
             Integer quantity,
             Double price
     ) {}
