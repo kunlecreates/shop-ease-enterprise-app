@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Metadata } from 'next';
+import HeroSlideshow from '@/components/HeroSlideshow';
 
 export const metadata: Metadata = {
   title: 'ShopEase - Your Online Superstore',
@@ -11,27 +12,23 @@ export default function HomePage() {
     <div className="bg-white dark:bg-slate-950">
 
       {/* ── Hero ─────────────────────────────────────────────────── */}
-      <section className="relative isolate overflow-hidden bg-slate-950">
-        {/* Subtle grid pattern overlay */}
-        <svg
-          aria-hidden="true"
-          className="absolute inset-0 -z-10 h-full w-full stroke-slate-700/30 [mask-image:radial-gradient(100%_100%_at_top_right,white,transparent)]"
-        >
-          <defs>
-            <pattern id="hero-grid" width={200} height={200} x="50%" y={-1} patternUnits="userSpaceOnUse">
-              <path d="M.5 200V.5H200" fill="none" />
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" strokeWidth={0} fill="url(#hero-grid)" />
-        </svg>
+      <section className="relative isolate overflow-hidden min-h-[620px] lg:min-h-[700px]">
+        {/* Auto-cycling grocery superstore background */}
+        <HeroSlideshow />
 
-        {/* Radial glow */}
+        {/* Gradient overlay — lighter than pure black, fades left-to-right */}
         <div
           aria-hidden="true"
-          className="absolute left-[max(50%,25rem)] top-0 -z-10 h-[64rem] w-[128rem] -translate-x-1/2 [mask-image:radial-gradient(64rem_64rem_at_top,white,transparent)] bg-gradient-to-tr from-indigo-900/40 via-indigo-600/20 to-transparent"
+          className="absolute inset-0 bg-gradient-to-r from-slate-900/85 via-slate-800/70 to-slate-700/40"
         />
 
-        <div className="mx-auto max-w-7xl px-6 pb-24 pt-20 sm:pb-32 lg:flex lg:items-center lg:gap-x-16 lg:px-8 lg:pt-32">
+        {/* Subtle indigo accent glow keeping brand colour */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-gradient-to-b from-indigo-950/20 via-transparent to-slate-900/30"
+        />
+
+        <div className="relative mx-auto max-w-7xl px-6 pb-24 pt-20 sm:pb-32 lg:flex lg:items-center lg:gap-x-16 lg:px-8 lg:pt-32">
           <div className="mx-auto max-w-2xl lg:mx-0 lg:max-w-xl lg:flex-shrink-0">
             <div className="inline-flex items-center gap-x-2 rounded-full bg-indigo-500/10 px-4 py-1.5 ring-1 ring-inset ring-indigo-500/20 mb-8">
               <span className="text-xs font-semibold text-indigo-400 tracking-widest uppercase">New arrivals daily</span>
@@ -79,11 +76,11 @@ export default function HomePage() {
               ].map((stat) => (
                 <div
                   key={stat.label}
-                  className="rounded-2xl bg-slate-800/50 ring-1 ring-slate-700/50 p-6 backdrop-blur-sm"
+                  className="rounded-2xl bg-white/10 ring-1 ring-white/20 p-6 backdrop-blur-md"
                 >
                   <p className="text-3xl font-bold tracking-tight text-white">{stat.value}</p>
-                  <p className="mt-1 text-sm font-semibold text-slate-300">{stat.label}</p>
-                  <p className="mt-1 text-xs text-slate-500">{stat.description}</p>
+                  <p className="mt-1 text-sm font-semibold text-slate-200">{stat.label}</p>
+                  <p className="mt-1 text-xs text-slate-300">{stat.description}</p>
                 </div>
               ))}
             </div>
