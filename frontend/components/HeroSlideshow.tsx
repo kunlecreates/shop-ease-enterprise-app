@@ -22,8 +22,8 @@ const slides = [
   },
 ];
 
-const INTERVAL_MS = 6000;
-const FADE_MS = 900;
+const INTERVAL_MS = 10000;
+const FADE_MS = 1500;
 
 export default function HeroSlideshow() {
   const [current, setCurrent] = useState(0);
@@ -51,7 +51,7 @@ export default function HeroSlideshow() {
           fill
           priority={i === 0}
           unoptimized
-          className="object-cover object-center transition-opacity duration-[900ms]"
+          className="object-cover object-center transition-opacity duration-[1500ms]"
           style={{ opacity: i === current ? (fading ? 0 : 1) : 0 }}
           sizes="100vw"
         />

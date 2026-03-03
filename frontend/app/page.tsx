@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function HomePage() {
   return (
-    <div className="bg-white dark:bg-slate-950">
+    <div className="bg-stone-50 dark:bg-slate-950">
 
       {/* ── Hero ─────────────────────────────────────────────────── */}
       <section className="relative isolate overflow-hidden min-h-[620px] lg:min-h-[700px]">
@@ -19,13 +19,13 @@ export default function HomePage() {
         {/* Gradient overlay — lighter than pure black, fades left-to-right */}
         <div
           aria-hidden="true"
-          className="absolute inset-0 bg-gradient-to-r from-slate-900/85 via-slate-800/70 to-slate-700/40"
+          className="absolute inset-0 bg-gradient-to-r from-slate-800/60 via-slate-700/40 to-slate-600/15"
         />
 
         {/* Subtle indigo accent glow keeping brand colour */}
         <div
           aria-hidden="true"
-          className="absolute inset-0 bg-gradient-to-b from-indigo-950/20 via-transparent to-slate-900/30"
+          className="absolute inset-0 bg-gradient-to-b from-indigo-900/10 via-transparent to-slate-800/20"
         />
 
         <div className="relative mx-auto max-w-7xl px-6 pb-24 pt-20 sm:pb-32 lg:flex lg:items-center lg:gap-x-16 lg:px-8 lg:pt-32">
@@ -197,7 +197,7 @@ export default function HomePage() {
           ].map((feature) => (
             <div
               key={feature.title}
-              className="relative rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-lg transition-all duration-200"
+              className="relative rounded-2xl border border-slate-200 dark:border-slate-800 bg-stone-50 dark:bg-slate-900 p-8 hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-lg transition-all duration-200"
             >
               <div className="mb-5 inline-flex items-center justify-center rounded-xl bg-indigo-50 dark:bg-indigo-950 p-3 text-indigo-600 dark:text-indigo-400">
                 {feature.icon}
@@ -245,7 +245,7 @@ export default function HomePage() {
             ].map((t) => (
               <figure
                 key={t.name}
-                className="rounded-2xl bg-white dark:bg-slate-800 ring-1 ring-slate-200 dark:ring-slate-700 p-8"
+                className="rounded-2xl bg-stone-50 dark:bg-slate-800 ring-1 ring-slate-200 dark:ring-slate-700 p-8"
               >
                 <svg className="h-6 w-6 text-indigo-400 mb-4" fill="currentColor" viewBox="0 0 32 32" aria-hidden="true">
                   <path d="M9.352 4C4.456 7.456 1 13.12 1 19.36c0 5.088 3.072 8.064 6.624 8.064 3.36 0 5.856-2.688 5.856-5.856 0-3.168-2.208-5.472-5.088-5.472-.576 0-1.344.096-1.536.192.48-3.264 3.552-7.104 6.624-9.024L9.352 4zm16.512 0c-4.8 3.456-8.256 9.12-8.256 15.36 0 5.088 3.072 8.064 6.624 8.064 3.264 0 5.856-2.688 5.856-5.856 0-3.168-2.304-5.472-5.184-5.472-.576 0-1.248.096-1.44.192.48-3.264 3.456-7.104 6.528-9.024L25.864 4z" />
@@ -277,7 +277,7 @@ export default function HomePage() {
           <div className="mt-10 lg:mt-0 flex flex-col sm:flex-row items-start sm:items-center gap-4 flex-shrink-0">
             <Link
               href="/products"
-              className="rounded-lg bg-white px-6 py-3 text-sm font-semibold text-indigo-600 shadow-sm hover:bg-indigo-50 transition-colors duration-200"
+              className="rounded-lg bg-stone-50 px-6 py-3 text-sm font-semibold text-indigo-600 shadow-sm hover:bg-stone-100 transition-colors duration-200"
             >
               Browse products
             </Link>
