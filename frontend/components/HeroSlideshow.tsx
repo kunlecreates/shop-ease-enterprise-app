@@ -50,6 +50,7 @@ export default function HeroSlideshow() {
           alt={slide.alt}
           fill
           priority={i === 0}
+          unoptimized
           className="object-cover object-center transition-opacity duration-[900ms]"
           style={{ opacity: i === current ? (fading ? 0 : 1) : 0 }}
           sizes="100vw"
