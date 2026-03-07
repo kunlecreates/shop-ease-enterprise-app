@@ -6,4 +6,8 @@ module.exports = {
   transform: {
     '^.+\\.tsx?$': 'ts-jest',
   },
+  moduleNameMapper: {
+    // Resolve Next.js / TypeScript path alias @/* → project root
+    '^@/(.*)$': '<rootDir>/$1',
+  },
 };

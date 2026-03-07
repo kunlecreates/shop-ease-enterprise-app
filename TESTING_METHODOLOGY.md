@@ -29,8 +29,8 @@ ShopEase implements a **4-layer testing architecture** that validates applicatio
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                    Layer 4: End-to-End Tests                    │
-│  Tool: Playwright | Location: /e2e | Scope: Browser → Full System│
-│  Validates: User journeys, UI/UX, cross-service workflows      │
+│  Tool: Playwright | Location: /e2e | Scope: Browser → Full Systm│
+│  Validates: User journeys, UI/UX, cross-service workflows       │
 └─────────────────────────────────────────────────────────────────┘
                               ↑
 ┌─────────────────────────────────────────────────────────────────┐
@@ -79,7 +79,7 @@ ShopEase implements a **4-layer testing architecture** that validates applicatio
 
 ### 1. Automated Testing Workflows
 
-ShopEase implements **12 GitHub Actions workflows** providing comprehensive CI/CD automation:
+ShopEase implements **11 GitHub Actions workflows** providing comprehensive CI/CD automation:
 
 #### **Service-Level Test Workflows** (5 workflows)
 ```yaml
@@ -97,12 +97,11 @@ ci-frontend-tests.yml      # Jest tests for React components
 - ✅ Separate unit and integration test phases
 - ✅ Test artifact uploads for debugging
 
-#### **Cross-Service Validation Workflows** (7 workflows)
+#### **Cross-Service Validation Workflows** (6 workflows)
 ```yaml
 coverage-authority.yml      # Aggregates coverage, enforces minimum thresholds
 api-tests.yml              # Post-deployment contract validation
 e2e.yml                    # Playwright E2E tests via Cloudflare tunnel
-shared-change-validation.yml # Multi-service change detection
 build-images.yaml          # Docker image builds with test gates
 deploy-staging.yaml        # Staging deployment with health checks
 infra-provisioning.yml     # Infrastructure validation

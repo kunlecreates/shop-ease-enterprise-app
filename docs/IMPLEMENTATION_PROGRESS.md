@@ -23,7 +23,7 @@
   - Metrics to Prometheus
   - Structured logs to Elasticsearch
 
-See [OTEL_COMPLETE_IMPLEMENTATION_SUMMARY.md](OTEL_COMPLETE_IMPLEMENTATION_SUMMARY.md) and [OTEL_INSTRUMENTATION_OPTIMIZATION.md](OTEL_INSTRUMENTATION_OPTIMIZATION.md) for details.
+See [OTEL_COMPLETE_IMPLEMENTATION_SUMMARY.md](OTEL_COMPLETE_IMPLEMENTATION_SUMMARY.md) for details.
 
 ### NetworkPolicy Implementation (Completed: Jan 26, 2026)
 - ✅ NetworkPolicies deployed for all services

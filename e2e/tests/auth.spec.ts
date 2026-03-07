@@ -123,6 +123,48 @@ test.describe('Authentication & Authorization (FR001, FR003)', () => {
         registerLink.click(),
       ]);
     });
+
+    test('should have a "Reset it" link that navigates to forgot-password page', async ({ page }) => {
+      await page.goto('/login');
+
+      await test.step('Verify forgot-password link exists and navigates', async () => {
+        const resetLink = page.getByRole('link', { name: 'Reset it' });
+        await expect(resetLink).toBeVisible();
+        await resetLink.click();
+        await expect(page).toHaveURL(/.*forgot-password/);
+      });
+    });
+  });
+
+  test.describe('Forgot Password Flow', () => {
+    test('should display the forgot-password page with correct form', async ({ page }) => {
+      await page.goto('/forgot-password');
+
+      await test.step('Verify page heading and email input', async () => {
+        await expect(
+          page.getByRole('heading', { name: 'Reset your password' }),
+        ).toBeVisible();
+        await expect(page.getByLabel(/email/i)).toBeVisible();
+      });
+    });
+
+    test('should have a submit button on the forgot-password page', async ({ page }) => {
+      await page.goto('/forgot-password');
+
+      await test.step('Verify submit button is rendered with correct label', async () => {
+        await expect(page.getByRole('button', { name: 'Send reset link' })).toBeVisible();
+      });
+    });
+
+    test('should stay on forgot-password page when submitted with empty email (HTML5 validation)', async ({ page }) => {
+      await page.goto('/forgot-password');
+
+      await test.step('Submit empty form via button click', async () => {
+        await page.getByRole('button', { name: 'Send reset link' }).click();
+        // HTML5 required attribute prevents submission — URL stays the same
+        await expect(page).toHaveURL(/.*forgot-password/, { timeout: 2000 });
+      });
+    });
   });
 
   test.describe('Protected Routes', () => {
