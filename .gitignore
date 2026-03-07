@@ -101,6 +101,9 @@ frontend/.vercel/
 .tmp_venv
 **/tmp/
 
+# Copilot instructions (local IDE config, not for version control)
+.github/instructions/
+
 # Documentation (keep in repo for tracking)
 # These are intentionally tracked
 # *.md files in root are documentation
