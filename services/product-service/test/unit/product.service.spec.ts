@@ -260,4 +260,217 @@ describe('ProductService', () => {
       expect(removeSpy).not.toHaveBeenCalled();
     });
   });
+
+  // updateProduct() tests
+  describe('updateProduct', () => {
+    it('should throw NotFoundException for non-existent SKU', async () => {
+      jest.spyOn(productRepo, 'findOne').mockResolvedValue(null);
+
+      await expect(service.updateProduct('BAD-SKU', { name: 'New Name' }))
+        .rejects.toThrow('Product with sku BAD-SKU not found');
+    });
+
+    it('should update product fields and return saved product', async () => {
+      const mockProduct = { id: 1, sku: 'TEST-001', name: 'Old Name', priceCents: 1000, categories: [] } as unknown as Product;
+      const updatedProduct = { ...mockProduct, name: 'New Name' };
+
+      jest.spyOn(productRepo, 'findOne')
+        .mockResolvedValueOnce(mockProduct)
+        .mockResolvedValueOnce(updatedProduct as any);
+      jest.spyOn(productRepo, 'save').mockResolvedValue(updatedProduct as any);
+
+      const result = await service.updateProduct('TEST-001', { name: 'New Name' });
+
+      expect(result?.name).toBe('New Name');
+      expect(productRepo.save).toHaveBeenCalledWith(expect.objectContaining({ name: 'New Name' }));
+    });
+
+    it('should handle priceCents update', async () => {
+      const mockProduct = { id: 1, sku: 'PRICE-001', priceCents: 500, categories: [] } as unknown as Product;
+      const updatedProduct = { ...mockProduct, priceCents: 1999 };
+
+      jest.spyOn(productRepo, 'findOne')
+        .mockResolvedValueOnce(mockProduct)
+        .mockResolvedValueOnce(updatedProduct as any);
+      jest.spyOn(productRepo, 'save').mockResolvedValue(updatedProduct as any);
+
+      const result = await service.updateProduct('PRICE-001', { priceCents: 1999 });
+
+      expect(result?.priceCents).toBe(1999);
+    });
+
+    it('should upsert categories on update', async () => {
+      const mockProduct = { id: 1, sku: 'CAT-001', priceCents: 1000, categories: [] } as unknown as Product;
+      const newCategory = { id: 5, name: 'NewCat' } as Category;
+
+      jest.spyOn(productRepo, 'findOne')
+        .mockResolvedValueOnce(mockProduct)
+        .mockResolvedValueOnce({ ...mockProduct, categories: [newCategory] } as any);
+      jest.spyOn(categoryRepo, 'findOne').mockResolvedValue(null);
+      jest.spyOn(categoryRepo, 'create').mockReturnValue(newCategory);
+      jest.spyOn(categoryRepo, 'save').mockResolvedValue(newCategory);
+      jest.spyOn(productRepo, 'save').mockResolvedValue(mockProduct);
+
+      const result = await service.updateProduct('CAT-001', { categoryCodes: ['NewCat'] });
+
+      expect(categoryRepo.create).toHaveBeenCalledWith({ name: 'NewCat' });
+      expect(result?.categories).toContainEqual(newCategory);
+    });
+  });
+
+  // getProductBySku() tests
+  describe('getProductBySku', () => {
+    it('should return product with relations for valid SKU', async () => {
+      const mockProduct = { id: 1, sku: 'TEST-001', categories: [], movements: [] } as unknown as Product;
+
+      jest.spyOn(productRepo, 'findOne').mockResolvedValue(mockProduct);
+
+      const result = await service.getProductBySku('TEST-001');
+
+      expect(result).toEqual(mockProduct);
+      expect(productRepo.findOne).toHaveBeenCalledWith({
+        where: { sku: 'TEST-001' },
+        relations: ['categories', 'movements'],
+      });
+    });
+
+    it('should return null for non-existent SKU', async () => {
+      jest.spyOn(productRepo, 'findOne').mockResolvedValue(null);
+
+      const result = await service.getProductBySku('NONE-000');
+
+      expect(result).toBeNull();
+    });
+  });
+
+  // searchProducts() tests
+  describe('searchProducts', () => {
+    it('should search products using full-text query', async () => {
+      const mockQueryBuilder = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        setParameter: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue([{ id: 1, sku: 'MATCH-001' } as any]),
+      };
+      jest.spyOn(productRepo, 'createQueryBuilder').mockReturnValue(mockQueryBuilder as any);
+
+      const result = await service.searchProducts('apple');
+
+      expect(productRepo.createQueryBuilder).toHaveBeenCalledWith('p');
+      expect(mockQueryBuilder.where).toHaveBeenCalledWith(
+        expect.stringContaining('plainto_tsquery'),
+        expect.objectContaining({ query: 'apple' }),
+      );
+      expect(result).toHaveLength(1);
+    });
+
+    it('should apply pagination when provided', async () => {
+      const mockQueryBuilder = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        setParameter: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue([]),
+      };
+      jest.spyOn(productRepo, 'createQueryBuilder').mockReturnValue(mockQueryBuilder as any);
+
+      await service.searchProducts('banana', { page: 2, limit: 5 });
+
+      expect(mockQueryBuilder.skip).toHaveBeenCalledWith(5);
+      expect(mockQueryBuilder.take).toHaveBeenCalledWith(5);
+    });
+  });
+
+  // listProducts() with filter options tests
+  describe('listProducts with filters', () => {
+    const buildMockQb = (results: any[] = []) => ({
+      leftJoinAndSelect: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      skip: jest.fn().mockReturnThis(),
+      take: jest.fn().mockReturnThis(),
+      getMany: jest.fn().mockResolvedValue(results),
+    });
+
+    it('should apply text search filter via andWhere', async () => {
+      const mockQb = buildMockQb([{ id: 1 } as any]);
+      jest.spyOn(productRepo, 'createQueryBuilder').mockReturnValue(mockQb as any);
+
+      const result = await service.listProducts({ q: 'coffee' });
+
+      expect(mockQb.andWhere).toHaveBeenCalledWith(
+        expect.stringContaining('plainto_tsquery'),
+        expect.objectContaining({ query: 'coffee' }),
+      );
+      expect(result).toHaveLength(1);
+    });
+
+    it('should apply category filter', async () => {
+      const mockQb = buildMockQb();
+      jest.spyOn(productRepo, 'createQueryBuilder').mockReturnValue(mockQb as any);
+
+      await service.listProducts({ category: 'Beverages' });
+
+      expect(mockQb.andWhere).toHaveBeenCalledWith(
+        'categories.name = :category',
+        { category: 'Beverages' },
+      );
+    });
+
+    it('should apply minPrice filter converting to cents', async () => {
+      const mockQb = buildMockQb();
+      jest.spyOn(productRepo, 'createQueryBuilder').mockReturnValue(mockQb as any);
+
+      await service.listProducts({ minPrice: 5.00 });
+
+      expect(mockQb.andWhere).toHaveBeenCalledWith(
+        'p.priceCents >= :minPrice',
+        { minPrice: 500 },
+      );
+    });
+
+    it('should apply maxPrice filter converting to cents', async () => {
+      const mockQb = buildMockQb();
+      jest.spyOn(productRepo, 'createQueryBuilder').mockReturnValue(mockQb as any);
+
+      await service.listProducts({ maxPrice: 20.00 });
+
+      expect(mockQb.andWhere).toHaveBeenCalledWith(
+        'p.priceCents <= :maxPrice',
+        { maxPrice: 2000 },
+      );
+    });
+
+    it('should apply price_asc sort', async () => {
+      const mockQb = buildMockQb();
+      jest.spyOn(productRepo, 'createQueryBuilder').mockReturnValue(mockQb as any);
+
+      await service.listProducts({ sort: 'price_asc' });
+
+      expect(mockQb.orderBy).toHaveBeenCalledWith('p.priceCents', 'ASC');
+    });
+
+    it('should apply price_desc sort', async () => {
+      const mockQb = buildMockQb();
+      jest.spyOn(productRepo, 'createQueryBuilder').mockReturnValue(mockQb as any);
+
+      await service.listProducts({ sort: 'price_desc' });
+
+      expect(mockQb.orderBy).toHaveBeenCalledWith('p.priceCents', 'DESC');
+    });
+
+    it('should apply name sort by default when no sort specified', async () => {
+      const mockQb = buildMockQb();
+      jest.spyOn(productRepo, 'createQueryBuilder').mockReturnValue(mockQb as any);
+
+      await service.listProducts({ page: 1, limit: 10 });
+
+      expect(mockQb.orderBy).toHaveBeenCalledWith('p.name', 'ASC');
+    });
+  });
 });

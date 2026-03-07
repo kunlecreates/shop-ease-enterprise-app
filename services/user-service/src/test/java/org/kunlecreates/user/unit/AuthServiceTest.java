@@ -273,4 +273,19 @@ class AuthServiceTest {
         verify(userRepository).save(testUser);
         verify(passwordResetTokenRepository).save(resetToken);
     }
+
+    @Test
+    void login_whenEmailNotVerified_shouldThrowIllegalStateException() {
+        testUser.setEmailVerified(0);
+        LoginRequest request = new LoginRequest("test@example.com", "correctPassword");
+
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(testUser));
+        when(passwordEncoder.matches("correctPassword", testUser.getPasswordHash())).thenReturn(true);
+
+        assertThatThrownBy(() -> authService.login(request))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("Email not verified. Please check your email for verification link.");
+
+        verify(jwtService, never()).generateToken(any(), any(), any(), any());
+    }
 }

@@ -248,4 +248,67 @@ class OrderServiceTest {
         verify(orderRepository).save(paidOrder);
         verify(orderEventRepository).saveAll(anyList());
     }
+
+    @Test
+    void listOrders_shouldReturnAllOrders() {
+        List<Order> orders = List.of(
+                new Order("user-001", "PENDING", 5000L),
+                new Order("user-002", "PAID", 12000L)
+        );
+        when(orderRepository.findAll()).thenReturn(orders);
+
+        List<Order> result = orderService.listOrders();
+
+        assertThat(result).hasSize(2);
+        verify(orderRepository).findAll();
+    }
+
+    @Test
+    void findById_whenOrderExists_shouldReturnOrder() {
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(testOrder));
+
+        Optional<Order> result = orderService.findById(1L);
+
+        assertThat(result).isPresent();
+        assertThat(result.get().getStatus()).isEqualTo("PENDING");
+    }
+
+    @Test
+    void findById_whenOrderNotFound_shouldReturnEmptyOptional() {
+        when(orderRepository.findById(999L)).thenReturn(Optional.empty());
+
+        Optional<Order> result = orderService.findById(999L);
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void updateStatus_toDelivered_shouldSendDeliveredNotificationAndSaveEvent() {
+        Order shippedOrder = new Order("user-123", "SHIPPED", 10000L);
+        ReflectionTestUtils.setField(shippedOrder, "id", 2L);
+        when(orderRepository.findById(2L)).thenReturn(Optional.of(shippedOrder));
+        when(orderRepository.save(any(Order.class))).thenReturn(shippedOrder);
+        when(orderItemRepository.findByOrderId(2L)).thenReturn(List.of());
+
+        Order result = orderService.updateStatus(2L, OrderStatus.DELIVERED, "jwt-token");
+
+        assertThat(result.getStatus()).isEqualTo("DELIVERED");
+        verify(notificationClient).sendOrderDeliveredNotification(any(Order.class), eq("jwt-token"));
+        verify(orderEventRepository).saveAll(anyList());
+    }
+
+    @Test
+    void updateStatus_toCancelled_shouldSendCancelledNotificationAndSaveEvent() {
+        Order pendingOrder = new Order("user-123", "PENDING", 8000L);
+        ReflectionTestUtils.setField(pendingOrder, "id", 3L);
+        when(orderRepository.findById(3L)).thenReturn(Optional.of(pendingOrder));
+        when(orderRepository.save(any(Order.class))).thenReturn(pendingOrder);
+        when(orderItemRepository.findByOrderId(3L)).thenReturn(List.of());
+
+        Order result = orderService.updateStatus(3L, OrderStatus.CANCELLED, "jwt-token");
+
+        assertThat(result.getStatus()).isEqualTo("CANCELLED");
+        verify(notificationClient).sendOrderCancelledNotification(any(Order.class), eq("jwt-token"));
+        verify(orderEventRepository).saveAll(anyList());
+    }
 }
