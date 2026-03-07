@@ -57,9 +57,12 @@ root/
 │   ├── playwright.config.ts
 │   ├── tests/
 │   │   ├── auth.spec.ts
-│   │   ├── product-browse.spec.ts
-│   │   ├── checkout.spec.ts
-│   │   └── admin-flow.spec.ts
+│   │   ├── cart-checkout.spec.ts
+│   │   ├── cross-service.spec.ts
+│   │   ├── homepage.spec.ts
+│   │   ├── products.spec.ts
+│   │   ├── security.spec.ts
+│   │   └── smoke.spec.ts
 │   └── fixtures/
 │       └── test-users.ts
 |
@@ -87,6 +90,7 @@ root/
 | **Phase 4** | CI/CD Integration                         | Automate tests and builds in pipeline                              | GitHub Actions                      |
 | **Phase 5** | E2E Automation & Performance Testing      | Add Playwright and JMeter stages                                   | Playwright, JMeter                  |
 | **Phase 6** | Observability and Deployment              | Add Helm, monitoring, and deploy to MicroK8s                       | Helm, Prometheus, Grafana           |
+| **Phase 7** | Test Coverage Optimization                | Frontend Jest tests, E2E expansion, frontend CI workflow           | Jest, Playwright, GitHub Actions    |
 
 
 ## 🧩 Service Substructures
@@ -251,6 +255,10 @@ frontend/                          # Web Frontend (Next.js + TypeScript)
 ├── contexts/                      # React contexts (AuthContext, etc.)
 ├── lib/                           # Utilities (cart-store, api-client, etc.)
 ├── types/                         # TypeScript type definitions
+├── __tests__/                     # Jest unit tests (frontend)
+│   ├── cart-store.test.ts         # Zustand cart store (20 tests)
+│   ├── api-client.test.ts         # ApiClient HTTP layer (24 tests)
+│   └── ...                        # Additional unit tests
 ├── public/                        # Static assets
 └── Dockerfile
 ```
@@ -258,7 +266,7 @@ frontend/                          # Web Frontend (Next.js + TypeScript)
 - **Next.js 15.5+** with App Router (file-system based routing)
 - **React 19**, **TypeScript 5**, **Tailwind CSS 4**, **shadcn/ui**
 - **API Proxies**: All `/api/*` routes proxy to internal ClusterIP services
-- **Testing**: Playwright for E2E tests (in `/e2e` at project root)
+- **Testing**: Jest (unit tests in `frontend/__tests__/`) + Playwright for E2E (in `/e2e` at project root)
 - **Deployment**: Containerized service via Helm behind NGINX ingress
 
 #### Key Concepts:
@@ -327,6 +335,8 @@ strategy:
     service: [user-service, product-service, order-service, notification-service]
 ```
 
+Additionally, `ci-frontend-tests.yml` runs Jest unit tests on every push to `frontend/`.
+
 Each pipeline uses:
 - Secrets: KUBE_CONFIG, FLYWAY_URL_*, REGISTRY_TOKEN, etc.
 - Environment: prod, staging, dev via branch mapping
@@ -394,7 +404,7 @@ Each pipeline uses:
 
 ### Test Pyramid Architecture
 
-This project follows the industry-standard **Test Pyramid** with four distinct test layers:
+This project follows the industry-standard **Test Pyramid** with five distinct test layers:
 
 ```
         /\
@@ -404,16 +414,17 @@ This project follows the industry-standard **Test Pyramid** with four distinct t
     /----------\
    /Integration\     ← Testcontainers (real DB, in CI)
   /--------------\
+ /  Frontend Unit \  ← Jest (frontend/__tests__/, per-push)
+/-----------------\
  /     Unit      \   ← Mocked dependencies (fast)
-/------------------\
+/_________________\
 ```
 
 ### Test Type Definitions
 
 | Test Type | Scope | Location | Database | When Runs | Example File |
 |-----------|-------|----------|----------|-----------|--------------|
-| **Unit** | Single class/module | `src/test/java/unit/` or `test/unit/` | Mocked or H2 | Every push | `UserServiceTest.java`, `product.service.spec.ts` |
-| **Integration** | Controller→Service→Repo→DB | `src/test/java/integration/` or `test/integration/` | Testcontainers | Every push (before build) | `UserControllerIT.java`, `product.controller.integration.spec.ts` |
+| **Unit** | Single class/module | `src/test/java/unit/` or `test/unit/` | Mocked or H2 | Every push | `UserServiceTest.java`, `product.service.spec.ts` || **Frontend Unit** | React logic (stores, clients) | `frontend/__tests__/` | N/A | Every push (ci-frontend-tests.yml) | `cart-store.test.ts`, `api-client.test.ts` || **Integration** | Controller→Service→Repo→DB | `src/test/java/integration/` or `test/integration/` | Testcontainers | Every push (before build) | `UserControllerIT.java`, `product.controller.integration.spec.ts` |
 | **API Contract** | Cross-service HTTP | `/api-tests/` | Staging DB | After deployment | `customer-checkout.flow.test.ts` |
 | **E2E** | Browser + Full system | `/e2e/` | Staging DB | After deployment | `cart-checkout.spec.ts` (Playwright) |
 
