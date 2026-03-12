@@ -12,7 +12,7 @@
 [![License](https://img.shields.io/github/license/kunlecreates/shop-ease-enterprise-app)](LICENSE)
 [![Visitors](https://hits.sh/github.com/kunlecreates/shop-ease-enterprise-app.svg?label=Visitors&style=flat&color=0e75b6)](https://github.com/kunlecreates/shop-ease-enterprise-app)
 
-**[🌐 Live Demo](https://shop-ease.kunlecreates.org)** &nbsp;·&nbsp; **[📖 Docs](docs/)** &nbsp;·&nbsp; **[📊 Project Status](#-project-status)** &nbsp;·&nbsp; **[🐛 Issues](https://github.com/kunlecreates/shop-ease-enterprise-app/issues)**
+**[🌐 Live Demo](https://shop.kunlecreates.org)** &nbsp;·&nbsp; **[📖 Docs](docs/)** &nbsp;·&nbsp; **[📊 Project Status](#-project-status)** &nbsp;·&nbsp; **[🐛 Issues](https://github.com/kunlecreates/shop-ease-enterprise-app/issues)**
 
 </div>
 
@@ -31,7 +31,7 @@ This project was built as a **living demonstration** of real-world engineering p
 - **Production observability** — OpenTelemetry auto-instrumentation, Prometheus, Grafana, Jaeger, ECK
 - **Zero-trust security** — JWT/RS256, NetworkPolicies, email verification, RBAC
 
-> 🌐 **Live at**: [shop-ease.kunlecreates.org](https://shop-ease.kunlecreates.org)
+> 🌐 **Live at**: [shop.kunlecreates.org](https://shop.kunlecreates.org)
 
 ---
 
@@ -131,7 +131,7 @@ helm upgrade --install shopease helm-charts/ \
 kubectl get pods -n shopease-system
 
 # Access health endpoint
-curl https://shop-ease.kunlecreates.org/api/user/health
+curl https://shop.kunlecreates.org/api/user/health
 ```
 
 ### 4. Run E2E Tests (Post-Deployment)
@@ -139,7 +139,7 @@ curl https://shop-ease.kunlecreates.org/api/user/health
 ```bash
 cd e2e
 npm ci && npx playwright install --with-deps
-E2E_BASE_URL=https://shop-ease.kunlecreates.org npx playwright test
+E2E_BASE_URL=https://shop.kunlecreates.org npx playwright test
 ```
 
 ### Sparse Checkout — Work on a Single Service
@@ -190,7 +190,7 @@ git sparse-checkout add frontend                  # add more as needed
 ```
 ┌──────────────────────────────────────────────────────────────────┐
 │                   Cloudflare Tunnel + Access                     │
-│                   (shop-ease.kunlecreates.org)                   │
+│                   (shop.kunlecreates.org)                   │
 └────────────────────────────┬─────────────────────────────────────┘
                              │
 ┌────────────────────────────▼─────────────────────────────────────┐
@@ -756,7 +756,7 @@ ShopEase demonstrates production patterns but is a portfolio/learning project. B
 | **Backend Services** | 4 (user, product, order, notification) |
 | **Databases** | 3 (Oracle DB, PostgreSQL 15, MS SQL Server) |
 | **API Endpoints** | ~55 across all services |
-| **Live URL** | [shop-ease.kunlecreates.org](https://shop-ease.kunlecreates.org) |
+| **Live URL** | [shop.kunlecreates.org](https://shop.kunlecreates.org) |
 
 <p align="right"><a href="#-shopease-platform">↑ back to top</a></p>
 
