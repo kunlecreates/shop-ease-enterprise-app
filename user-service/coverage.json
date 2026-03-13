@@ -1,1 +1,1 @@
-{"service": "user-service", "language": "java", "lines": {"total": 684, "covered": 242, "missed": 442, "coverage_pct": 35.38}}
+{"service": "user-service", "language": "java", "lines": {"total": 729, "covered": 245, "missed": 484, "coverage_pct": 33.61}}
