@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #ef4444; color: white; padding: 20px; border-radius: 5px; }
+        .content { background-color: #f9f9f9; padding: 20px; margin-top: 20px; border-radius: 5px; }
+        .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #666; }
+        .button { background-color: #2563eb; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 15px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Order Cancelled</h1>
+        </div>
+        <div class="content">
+            <p>Dear {{customer_name}},</p>
+            <p>Your order <strong>#{{order_id}}</strong> has been cancelled.</p>
+            <p>If you didn't request this cancellation or have any questions, please contact our support team immediately.</p>
+            <p>Any charges made will be refunded to your original payment method within 5-7 business days.</p>
+            <a href="{{support_url}}" class="button">Contact Support</a>
+        </div>
+        <div class="footer">
+            <p>We hope to serve you again soon!</p>
+        </div>
+    </div>
+</body>
+</html>

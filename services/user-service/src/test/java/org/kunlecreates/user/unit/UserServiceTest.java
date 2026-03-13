@@ -11,8 +11,13 @@ import org.kunlecreates.user.domain.User;
 import org.kunlecreates.user.domain.Role;
 import org.kunlecreates.user.repository.UserRepository;
 import org.kunlecreates.user.repository.RoleRepository;
+import org.kunlecreates.user.repository.EmailVerificationTokenRepository;
+import org.kunlecreates.user.repository.PasswordResetTokenRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,6 +33,15 @@ class UserServiceTest {
 
     @Mock
     private RoleRepository roleRepository;
+
+    @Mock
+    private EmailVerificationTokenRepository verificationTokenRepository;
+
+    @Mock
+    private PasswordResetTokenRepository passwordResetTokenRepository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private UserService userService;
@@ -179,5 +193,172 @@ class UserServiceTest {
         assertThat(result).isEmpty();
         verify(roleRepository, never()).findByNameIgnoreCase(anyString());
         verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void changePassword_whenCurrentPasswordIsIncorrect_shouldThrowException() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(passwordEncoder.matches("wrongPassword", testUser.getPasswordHash())).thenReturn(false);
+
+        assertThatThrownBy(() -> userService.changePassword(1L, "wrongPassword", "newPassword123"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Current password is incorrect");
+
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void changePassword_whenCurrentPasswordIsCorrect_shouldUpdatePassword() {
+        String originalPasswordHash = testUser.getPasswordHash();
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(passwordEncoder.matches("currentPassword", originalPasswordHash)).thenReturn(true);
+        when(passwordEncoder.encode("newPassword123")).thenReturn("newHashedPassword");
+
+        userService.changePassword(1L, "currentPassword", "newPassword123");
+
+        verify(passwordEncoder).matches("currentPassword", originalPasswordHash);
+        verify(passwordEncoder).encode("newPassword123");
+        verify(userRepository).save(testUser);
+        assertThat(testUser.getPasswordHash()).isEqualTo("newHashedPassword");
+    }
+
+    @Test
+    void changePassword_whenUserNotFound_shouldThrowException() {
+        when(userRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> userService.changePassword(999L, "currentPassword", "newPassword123"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("User not found");
+
+        verify(passwordEncoder, never()).matches(anyString(), anyString());
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void listUsers_shouldReturnAllUsers() {
+        List<User> users = Arrays.asList(
+                new User("alice@example.com", "hash1"),
+                new User("bob@example.com", "hash2")
+        );
+        when(userRepository.findAll()).thenReturn(users);
+
+        List<User> result = userService.listUsers();
+
+        assertThat(result).hasSize(2);
+        verify(userRepository).findAll();
+    }
+
+    @Test
+    void findById_whenUserExists_shouldReturnUser() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+
+        Optional<User> result = userService.findById(1L);
+
+        assertThat(result).isPresent();
+        assertThat(result.get().getEmail()).isEqualTo("test@example.com");
+    }
+
+    @Test
+    void findById_whenUserNotFound_shouldReturnEmptyOptional() {
+        when(userRepository.findById(999L)).thenReturn(Optional.empty());
+
+        Optional<User> result = userService.findById(999L);
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void findByEmail_whenUserExists_shouldReturnUser() {
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(testUser));
+
+        Optional<User> result = userService.findByEmail("test@example.com");
+
+        assertThat(result).isPresent();
+        assertThat(result.get().getEmail()).isEqualTo("test@example.com");
+    }
+
+    @Test
+    void findByEmail_whenUserNotFound_shouldReturnEmptyOptional() {
+        when(userRepository.findByEmail("unknown@example.com")).thenReturn(Optional.empty());
+
+        Optional<User> result = userService.findByEmail("unknown@example.com");
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void createUser_shouldSaveAndReturnNewUser() {
+        User newUser = new User("newuser@example.com", "hashedPassword");
+        when(userRepository.save(any(User.class))).thenReturn(newUser);
+
+        User result = userService.createUser("newuser@example.com", "hashedPassword");
+
+        assertThat(result.getEmail()).isEqualTo("newuser@example.com");
+        verify(userRepository).save(any(User.class));
+    }
+
+    @Test
+    void updateUserStatus_shouldActivateUser() {
+        testUser.setIsActive(0);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(userRepository.save(testUser)).thenReturn(testUser);
+
+        Optional<User> result = userService.updateUserStatus(1L, true);
+
+        assertThat(result).isPresent();
+        assertThat(result.get().getIsActive()).isEqualTo(1);
+        verify(userRepository).save(testUser);
+    }
+
+    @Test
+    void updateUserStatus_shouldDeactivateUser() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(userRepository.save(testUser)).thenReturn(testUser);
+
+        Optional<User> result = userService.updateUserStatus(1L, false);
+
+        assertThat(result).isPresent();
+        assertThat(result.get().getIsActive()).isEqualTo(0);
+        verify(userRepository).save(testUser);
+    }
+
+    @Test
+    void updateUserStatus_whenUserNotFound_shouldReturnEmptyOptional() {
+        when(userRepository.findById(999L)).thenReturn(Optional.empty());
+
+        Optional<User> result = userService.updateUserStatus(999L, true);
+
+        assertThat(result).isEmpty();
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void updateLastLogin_shouldUpdateTimestampForExistingUser() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+
+        userService.updateLastLogin(1L);
+
+        assertThat(testUser.getLastLoginAt()).isNotNull();
+        verify(userRepository).save(testUser);
+    }
+
+    @Test
+    void updateLastLogin_whenUserNotFound_shouldNotSave() {
+        when(userRepository.findById(999L)).thenReturn(Optional.empty());
+
+        userService.updateLastLogin(999L);
+
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void deleteUser_shouldDeleteChildTokensBeforeDeletingUser() {
+        when(userRepository.existsById(1L)).thenReturn(true);
+
+        userService.deleteUser(1L);
+
+        verify(verificationTokenRepository).deleteByUserId(1L);
+        verify(passwordResetTokenRepository).deleteByUserId(1L);
+        verify(userRepository).deleteById(1L);
     }
 }

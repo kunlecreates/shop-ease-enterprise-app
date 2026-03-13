@@ -113,7 +113,7 @@ class AuthServiceTest {
         when(passwordEncoder.encode(anyString())).thenReturn("hashedPassword");
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
         when(roleRepository.findByNameIgnoreCase("customer")).thenReturn(Optional.of(customerRole));
-        when(jwtService.generateToken(anyString(), anyString(), anyList())).thenReturn("jwt-token");
+        when(jwtService.generateToken(anyString(), anyString(), anyList(), anyString())).thenReturn("jwt-token");
 
         authService.register(request);
 
@@ -147,7 +147,7 @@ class AuthServiceTest {
         when(passwordEncoder.encode(anyString())).thenReturn("hashedPassword");
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
         when(roleRepository.findByNameIgnoreCase("customer")).thenReturn(Optional.of(customerRole));
-        when(jwtService.generateToken("5", "new@example.com", List.of("CUSTOMER")))
+        when(jwtService.generateToken("5", "new@example.com", List.of("CUSTOMER"), null))
                 .thenReturn("generated-token");
 
         AuthResponse response = authService.register(request);
@@ -155,7 +155,7 @@ class AuthServiceTest {
         assertThat(response.token()).isEqualTo("generated-token");
         assertThat(response.userId()).isEqualTo("5");
         assertThat(response.email()).isEqualTo("new@example.com");
-        verify(jwtService).generateToken("5", "new@example.com", List.of("CUSTOMER"));
+        verify(jwtService).generateToken("5", "new@example.com", List.of("CUSTOMER"), null);
     }
 
     @Test
@@ -201,7 +201,7 @@ class AuthServiceTest {
         when(passwordEncoder.matches("correctPassword", "hashedPassword")).thenReturn(true);
         when(passwordResetTokenRepository.existsByUserAndUsedAtIsNullAndExpiresAtAfter(
                 eq(testUser), any(LocalDateTime.class))).thenReturn(false);
-        when(jwtService.generateToken("1", "test@example.com", List.of("CUSTOMER")))
+        when(jwtService.generateToken("1", "test@example.com", List.of("CUSTOMER"), null))
                 .thenReturn("login-token");
 
         AuthResponse response = authService.login(request);
@@ -272,5 +272,20 @@ class AuthServiceTest {
         verify(passwordEncoder).encode("newPassword123");
         verify(userRepository).save(testUser);
         verify(passwordResetTokenRepository).save(resetToken);
+    }
+
+    @Test
+    void login_whenEmailNotVerified_shouldThrowIllegalStateException() {
+        testUser.setEmailVerified(0);
+        LoginRequest request = new LoginRequest("test@example.com", "correctPassword");
+
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(testUser));
+        when(passwordEncoder.matches("correctPassword", testUser.getPasswordHash())).thenReturn(true);
+
+        assertThatThrownBy(() -> authService.login(request))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("Email not verified. Please check your email for verification link.");
+
+        verify(jwtService, never()).generateToken(any(), any(), any(), any());
     }
 }

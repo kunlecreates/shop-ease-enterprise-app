@@ -13,3 +13,6 @@ jwt:
 notification:
   service:
     enabled: false
+product:
+  service:
+    enabled: false

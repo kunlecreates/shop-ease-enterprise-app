@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/Button';
 
 interface User {
   id: string;
-  username: string;
+  firstName: string;
+  lastName: string;
   email: string;
-  role: string;
+  roles: string[];
   isActive: boolean;
   createdAt: string;
 }
@@ -59,11 +60,11 @@ function UserManagementContent() {
     : users.filter(u => !u.isActive);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-6 max-w-7xl mx-auto dark:bg-gray-900 min-h-screen">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">User Management</h1>
+        <h1 className="text-3xl font-bold dark:text-white">User Management</h1>
         <select
-          className="px-4 py-2 border rounded-lg"
+          className="px-4 py-2 border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
         >
@@ -74,43 +75,46 @@ function UserManagementContent() {
       </div>
 
       {loading ? (
-        <p className="text-center py-8">Loading users...</p>
+        <p className="text-center py-8 dark:text-white">Loading users...</p>
       ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+          <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50 border-b">
+            <thead className="bg-gray-50 dark:bg-gray-700 border-b dark:border-gray-600">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Username</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Joined</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Username</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Email</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Role</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Joined</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filteredUsers.map((user) => (
-                <tr key={user.id}>
-                  <td className="px-6 py-4 whitespace-nowrap font-medium">{user.username}</td>
-                  <td className="px-6 py-4">{user.email}</td>
+            <tbody>
+              {filteredUsers.map((user, index) => (
+                <tr key={user.id} className={`${index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900'} border-b dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors`}>
+                  <td className="px-6 py-4 whitespace-nowrap font-medium dark:text-white">
+                    {`${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email}
+                  </td>
+                  <td className="px-6 py-4 dark:text-gray-300">{user.email}</td>
                   <td className="px-6 py-4">
                     <select
-                      className="px-2 py-1 border rounded text-sm"
-                      value={user.role}
+                      className="px-2 py-1 border dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      value={user.roles?.find(r => r.toUpperCase() === 'ADMIN') ? 'ADMIN' : 'CUSTOMER'}
                       onChange={(e) => handleRoleChange(user.id, e.target.value)}
                     >
-                      <option value="USER">User</option>
+                      <option value="CUSTOMER">Customer</option>
                       <option value="ADMIN">Admin</option>
                     </select>
                   </td>
                   <td className="px-6 py-4">
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      user.isActive ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
                     }`}>
                       {user.isActive ? 'Active' : 'Inactive'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">
+                  <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
                     {new Date(user.createdAt).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -128,10 +132,11 @@ function UserManagementContent() {
           </table>
 
           {filteredUsers.length === 0 && (
-            <div className="text-center py-12 text-gray-600">
+            <div className="text-center py-12 text-gray-600 dark:text-gray-400">
               No users found for the selected filter.
             </div>
           )}
+          </div>
         </div>
       )}
     </div>

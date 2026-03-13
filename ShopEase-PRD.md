@@ -1,8 +1,8 @@
 # ![ShopEase Logo](https://kunlecreates.org/assets/acegrocer-logo.png)
 # Product Requirements Document (PRD)  
 **Project:** ShopEase - A grocery store e-commerce web application  
-**Version:** 1.0  
-**Date:** November 2025  
+**Version:** 1.1  
+**Date:** March 2026 (updated from November 2025)  
 **Owner:** Kunle Ogunlana  
 
 ---
@@ -25,7 +25,7 @@ Administrators require tools to manage users, inventory, and transactions effici
 
 ### Non-Goals
 - Real payment gateway integration (mock only in MVP).  
-- Multi-region database replication (single SQLite instance initially).  
+- Multi-region database replication (single-region deployment; polyglot persistence across Oracle, PostgreSQL, and MSSQL is in place).  
 - Personalized AI-driven product recommendations (future enhancement).  
 
 ---
@@ -61,7 +61,7 @@ Administrators require tools to manage users, inventory, and transactions effici
 | **FR013** | Observability & Monitoring | As DevOps, I want telemetry for troubleshooting. | Emit traces/logs compatible with OpenTelemetry. |
 | **FR014** | CI/CD Deployment | As a developer, I want automated deployments. | GitHub Actions build → GHCR → Helm → Kubernetes. |
 | **FR015** | Security & Reliability | As a user, I want my data secure. | HTTPS, JWT validation, secure cookies, secrets handling. |
-| **FR016** | Testing & Quality Assurance | As a developer, I want automated testing. | ≥80% test coverage via Jest/Vitest, Playwright. |
+| **FR016** | Testing & Quality Assurance | As a developer, I want automated testing. | ≥90% test coverage via Jest, Playwright, and JUnit 5/pytest. |
 
 ---
 
@@ -76,7 +76,7 @@ Administrators require tools to manage users, inventory, and transactions effici
 | **NFR005** | Maintainability | Modular microservice structure with clear API contracts. |
 | **NFR006** | Observability | Metrics, logs, and traces integrated with OpenTelemetry. |
 | **NFR007** | Portability | Fully containerized, deployable on any K8s cluster. |
-| **NFR008** | Testability | ≥80% coverage verified in CI/CD. |
+| **NFR008** | Testability | ≥90% coverage verified in CI/CD. |
 | **NFR009** | Usability | Accessible, responsive UI optimized for mobile and desktop. |
 | **NFR010** | Compliance | GDPR-aligned data protection and consent management. |
 
@@ -89,7 +89,7 @@ Administrators require tools to manage users, inventory, and transactions effici
 | **Performance** | API response time | <2 seconds |
 | **Reliability** | Uptime | 99.9% |
 | **Security** | Auth failures | <0.1% |
-| **Testing** | Code coverage | ≥80% |
+| **Testing** | Code coverage | ≥90% |
 | **User Experience** | Checkout completion rate | ≥85% |
 | **CI/CD** | Build + deployment success rate | 100% per push |
 
@@ -97,23 +97,27 @@ Administrators require tools to manage users, inventory, and transactions effici
 
 ## 6. Milestones / Phasing
 
-| Phase | Deliverables | Target Date |
-|--------|---------------|-------------|
-| **Phase 1** | Authentication, user profiles, catalog browsing | Nov 2025 |
-| **Phase 2** | Shopping cart and mock checkout | Dec 2025 |
-| **Phase 3** | Admin management tools and dashboards | Jan 2026 |
-| **Phase 4** | Observability stack, CI/CD via Helm and Cloudflare Tunnel | Feb 2026 |
-| **Phase 5** | Testing optimization, Vault integration, scalability review | Mar 2026 |
-| **Phase 6** | Admin Productivity Enhancements (bulk operations, user account management) | Apr 2026 |
+| Phase | Deliverables | Target Date | Actual Status |
+|--------|---------------|-------------|---------------|
+| **Phase 1** | Authentication, user profiles, catalog browsing | Nov 2025 | ✅ Delivered Nov 2025 |
+| **Phase 2** | Shopping cart and mock checkout | Dec 2025 | ✅ Delivered Dec 2025 |
+| **Phase 3** | Admin management tools and dashboards | Jan 2026 | ✅ Delivered Jan 2026 |
+| **Phase 4** | Observability stack, CI/CD via Helm and Cloudflare Tunnel | Feb 2026 | ✅ Delivered Feb 2026 |
+| **Phase 5** | Testing optimization, Vault integration, scalability review | Mar 2026 | ✅ Delivered Feb 2026 |
+| **Phase 6** | Admin Productivity Enhancements (bulk operations, user account management) | Apr 2026 | ✅ P6-005 delivered Feb 2026; bulk operations planned |
+| **Phase 7** | Test coverage optimization — frontend unit tests, E2E expansion, frontend CI | Mar 2026 | ✅ Delivered Mar 2026 |
 
 ---
 
 ## 7. Open Questions
-- When should the migration to Postgres/MySQL occur?  
-- Should we introduce Redis caching for catalog queries?  
-- Will notifications (email/SMS) be included in MVP?  
-- How should GDPR “right-to-forget” be implemented across services?  
-- Should mock payments evolve into Stripe sandbox integration?
+
+| Question | Status | Resolution |
+|----------|--------|------------|
+| When should the migration to Postgres/MySQL occur? | ✅ **Resolved** | Using polyglot persistence: PostgreSQL (product), MSSQL (order), Oracle (user). No migration needed. |
+| Should we introduce Redis caching for catalog queries? | ⏳ **Deferred** | PostgreSQL full-text search is fast enough at current scale. Re-evaluate at 10k+ concurrent users. |
+| Will notifications (email/SMS) be included in MVP? | ✅ **Resolved** | Email notifications fully implemented via Gmail SMTP (order confirmation, shipping, password reset, welcome). SMS deferred. |
+| How should GDPR "right-to-forget" be implemented across services? | 🔄 **Partial** | Account deletion endpoint (DELETE /api/user/:id) implemented. Data export and consent management remain pending. |
+| Should mock payments evolve into Stripe sandbox integration? | ⏳ **Deferred** | Mock payment sufficient for MVP. Stripe integration planned post-MVP. |
 
 ---
 ## 8. Phase 6 Features (Future Enhancements)
@@ -121,13 +125,13 @@ Administrators require tools to manage users, inventory, and transactions effici
 ### Admin Productivity & Bulk Operations
 **Target:** April 2026
 
-| Feature ID | Feature | Description | Endpoints |
-|-----------|---------|-------------|-----------|
-| **P6-001** | Bulk Product Import | Import multiple products via CSV/JSON | POST `/api/product/bulk` |
-| **P6-002** | Bulk Price Updates | Update prices for multiple products at once | PATCH `/api/product/bulk/price` |
-| **P6-003** | Bulk Stock Adjustments | Adjust inventory for multiple products | POST `/api/product/bulk/stock` |
-| **P6-004** | Product Export | Export product catalog to CSV/JSON | GET `/api/product/export` |
-| **P6-005** | User Account Status Management | Enable/disable user accounts | PATCH `/api/user/:id/status` |
+| Feature ID | Feature | Description | Endpoints | Status |
+|-----------|---------|-------------|----------|--------|
+| **P6-001** | Bulk Product Import | Import multiple products via CSV/JSON | POST `/api/product/bulk` | ⏳ Planned |
+| **P6-002** | Bulk Price Updates | Update prices for multiple products at once | PATCH `/api/product/bulk/price` | ⏳ Planned |
+| **P6-003** | Bulk Stock Adjustments | Adjust inventory for multiple products | POST `/api/product/bulk/stock` | ⏳ Planned |
+| **P6-004** | Product Export | Export product catalog to CSV/JSON | GET `/api/product/export` | ⏳ Planned |
+| **P6-005** | User Account Status Management | Enable/disable user accounts | PATCH `/api/user/:id/status` | ✅ **Implemented** (Feb 2026) |
 
 **Rationale:** These features enhance admin efficiency but are not required for core e-commerce functionality. They will be prioritized based on admin feedback and operational needs after MVP launch.
 

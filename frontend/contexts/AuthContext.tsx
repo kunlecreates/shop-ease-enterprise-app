@@ -15,25 +15,58 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+/** Checks the JWT exp claim without a library. Returns true if the token is expired or unparseable. */
+function isTokenExpired(token: string): boolean {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+    return typeof payload.exp === 'number' && payload.exp * 1000 < Date.now();
+  } catch {
+    return true;
+  }
+}
+
+function clearAuthStorage() {
+  localStorage.removeItem('auth_token');
+  localStorage.removeItem('user');
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const logout = () => {
+    clearAuthStorage();
+    setUser(null);
+  };
+
   useEffect(() => {
     const token = localStorage.getItem('auth_token');
     const storedUser = localStorage.getItem('user');
-    
+
     if (token && storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error('Failed to parse stored user', error);
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('user');
+      if (isTokenExpired(token)) {
+        // JWT is expired — clear stale session so Cloudflare re-auth leads to login
+        clearAuthStorage();
+      } else {
+        try {
+          setUser(JSON.parse(storedUser));
+        } catch {
+          clearAuthStorage();
+        }
       }
     }
-    
+
     setIsLoading(false);
+  }, []);
+
+  // Listen for 401 events dispatched by ApiClient so expired/revoked sessions are cleared globally
+  useEffect(() => {
+    const handle401 = () => {
+      clearAuthStorage();
+      setUser(null);
+    };
+    window.addEventListener('auth:unauthorized', handle401);
+    return () => window.removeEventListener('auth:unauthorized', handle401);
   }, []);
 
   const login = async (username: string, password: string) => {
@@ -71,12 +104,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Registration failed:', error);
       throw error;
     }
-  };
-
-  const logout = () => {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('user');
-    setUser(null);
   };
 
   return (

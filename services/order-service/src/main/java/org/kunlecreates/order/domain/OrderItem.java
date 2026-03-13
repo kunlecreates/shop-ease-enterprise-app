@@ -17,6 +17,9 @@ public class OrderItem {
     @Column(name = "product_ref", nullable = false, length = 64)
     private String productRef;
 
+    @Column(name = "product_name", length = 255)
+    private String productName;
+
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
 
@@ -33,12 +36,17 @@ public class OrderItem {
     private Instant updatedAt = Instant.now();
 
     protected OrderItem() {}
-    public OrderItem(Order order, String productRef, Integer quantity, Long unitPriceCents) {
-        this.order = order; this.productRef = productRef; this.quantity = quantity; this.unitPriceCents = unitPriceCents;
+    public OrderItem(Order order, String productRef, String productName, Integer quantity, Long unitPriceCents) {
+        this.order = order;
+        this.productRef = productRef;
+        this.productName = productName;
+        this.quantity = quantity;
+        this.unitPriceCents = unitPriceCents;
     }
     public Long getId() { return id; }
     public Order getOrder() { return order; }
     public String getProductRef() { return productRef; }
+    public String getProductName() { return productName; }
     public Integer getQuantity() { return quantity; }
     public Long getUnitPriceCents() { return unitPriceCents; }
 }

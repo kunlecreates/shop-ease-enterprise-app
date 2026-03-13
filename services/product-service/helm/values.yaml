@@ -38,6 +38,12 @@ jwt:
   dev:
     JWT_SECRET: "dev-secret-changeme-at-least-256-bits"
 
+internalApiKey:
+  # Name of a pre-created K8s Secret containing INTERNAL_SERVICE_API_KEY.
+  # The same secret must be provisioned identically in the order-service namespace.
+  # Leave empty to disable the header check (stock adjustments from order-service will fail).
+  secretName: "shopease-internal-api-key"
+
 service:
   port: 80
   # Port on the container the application listens on; used as Service targetPort and

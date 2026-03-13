@@ -31,20 +31,21 @@ public class OrderController {
      * Users see only their own orders; admins see all orders
      */
     @GetMapping
-    public List<Order> list(Authentication authentication) {
+    public List<OrderResponse> list(Authentication authentication) {
         String currentUserId = extractUserIdFromAuth(authentication);
         boolean isAdmin = hasRole(authentication, "ADMIN");
         
         List<Order> orders = orderService.listOrders();
         
         // Admins can see all orders, regular users only see their own
-        if (isAdmin) {
-            return orders;
+        if (!isAdmin) {
+            orders = orders.stream()
+                .filter(order -> currentUserId.equals(order.getUserRef()))
+                .collect(Collectors.toList());
         }
         
-        // Filter orders to only those belonging to the authenticated user
         return orders.stream()
-                .filter(order -> currentUserId.equals(order.getUserRef()))
+                .map(this::toOrderResponse)
                 .collect(Collectors.toList());
     }
 
@@ -53,7 +54,7 @@ public class OrderController {
      * Users can only view their own orders unless they are admin
      */
     @GetMapping("/{id}")
-    public ResponseEntity<Order> get(@PathVariable Long id, Authentication authentication) {
+    public ResponseEntity<OrderResponse> get(@PathVariable Long id, Authentication authentication) {
         String currentUserId = extractUserIdFromAuth(authentication);
         boolean isAdmin = hasRole(authentication, "ADMIN");
         
@@ -61,11 +62,11 @@ public class OrderController {
                 .map(order -> {
                     // Check ownership: user must own the order OR be an admin
                     if (!currentUserId.equals(order.getUserRef()) && !isAdmin) {
-                        return ResponseEntity.status(HttpStatus.FORBIDDEN).<Order>body(null);
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).<OrderResponse>body(null);
                     }
-                    return ResponseEntity.ok(order);
+                    return ResponseEntity.ok(toOrderResponse(order));
                 })
-                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).<Order>body(null));
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).<OrderResponse>body(null));
     }
 
     /**
@@ -83,6 +84,10 @@ public class OrderController {
         // Extract JWT token from Authorization header for notification service
         String jwtToken = extractJwtToken(request);
         
+        // Extract customer identity from JWT for notifications and display
+        String customerName = extractCustomerNameFromAuth(authentication);
+        String customerEmail = extractCustomerEmailFromAuth(authentication);
+        
         // Extract shipping address fields
         String shippingRecipient = req.shippingAddress() != null ? req.shippingAddress().recipient() : null;
         String shippingStreet1 = req.shippingAddress() != null ? req.shippingAddress().street1() : null;
@@ -98,30 +103,25 @@ public class OrderController {
         String paymentLast4 = req.paymentMethod() != null ? req.paymentMethod().last4() : null;
         String paymentBrand = req.paymentMethod() != null ? req.paymentMethod().brand() : null;
         
+        // Map request items to service layer input objects
+        List<OrderService.OrderItemInput> orderItems = req.items() != null
+                ? req.items().stream()
+                        .map(i -> new OrderService.OrderItemInput(i.productRef(), i.productName(), i.quantity(), i.unitPrice()))
+                        .collect(Collectors.toList())
+                : java.util.Collections.emptyList();
+        
         // Create order with authenticated user's ID (ignore userId from request body for security)
         Order created = orderService.createOrder(
             authenticatedUserId, null, req.status(), req.total(), jwtToken,
             shippingRecipient, shippingStreet1, shippingStreet2, shippingCity,
             shippingState, shippingPostalCode, shippingCountry, shippingPhone,
-            paymentMethodType, paymentLast4, paymentBrand
+            paymentMethodType, paymentLast4, paymentBrand,
+            customerEmail, customerName, orderItems
         );
         
         URI location = uriBuilder.path("/api/order/{id}").buildAndExpand(created.getId()).toUri();
         
-        // Return order details in response body for frontend confirmation
-        OrderResponse response = new OrderResponse(
-            created.getId(),
-            created.getUserRef(),
-            created.getStatus(),
-            created.getTotalCents(),
-            created.getCurrency(),
-            created.getPlacedAt(),
-            created.getCreatedAt(),
-            created.getUpdatedAt(),
-            req.shippingAddress(),
-            req.paymentMethod()
-        );
-        return ResponseEntity.created(location).body(response);
+        return ResponseEntity.created(location).body(toOrderResponse(created));
     }
 
     /**
@@ -147,6 +147,66 @@ public class OrderController {
     private boolean hasRole(Authentication authentication, String role) {
         return authentication.getAuthorities().stream()
                 .anyMatch(auth -> auth.getAuthority().equals("ROLE_" + role));
+    }
+    
+    /**
+     * Extract customer full name from JWT token claims
+     * Returns fullName or "Customer" as fallback
+     */
+    private String extractCustomerNameFromAuth(Authentication authentication) {
+        if (authentication.getPrincipal() instanceof Jwt jwt) {
+            String fullName = jwt.getClaimAsString("fullName");
+            return (fullName != null && !fullName.isEmpty()) ? fullName : "Customer";
+        }
+        return "Customer";
+    }
+
+    /**
+     * Extract customer email from JWT token claims
+     */
+    private String extractCustomerEmailFromAuth(Authentication authentication) {
+        if (authentication.getPrincipal() instanceof Jwt jwt) {
+            String email = jwt.getClaimAsString("email");
+            return (email != null && !email.isEmpty()) ? email : null;
+        }
+        return null;
+    }
+    
+    /**
+     * Convert Order entity to OrderResponse DTO using the customer name stored on the order,
+     * which was captured from the customer's JWT at creation time.
+     */
+    private OrderResponse toOrderResponse(Order order) {
+        String customerName = order.getCustomerName();
+        if (customerName == null || customerName.isEmpty()) {
+            customerName = order.getShippingRecipient();
+        }
+        return new OrderResponse(
+            order.getId(),
+            order.getUserRef(),
+            customerName,
+            order.getStatus(),
+            order.getTotalCents(),
+            order.getCurrency(),
+            order.getPlacedAt(),
+            order.getCreatedAt(),
+            order.getUpdatedAt(),
+            new org.kunlecreates.order.interfaces.dto.ShippingAddress(
+                order.getShippingRecipient(),
+                order.getShippingStreet1(),
+                order.getShippingStreet2(),
+                order.getShippingCity(),
+                order.getShippingState(),
+                order.getShippingPostalCode(),
+                order.getShippingCountry(),
+                order.getShippingPhone()
+            ),
+            new org.kunlecreates.order.interfaces.dto.PaymentMethod(
+                order.getPaymentMethodType(),
+                order.getPaymentLast4(),
+                order.getPaymentBrand()
+            )
+        );
     }
     
     /**

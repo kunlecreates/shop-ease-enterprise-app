@@ -39,12 +39,14 @@ export interface Cart {
 
 export interface Order {
   id: string;
-  userId: string;
-  orderNumber: string;
-  status: 'PENDING' | 'PAID' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
+  userId?: string;
+  userRef?: string;
+  orderNumber?: string;
+  status: 'PENDING' | 'PAID' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED' | 'REFUNDED';
   items: CartItem[];
   total: number;
-  shippingAddress: Address;
+  totalPrice: number;
+  shippingAddress?: Address;
   createdAt: string;
   updatedAt: string;
 }

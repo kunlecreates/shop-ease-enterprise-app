@@ -24,6 +24,11 @@ notification:
   service:
     url: ${NOTIFICATION_SERVICE_URL:http://localhost:8003}
     enabled: ${NOTIFICATION_SERVICE_ENABLED:true}
+product:
+  service:
+    url: ${PRODUCT_SERVICE_URL:http://localhost:8081}
+    internal-api-key: ${INTERNAL_SERVICE_API_KEY:}
+    enabled: ${PRODUCT_SERVICE_ENABLED:true}
 management:
   endpoints:
     web:

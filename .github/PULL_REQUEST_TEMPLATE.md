@@ -1,7 +1,6 @@
 <!--
 Use this template when creating PRs. This project uses a single shared PR branch
-`feat/dev-tests` for development PRs. See `scripts/push-to-feat-dev-tests.sh` for
-convenience tooling to update that branch from a topic branch.
+`feat/dev-tests` for development PRs.
 -->
 
 ## Summary

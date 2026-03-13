@@ -1,35 +1,51 @@
 package org.kunlecreates.order.application;
 
+import org.kunlecreates.order.domain.Cart;
+import org.kunlecreates.order.domain.CartItem;
 import org.kunlecreates.order.domain.Order;
 import org.kunlecreates.order.domain.OrderEvent;
+import org.kunlecreates.order.domain.OrderItem;
 import org.kunlecreates.order.domain.OrderStatus;
 import org.kunlecreates.order.infrastructure.notification.NotificationClient;
+import org.kunlecreates.order.infrastructure.product.ProductServiceClient;
 import org.kunlecreates.order.repository.OrderEventRepository;
+import org.kunlecreates.order.repository.OrderItemRepository;
 import org.kunlecreates.order.repository.OrderRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class OrderService {
+    private static final Logger logger = LoggerFactory.getLogger(OrderService.class);
+    
     private final OrderRepository orderRepository;
     private final OrderEventRepository orderEventRepository;
+    private final OrderItemRepository orderItemRepository;
     private final PaymentService paymentService;
     private final NotificationClient notificationClient;
+    private final ProductServiceClient productServiceClient;
 
     public OrderService(
             OrderRepository orderRepository, 
             OrderEventRepository orderEventRepository,
+            OrderItemRepository orderItemRepository,
             PaymentService paymentService,
-            NotificationClient notificationClient) {
+            NotificationClient notificationClient,
+            ProductServiceClient productServiceClient) {
         this.orderRepository = orderRepository;
         this.orderEventRepository = orderEventRepository;
+        this.orderItemRepository = orderItemRepository;
         this.paymentService = paymentService;
         this.notificationClient = notificationClient;
+        this.productServiceClient = productServiceClient;
     }
 
     @Transactional(readOnly = true)
@@ -41,13 +57,15 @@ public class OrderService {
     public Optional<Order> findById(Long id) {
         return orderRepository.findById(id);
     }
-
+    
     @Transactional
     public Order createOrder(String userRef, Long userId, String status, double total, String jwtToken,
                            String shippingRecipient, String shippingStreet1, String shippingStreet2,
                            String shippingCity, String shippingState, String shippingPostalCode,
                            String shippingCountry, String shippingPhone,
-                           String paymentMethodType, String paymentLast4, String paymentBrand) {
+                           String paymentMethodType, String paymentLast4, String paymentBrand,
+                           String customerEmail, String customerName,
+                           List<OrderItemInput> items) {
         String ref;
         if (userRef != null && !userRef.isBlank()) {
             ref = userRef;
@@ -71,8 +89,20 @@ public class OrderService {
         o.setPaymentMethodType(paymentMethodType);
         o.setPaymentLast4(paymentLast4);
         o.setPaymentBrand(paymentBrand);
+        o.setCustomerEmail(customerEmail);
+        o.setCustomerName(customerName);
         
         Order saved = orderRepository.save(o);
+        
+        // Persist order line items
+        if (items != null && !items.isEmpty()) {
+            List<OrderItem> orderItems = items.stream()
+                    .map(item -> new OrderItem(saved, item.productRef(), item.productName(), item.quantity(),
+                            Math.round(item.unitPrice() * 100)))
+                    .toList();
+            orderItemRepository.saveAll(orderItems);
+            logger.debug("Saved {} items for order {}", orderItems.size(), saved.getId());
+        }
         
         // Send order confirmation email asynchronously (non-blocking)
         if (jwtToken != null) {
@@ -82,12 +112,16 @@ public class OrderService {
         return saved;
     }
 
+    /** Simple input record for order line items, used within the application layer */
+    public record OrderItemInput(String productRef, String productName, int quantity, double unitPrice) {}
+
     @Transactional
     public Order processCheckout(Long userId, double total, String jwtToken,
                                 String shippingRecipient, String shippingStreet1, String shippingStreet2,
                                 String shippingCity, String shippingState, String shippingPostalCode,
                                 String shippingCountry, String shippingPhone,
-                                String paymentMethodType, String paymentLast4, String paymentBrand) {
+                                String paymentMethodType, String paymentLast4, String paymentBrand,
+                                String customerEmail, String customerName) {
         boolean paid = paymentService.charge(userId, total);
         if (!paid) {
             throw new RuntimeException("Payment failed");
@@ -95,7 +129,8 @@ public class OrderService {
         return createOrder(null, userId, "PAID", total, jwtToken,
                 shippingRecipient, shippingStreet1, shippingStreet2, shippingCity,
                 shippingState, shippingPostalCode, shippingCountry, shippingPhone,
-                paymentMethodType, paymentLast4, paymentBrand);
+                paymentMethodType, paymentLast4, paymentBrand,
+                customerEmail, customerName, Collections.emptyList());
     }
     
     @Transactional
@@ -112,11 +147,49 @@ public class OrderService {
             orderEventRepository.saveAll(events);
             order.clearDomainEvents();
         }
+
+        // Reconcile stock with the product service based on the transition
+        List<OrderItem> items = orderItemRepository.findByOrderId(orderId);
+        if (newStatus == OrderStatus.PAID) {
+            // Decrement stock when payment is confirmed — items are now committed
+            items.forEach(item -> productServiceClient.adjustStock(
+                    item.getProductRef(), -item.getQuantity(),
+                    "Order #" + orderId + " paid"));
+        } else if (newStatus == OrderStatus.CANCELLED || newStatus == OrderStatus.REFUNDED) {
+            // Restore stock only if it was previously decremented (i.e. order reached PAID)
+            boolean wasDeducted = previousStatus == OrderStatus.PAID
+                    || previousStatus == OrderStatus.SHIPPED;
+            if (wasDeducted) {
+                items.forEach(item -> productServiceClient.adjustStock(
+                        item.getProductRef(), item.getQuantity(),
+                        "Order #" + orderId + " " + newStatus.getValue().toLowerCase()));
+            }
+        }
         
-        if (newStatus == OrderStatus.SHIPPED && jwtToken != null) {
-            String trackingNumber = generateTrackingNumber(orderId);
-            String estimatedDelivery = calculateEstimatedDelivery();
-            notificationClient.sendShippingNotification(saved, trackingNumber, estimatedDelivery, jwtToken);
+        // Send appropriate email notification based on new status
+        if (jwtToken != null) {
+            switch (newStatus) {
+                case PAID:
+                    notificationClient.sendOrderPaidNotification(saved, jwtToken);
+                    break;
+                case SHIPPED:
+                    String trackingNumber = generateTrackingNumber(orderId);
+                    String estimatedDelivery = calculateEstimatedDelivery();
+                    notificationClient.sendShippingNotification(saved, trackingNumber, estimatedDelivery, jwtToken);
+                    break;
+                case DELIVERED:
+                    notificationClient.sendOrderDeliveredNotification(saved, jwtToken);
+                    break;
+                case CANCELLED:
+                    notificationClient.sendOrderCancelledNotification(saved, jwtToken);
+                    break;
+                case REFUNDED:
+                    notificationClient.sendOrderRefundedNotification(saved, jwtToken);
+                    break;
+                default:
+                    // No notification for other statuses
+                    break;
+            }
         }
         
         return saved;
@@ -154,6 +227,8 @@ public class OrderService {
             order.clearDomainEvents();
         }
         
+        // Note: Cancellation notification sent separately via updateStatus method when called with CANCELLED status
+        
         return saved;
     }
     
@@ -170,6 +245,8 @@ public class OrderService {
             orderEventRepository.saveAll(events);
             order.clearDomainEvents();
         }
+        
+        // Note: Refund notification sent separately via updateStatus method when called with REFUNDED status
         
         return saved;
     }

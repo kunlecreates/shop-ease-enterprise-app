@@ -115,5 +115,49 @@ describe('Product Entity', () => {
 
       expect(json.stock).toBe(-10);
     });
+
+    it('should extract category from attributes JSONB when categories array is empty', () => {
+      product.categories = [];
+      product.attributes = { category: 'fruit', unit: 'each' };
+      product.movements = [];
+
+      const json = product.toJSON();
+
+      expect(json.categories).toEqual([{ name: 'fruit' }]);
+      expect(json.unit).toBe('each');
+    });
+
+    it('should use categories array when available instead of attributes', () => {
+      product.categories = [{ name: 'vegetables' } as any];
+      product.attributes = { category: 'fruit', unit: 'each' };
+      product.movements = [];
+
+      const json = product.toJSON();
+
+      expect(json.categories).toEqual([{ name: 'vegetables' }]);
+      expect(json.unit).toBe('each');
+    });
+
+    it('should handle missing attributes field gracefully', () => {
+      product.categories = [];
+      product.attributes = undefined as any;
+      product.movements = [];
+
+      const json = product.toJSON();
+
+      expect(json.categories).toEqual([]);
+      expect(json.unit).toBeUndefined();
+    });
+
+    it('should extract unit from attributes even when categories exist', () => {
+      product.categories = [{ name: 'dairy' } as any];
+      product.attributes = { category: 'fruit', unit: 'l' };
+      product.movements = [];
+
+      const json = product.toJSON();
+
+      expect(json.categories).toEqual([{ name: 'dairy' }]);
+      expect(json.unit).toBe('l');
+    });
   });
 });

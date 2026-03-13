@@ -1,0 +1,13 @@
+PAYMENT CONFIRMED
+
+Dear {{customer_name}},
+
+Good news! Your payment has been successfully processed for order #{{order_id}}.
+
+Order Total: ${{order_total}}
+
+We are now preparing your order for shipment. You'll receive another email with tracking information once your order ships.
+
+Track your order: {{order_url}}
+
+Thank you for shopping with ShopEase!

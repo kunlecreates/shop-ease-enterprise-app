@@ -82,7 +82,8 @@ public class AuthService {
             jwtToken = jwtService.generateToken(
                 String.valueOf(user.getId()),
                 user.getEmail(),
-                roleList
+                roleList,
+                user.getFullName()
             );
         }
         
@@ -125,7 +126,8 @@ public class AuthService {
         String token = jwtService.generateToken(
             String.valueOf(user.getId()),
             user.getEmail(),
-            roles
+            roles,
+            user.getFullName()
         );
 
         String primaryRole = roles.isEmpty() ? "CUSTOMER" : roles.get(0);

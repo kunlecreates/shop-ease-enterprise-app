@@ -36,6 +36,7 @@ public record CreateOrderRequest(
     public record CreateOrderItem(
         @NotNull
         String productRef,
+        String productName,
         @Min(1)
         int quantity,
         @Min(0)

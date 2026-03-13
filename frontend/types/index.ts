@@ -13,7 +13,12 @@ export interface Product {
   price: number;
   stock: number;
   category?: string | Array<string | { id?: number; name: string }>;
+  categories?: Array<{ id?: number; name: string; code?: string }>;
+  unit?: string;
   imageUrl?: string;
+  aisle?: string;
+  section?: string;
+  shelfLocation?: string;
   currency?: string;
   active?: boolean;
   createdAt?: string;
@@ -39,24 +44,17 @@ export interface Cart {
 
 export interface Order {
   id: string;
-  userRef?: string;  // Backend uses userRef, not userId
-  userId?: string;   // Keep for backwards compatibility
-  status: 'PENDING' | 'PAID' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
-  total: number;     // Backend returns totalCents and calculates getTotal()
+  userRef?: string;
+  userId?: string;
+  customerName?: string;
+  status: 'PENDING' | 'PAID' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED' | 'REFUNDED';
+  total: number;
+  totalPrice: number;
   totalCents?: number;
   currency?: string;
   placedAt?: string;
-  shippingRecipient?: string;
-  shippingStreet1?: string;
-  shippingStreet2?: string;
-  shippingCity?: string;
-  shippingState?: string;
-  shippingPostalCode?: string;
-  shippingCountry?: string;
-  shippingPhone?: string;
-  paymentMethodType?: string;
-  paymentLast4?: string;
-  paymentBrand?: string;
+  shippingAddress?: ShippingAddress;
+  paymentMethod?: PaymentMethod;
   createdAt: string;
   updatedAt: string;
 }

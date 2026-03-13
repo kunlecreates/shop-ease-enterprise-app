@@ -1,7 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Query, UseGuards, Request, Delete, HttpCode, ForbiddenException, NotFoundException, ConflictException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Query, UseGuards, Request, Delete, HttpCode, ForbiddenException, NotFoundException, ConflictException, Put } from '@nestjs/common';
 import { ProductService } from '../application/product.service';
 import { CreateProductDto } from './dto/create-product.dto';
+import { UpdateProductDto } from './dto/update-product.dto';
 import { JwtAuthGuard } from '../config/jwt-auth.guard';
+import { InternalApiKeyGuard } from '../guards/internal-api-key.guard';
 
 @Controller('product')
 export class ProductController {
@@ -74,6 +76,19 @@ export class ProductController {
     }
   }
 
+  @Put(':sku')
+  @UseGuards(JwtAuthGuard)
+  async update(@Param('sku') sku: string, @Body() body: UpdateProductDto, @Request() req: any) {
+    if (!this.hasRole(req.user, 'admin')) {
+      throw new ForbiddenException('Only administrators can update products');
+    }
+    const updated = await this.service.updateProduct(sku, body);
+    if (!updated) {
+      throw new NotFoundException(`Product with SKU '${sku}' not found`);
+    }
+    return updated;
+  }
+
   @Get('inventory')
   async getInventorySummary() {
     try {
@@ -106,6 +121,20 @@ export class ProductController {
     }
     const adjustment = body.adjustment ?? body.quantity ?? 0;
     return this.service.adjustStock(sku, adjustment, body.reason || 'Manual adjustment');
+  }
+
+  /**
+   * Internal service-to-service stock adjustment endpoint.
+   * Secured by X-Internal-Api-Key header — not accessible to end users.
+   * Called by order-service to reconcile stock on PAID, CANCELLED, and REFUNDED transitions.
+   */
+  @Patch('internal/:sku/stock')
+  @UseGuards(InternalApiKeyGuard)
+  async adjustStockInternal(
+    @Param('sku') sku: string,
+    @Body() body: { adjustment: number; reason?: string },
+  ) {
+    return this.service.adjustStock(sku, body.adjustment, body.reason || 'Order fulfillment');
   }
 
   @Delete(':sku')

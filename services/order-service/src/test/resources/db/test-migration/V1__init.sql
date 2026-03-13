@@ -63,6 +63,10 @@ BEGIN
     payment_method_type VARCHAR(50),
     payment_last4 VARCHAR(4),
     payment_brand VARCHAR(50),
+
+    -- Customer identity captured at order creation for notifications
+    customer_email VARCHAR(255),
+    customer_name VARCHAR(255),
     
     created_at     DATETIME2(6) NOT NULL CONSTRAINT df_orders_created DEFAULT SYSUTCDATETIME(),
     updated_at     DATETIME2(6) NOT NULL CONSTRAINT df_orders_updated DEFAULT SYSUTCDATETIME()
@@ -78,6 +82,7 @@ BEGIN
     id                 BIGINT IDENTITY(1,1) PRIMARY KEY,
     order_id           BIGINT NOT NULL,
     product_ref        NVARCHAR(64) NOT NULL,
+    product_name       NVARCHAR(255) NULL,
     quantity           INT NOT NULL CONSTRAINT chk_oi_qty CHECK (quantity > 0),
     unit_price_cents   BIGINT NOT NULL CONSTRAINT chk_oi_price CHECK (unit_price_cents >= 0),
     currency           NCHAR(3) NOT NULL CONSTRAINT df_oi_currency DEFAULT N'USD',

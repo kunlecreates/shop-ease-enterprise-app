@@ -228,4 +228,46 @@ class CartServiceTest {
         assertThat(testCart.getStatus()).isEqualTo("CHECKED_OUT");
         verify(cartRepository).save(testCart);
     }
+
+    @Test
+    void getOrCreateActiveCart_whenOpenCartExists_shouldReturnExistingCart() {
+        when(cartRepository.findByUserRefAndStatus("user-456", "OPEN")).thenReturn(Optional.of(testCart));
+
+        Cart result = cartService.getOrCreateActiveCart("user-456");
+
+        assertThat(result.getUserRef()).isEqualTo("user-456");
+        verify(cartRepository, never()).save(any(Cart.class));
+    }
+
+    @Test
+    void getOrCreateActiveCart_whenNoOpenCartExists_shouldCreateAndSaveNewCart() {
+        Cart newCart = new Cart("user-456");
+        ReflectionTestUtils.setField(newCart, "id", 99L);
+        when(cartRepository.findByUserRefAndStatus("user-456", "OPEN")).thenReturn(Optional.empty());
+        when(cartRepository.save(any(Cart.class))).thenReturn(newCart);
+
+        Cart result = cartService.getOrCreateActiveCart("user-456");
+
+        assertThat(result.getUserRef()).isEqualTo("user-456");
+        verify(cartRepository).save(any(Cart.class));
+    }
+
+    @Test
+    void findById_whenCartExists_shouldReturnCart() {
+        when(cartRepository.findById(10L)).thenReturn(Optional.of(testCart));
+
+        Optional<Cart> result = cartService.findById(10L);
+
+        assertThat(result).isPresent();
+        assertThat(result.get().getUserRef()).isEqualTo("user-456");
+    }
+
+    @Test
+    void findById_whenCartNotFound_shouldReturnEmptyOptional() {
+        when(cartRepository.findById(999L)).thenReturn(Optional.empty());
+
+        Optional<Cart> result = cartService.findById(999L);
+
+        assertThat(result).isEmpty();
+    }
 }

@@ -20,19 +20,19 @@ function OrdersContent() {
   }, []);
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Order History</h1>
+    <div className="p-6 max-w-5xl mx-auto dark:bg-gray-900 min-h-screen">
+      <h1 className="text-3xl font-bold mb-6 dark:text-white">Order History</h1>
 
       {success && (
-        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-6">
+        <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 px-4 py-3 rounded mb-6">
           ✓ Order placed successfully!
         </div>
       )}
 
-      {loading && <p className="text-center py-8">Loading orders...</p>}
+      {loading && <p className="text-center py-8 dark:text-gray-300">Loading orders...</p>}
       
       {!loading && orders.length === 0 && (
-        <div className="text-center py-12 text-gray-600">
+        <div className="text-center py-12 text-gray-600 dark:text-gray-400">
           <p>You haven't placed any orders yet.</p>
         </div>
       )}
@@ -40,11 +40,11 @@ function OrdersContent() {
       {!loading && orders.length > 0 && (
         <div className="space-y-4">
           {orders.map((order) => (
-            <div key={order.id} className="bg-white rounded-lg shadow p-6">
+            <div key={order.id} className="bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-gray-700 p-6">
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h3 className="font-semibold text-lg">Order #{order.id}</h3>
-                  <p className="text-sm text-gray-600">
+                  <h3 className="font-semibold text-lg dark:text-white">Order #{order.id}</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
                     {new Date(order.createdAt).toLocaleDateString('en-US', {
                       year: 'numeric',
                       month: 'long',
@@ -55,10 +55,10 @@ function OrdersContent() {
                   </p>
                 </div>
                 <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                  order.status === 'DELIVERED' ? 'bg-green-100 text-green-800' :
-                  order.status === 'SHIPPED' ? 'bg-blue-100 text-blue-800' :
-                  order.status === 'PAID' ? 'bg-yellow-100 text-yellow-800' :
-                  'bg-gray-100 text-gray-800'
+                  order.status === 'DELIVERED' ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' :
+                  order.status === 'SHIPPED' ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200' :
+                  order.status === 'PAID' ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200' :
+                  'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
                 }`}>
                   {order.status}
                 </span>
@@ -66,35 +66,35 @@ function OrdersContent() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 {/* Shipping Information */}
-                {order.shippingRecipient && (
-                  <div className="border rounded-lg p-3 bg-gray-50">
-                    <h4 className="text-xs font-semibold text-gray-500 uppercase mb-1">Shipping To</h4>
-                    <p className="text-sm font-medium">{order.shippingRecipient}</p>
-                    {order.shippingStreet1 && <p className="text-sm">{order.shippingStreet1}</p>}
-                    {order.shippingStreet2 && <p className="text-sm">{order.shippingStreet2}</p>}
-                    <p className="text-sm">
-                      {order.shippingCity}{order.shippingState && `, ${order.shippingState}`} {order.shippingPostalCode}
+                {order.shippingAddress?.recipient && (
+                  <div className="border dark:border-gray-700 rounded-lg p-3 bg-gray-50 dark:bg-gray-700">
+                    <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Shipping To</h4>
+                    <p className="text-sm font-medium dark:text-white">{order.shippingAddress.recipient}</p>
+                    {order.shippingAddress.street1 && <p className="text-sm dark:text-gray-300">{order.shippingAddress.street1}</p>}
+                    {order.shippingAddress.street2 && <p className="text-sm dark:text-gray-300">{order.shippingAddress.street2}</p>}
+                    <p className="text-sm dark:text-gray-300">
+                      {order.shippingAddress.city}{order.shippingAddress.state && `, ${order.shippingAddress.state}`} {order.shippingAddress.postalCode}
                     </p>
-                    {order.shippingCountry && <p className="text-sm">{order.shippingCountry}</p>}
+                    {order.shippingAddress.country && <p className="text-sm dark:text-gray-300">{order.shippingAddress.country}</p>}
                   </div>
                 )}
-                
+
                 {/* Payment Information */}
-                {order.paymentMethodType && (
-                  <div className="border rounded-lg p-3 bg-gray-50">
-                    <h4 className="text-xs font-semibold text-gray-500 uppercase mb-1">Payment Method</h4>
-                    <p className="text-sm font-medium">
-                      {order.paymentBrand || order.paymentMethodType}
-                      {order.paymentLast4 && ` •••• ${order.paymentLast4}`}
+                {order.paymentMethod?.type && (
+                  <div className="border dark:border-gray-700 rounded-lg p-3 bg-gray-50 dark:bg-gray-700">
+                    <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Payment Method</h4>
+                    <p className="text-sm font-medium dark:text-white">
+                      {order.paymentMethod.brand || order.paymentMethod.type}
+                      {order.paymentMethod.last4 && ` •••• ${order.paymentMethod.last4}`}
                     </p>
                   </div>
                 )}
               </div>
               
-              <div className="border-t pt-4">
+              <div className="border-t dark:border-gray-700 pt-4">
                 <div className="flex justify-between font-bold text-lg">
-                  <span>Total</span>
-                  <span className="text-blue-600">${order.total.toFixed(2)}</span>
+                  <span className="dark:text-white">Total</span>
+                  <span className="text-blue-600 dark:text-blue-400">${order.total.toFixed(2)}</span>
                 </div>
               </div>
             </div>

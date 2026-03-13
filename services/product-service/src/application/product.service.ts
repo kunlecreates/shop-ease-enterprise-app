@@ -24,7 +24,20 @@ export class ProductService {
     @InjectRepository(StockMovement) private readonly movements: Repository<StockMovement>
   ) {}
 
-  async createProduct(data: { sku: string; name: string; description?: string; price?: number; priceCents?: number; currency?: string; categoryCodes?: string[]; initialStock?: number }) {
+  async createProduct(data: { 
+    sku: string; 
+    name: string; 
+    description?: string; 
+    price?: number; 
+    priceCents?: number; 
+    currency?: string; 
+    imageUrl?: string;
+    aisle?: string;
+    section?: string;
+    shelfLocation?: string;
+    categoryCodes?: string[]; 
+    initialStock?: number 
+  }) {
     const cats: Category[] = [];
     if (data.categoryCodes) {
       for (const code of data.categoryCodes) {
@@ -42,6 +55,10 @@ export class ProductService {
       sku: data.sku, 
       name: data.name,
       description: data.description,
+      imageUrl: data.imageUrl,
+      aisle: data.aisle,
+      section: data.section,
+      shelfLocation: data.shelfLocation,
       categories: cats, 
       active: true,
       currency: data.currency || 'USD'
@@ -69,21 +86,69 @@ export class ProductService {
     return this.products.findOne({ where: { id: saved.id }, relations: ['categories', 'movements'] });
   }
 
+  async updateProduct(sku: string, data: {
+    name?: string;
+    description?: string;
+    price?: number;
+    priceCents?: number;
+    currency?: string;
+    imageUrl?: string;
+    aisle?: string;
+    section?: string;
+    shelfLocation?: string;
+    categoryCodes?: string[];
+  }): Promise<Product | null> {
+    const product = await this.products.findOne({ where: { sku }, relations: ['categories'] });
+    if (!product) {
+      throw new NotFoundException(`Product with sku ${sku} not found`);
+    }
+
+    if (data.name !== undefined) product.name = data.name;
+    if (data.description !== undefined) product.description = data.description;
+    if (data.currency !== undefined) product.currency = data.currency;
+    if (data.imageUrl !== undefined) product.imageUrl = data.imageUrl;
+    if (data.aisle !== undefined) product.aisle = data.aisle;
+    if (data.section !== undefined) product.section = data.section;
+    if (data.shelfLocation !== undefined) product.shelfLocation = data.shelfLocation;
+
+    if (data.priceCents !== undefined) {
+      product.priceCents = data.priceCents;
+    } else if (data.price !== undefined) {
+      product.price = data.price;
+    }
+
+    if (data.categoryCodes !== undefined) {
+      const cats: Category[] = [];
+      for (const code of data.categoryCodes) {
+        let cat = await this.categories.findOne({ where: { name: code } });
+        if (!cat) {
+          cat = this.categories.create({ name: code });
+          cat = await this.categories.save(cat);
+        }
+        cats.push(cat);
+      }
+      product.categories = cats;
+    }
+
+    await this.products.save(product);
+    return this.products.findOne({ where: { sku }, relations: ['categories', 'movements'] });
+  }
+
   async listProducts(options?: ProductSearchOptions): Promise<Product[]> {
     if (!options) {
-      return this.products.find({ relations: ['movements'] });
+      return this.products.find({ relations: ['movements', 'categories'] });
     }
 
     const qb = this.products.createQueryBuilder('p')
-      .leftJoinAndSelect('p.movements', 'movements');
+      .leftJoinAndSelect('p.movements', 'movements')
+      .leftJoinAndSelect('p.categories', 'categories');
 
     if (options.q) {
       qb.andWhere("to_tsvector('english', coalesce(p.name,'') || ' ' || coalesce(p.description,'')) @@ plainto_tsquery('english', :query)", { query: options.q });
     }
 
     if (options.category) {
-      qb.innerJoin('p.categories', 'c')
-        .andWhere('c.name = :category', { category: options.category });
+      qb.andWhere('categories.name = :category', { category: options.category });
     }
 
     if (options.minPrice !== undefined) {

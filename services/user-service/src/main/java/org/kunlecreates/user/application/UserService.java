@@ -6,6 +6,7 @@ import org.kunlecreates.user.repository.EmailVerificationTokenRepository;
 import org.kunlecreates.user.repository.PasswordResetTokenRepository;
 import org.kunlecreates.user.repository.RoleRepository;
 import org.kunlecreates.user.repository.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,15 +20,18 @@ public class UserService {
     private final RoleRepository roleRepository;
     private final EmailVerificationTokenRepository verificationTokenRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public UserService(UserRepository userRepository, 
                       RoleRepository roleRepository, 
                       EmailVerificationTokenRepository verificationTokenRepository,
-                      PasswordResetTokenRepository passwordResetTokenRepository) {
+                      PasswordResetTokenRepository passwordResetTokenRepository,
+                      PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.verificationTokenRepository = verificationTokenRepository;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional(readOnly = true)
@@ -82,6 +86,20 @@ public class UserService {
     }
 
     @Transactional
+    public void changePassword(Long userId, String currentPassword, String newPassword) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        
+        if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
+            throw new IllegalArgumentException("Current password is incorrect");
+        }
+        
+        String hashedPassword = passwordEncoder.encode(newPassword);
+        user.setPasswordHash(hashedPassword);
+        userRepository.save(user);
+    }
+
+    @Transactional
     public boolean deleteUser(Long userId) {
         if (!userRepository.existsById(userId)) {
             return false;
@@ -113,6 +131,15 @@ public class UserService {
         user.addRole(roleOpt.get());
         
         return Optional.of(userRepository.save(user));
+    }
+
+    @Transactional
+    public Optional<User> updateUserStatus(Long userId, boolean isActive) {
+        return userRepository.findById(userId)
+                .map(user -> {
+                    user.setIsActive(isActive ? 1 : 0);
+                    return userRepository.save(user);
+                });
     }
 
     @Transactional
