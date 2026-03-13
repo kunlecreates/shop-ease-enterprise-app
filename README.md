@@ -12,7 +12,7 @@
 [![License](https://img.shields.io/github/license/kunlecreates/shop-ease-enterprise-app)](LICENSE)
 [![Visitors](https://hits.sh/github.com/kunlecreates/shop-ease-enterprise-app.svg?label=Visitors&style=flat&color=0e75b6)](https://github.com/kunlecreates/shop-ease-enterprise-app)
 
-**[🌐 Live Demo](https://shop.kunlecreates.org)** &nbsp;·&nbsp; **[📖 Docs](docs/)** &nbsp;·&nbsp; **[📊 Project Status](#-project-status)** &nbsp;·&nbsp; **[🐛 Issues](https://github.com/kunlecreates/shop-ease-enterprise-app/issues)**
+**[🌐 Request a Live Demo](mailto:info.cideveloper@gmail.com?subject=ShopEase%20Live%20Access)** &nbsp;·&nbsp; **[📖 Docs](docs/)** &nbsp;·&nbsp; **[📊 Project Status](#-project-status)** &nbsp;·&nbsp; **[🐛 Issues](https://github.com/kunlecreates/shop-ease-enterprise-app/issues)**
 
 </div>
 
@@ -31,7 +31,7 @@ This project was built as a **living demonstration** of real-world engineering p
 - **Production observability** — OpenTelemetry auto-instrumentation, Prometheus, Grafana, Jaeger, ECK
 - **Zero-trust security** — JWT/RS256, NetworkPolicies, email verification, RBAC
 
-> 🌐 **Live at**: [shop.kunlecreates.org](https://shop.kunlecreates.org)
+> 🌐 **Please send a request**: [Demo](mailto:info.cideveloper@gmail.com?subject=ShopEase%20Live%20Access)
 
 ---
 
@@ -369,7 +369,7 @@ This project implements a **comprehensive 5-layer testing pyramid** with clear o
      /Frontend Unit  \   ← Jest (frontend/__tests__/, per-push)
     /-----------------\
    /      Unit         \ ← Mocked dependencies (fast, blocks PR)
-  /______________________\
+  /_____________________\
 ```
 
 ### Layer 1: Unit Tests (Per-Service)
@@ -756,7 +756,6 @@ ShopEase demonstrates production patterns but is a portfolio/learning project. B
 | **Backend Services** | 4 (user, product, order, notification) |
 | **Databases** | 3 (Oracle DB, PostgreSQL 15, MS SQL Server) |
 | **API Endpoints** | ~55 across all services |
-| **Live URL** | [shop.kunlecreates.org](https://shop.kunlecreates.org) |
 
 <p align="right"><a href="#-shopease-platform">↑ back to top</a></p>
 

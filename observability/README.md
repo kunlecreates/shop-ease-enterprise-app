@@ -113,7 +113,6 @@ For detailed optimization analysis, see [OTEL_INSTRUMENTATION_OPTIMIZATION.md](.
 
 - **[Instrumentation README](instrumentation/README.md)** - Detailed per-service configuration guide
 - **[Complete Implementation Summary](../docs/OTEL_COMPLETE_IMPLEMENTATION_SUMMARY.md)** - Full auto-instrumentation implementation details
-- **[Optimization Report](../docs/OTEL_INSTRUMENTATION_OPTIMIZATION.md)** - Library-specific optimization analysis and results
 
 ## 🔍 Verification & Troubleshooting
 

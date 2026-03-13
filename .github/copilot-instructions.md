@@ -407,17 +407,17 @@ Each pipeline uses:
 This project follows the industry-standard **Test Pyramid** with five distinct test layers:
 
 ```
-        /\
-       /E2E\         ← Playwright (browser, full system)
-      /------\
-     /  API  \       ← HTTP to deployed services (post-deployment)
-    /----------\
-   /Integration\     ← Testcontainers (real DB, in CI)
-  /--------------\
- /  Frontend Unit \  ← Jest (frontend/__tests__/, per-push)
-/-----------------\
- /     Unit      \   ← Mocked dependencies (fast)
-/_________________\
+          /\
+         /E2E\          ← Playwright (browser, full system)
+        /-----\
+       /  API  \        ← HTTP to deployed services (post-deployment)
+      /---------\
+     /Integration\      ← Testcontainers (real DB, in CI)
+    /-------------\
+   / Frontend Unit \    ← Jest (frontend/__tests__/, per-push)
+  /-----------------\
+ /        Unit       \  ← Mocked dependencies (fast)
+/_____________________\
 ```
 
 ### Test Type Definitions
