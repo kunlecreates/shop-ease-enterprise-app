@@ -13,11 +13,15 @@ on:
     branches:
       - '**'  # Run for all branches (will filter for PR later)
 
+concurrency:
+  group: coverage-authority-${{ github.event.workflow_run.head_sha }}
+  cancel-in-progress: true
+
 jobs:
   check-completion:
     name: Check if all service tests completed
     runs-on: ubuntu-latest
-    if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success'
+    if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.name == 'CI — Frontend Component Tests'
     outputs:
       all_completed: ${{ steps.check.outputs.all_completed }}
       all_successful: ${{ steps.check.outputs.all_successful }}
@@ -95,10 +99,10 @@ jobs:
 
             console.log(`Successful workflows (${successfulWorkflows.length}): ${successfulWorkflows.join(', ')}`);
             
-            // Check if all started workflows are completed
-            const allCompleted = startedWorkflows.length > 0 && 
-                                startedWorkflows.length === completedWorkflows.length;
-            const allSuccessful = requiredWorkflows.length === successfulWorkflows.length;
+            // Check if all required workflows are completed and successful
+            const allCompleted = startedWorkflows.length === requiredWorkflows.length &&
+                                completedWorkflows.length === requiredWorkflows.length;
+            const allSuccessful = successfulWorkflows.length === requiredWorkflows.length;
             
             console.log(`All workflows completed: ${allCompleted}`);
             console.log(`All workflows successful: ${allSuccessful}`);
@@ -129,7 +133,7 @@ jobs:
               console.log('⏳ Waiting for other workflows to complete...');
               console.log(`Started: ${startedWorkflows.length}, Completed: ${completedWorkflows.length}`);
             } else if (!allSuccessful) {
-              console.log('❌ Not all required workflows succeeded. Coverage aggregation is skipped for this trigger.');
+              console.log('❌ Not all required workflows succeeded. Coverage aggregation will be skipped.');
             } else {
               console.log('✅ All service workflows have completed!');
             }
