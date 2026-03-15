@@ -20,6 +20,7 @@ jobs:
     if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success'
     outputs:
       all_completed: ${{ steps.check.outputs.all_completed }}
+      all_successful: ${{ steps.check.outputs.all_successful }}
       user_run_id: ${{ steps.check.outputs.user_run_id }}
       order_run_id: ${{ steps.check.outputs.order_run_id }}
       product_run_id: ${{ steps.check.outputs.product_run_id }}
@@ -84,14 +85,26 @@ jobs:
             });
             
             console.log(`Completed workflows (${completedWorkflows.length}): ${completedWorkflows.join(', ')}`);
+
+            const successfulWorkflows = requiredWorkflows.filter(name => {
+              const run = latestRunsByWorkflow[name];
+              const isSuccessful = run?.conclusion === 'success';
+              console.log(`${name}: success=${isSuccessful}`);
+              return isSuccessful;
+            });
+
+            console.log(`Successful workflows (${successfulWorkflows.length}): ${successfulWorkflows.join(', ')}`);
             
             // Check if all started workflows are completed
             const allCompleted = startedWorkflows.length > 0 && 
                                 startedWorkflows.length === completedWorkflows.length;
+            const allSuccessful = requiredWorkflows.length === successfulWorkflows.length;
             
             console.log(`All workflows completed: ${allCompleted}`);
+            console.log(`All workflows successful: ${allSuccessful}`);
             
             core.setOutput('all_completed', allCompleted.toString());
+            core.setOutput('all_successful', allSuccessful.toString());
             
             // Set individual run IDs for artifact download
             if (allCompleted) {
@@ -115,6 +128,8 @@ jobs:
             if (!allCompleted) {
               console.log('⏳ Waiting for other workflows to complete...');
               console.log(`Started: ${startedWorkflows.length}, Completed: ${completedWorkflows.length}`);
+            } else if (!allSuccessful) {
+              console.log('❌ Not all required workflows succeeded. Coverage aggregation is skipped for this trigger.');
             } else {
               console.log('✅ All service workflows have completed!');
             }
@@ -123,7 +138,7 @@ jobs:
     name: Aggregate and enforce coverage policy
     runs-on: ubuntu-latest
     needs: check-completion
-    if: needs.check-completion.outputs.all_completed == 'true'
+    if: needs.check-completion.outputs.all_completed == 'true' && needs.check-completion.outputs.all_successful == 'true'
     permissions:
       contents: write  # Required for GitHub Pages deployment
 

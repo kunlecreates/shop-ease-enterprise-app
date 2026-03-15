@@ -39,8 +39,10 @@ describe('ProtectedRoute', () => {
       root.render(
         React.createElement(
           ProtectedRoute,
-          { adminOnly },
-          React.createElement('div', null, 'Protected Content'),
+          {
+            adminOnly,
+            children: React.createElement('div', null, 'Protected Content'),
+          },
         ),
       );
       await Promise.resolve();
