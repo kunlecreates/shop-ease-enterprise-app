@@ -370,4 +370,167 @@ describe('ProductController (Integration)', () => {
         .expect(401);
     });
   });
+
+  describe('PUT /api/product/:sku (update product)', () => {
+    it('should update product name and price and persist changes', async () => {
+      await request(app.getHttpServer())
+        .post('/api/product')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ sku: 'UPD-001', name: 'Original Name', price: 10.0 })
+        .expect(201);
+
+      await request(app.getHttpServer())
+        .put('/api/product/UPD-001')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ name: 'Updated Name', price: 19.99 })
+        .expect(200);
+
+      const response = await request(app.getHttpServer())
+        .get('/api/product/UPD-001')
+        .expect(200);
+
+      expect(response.body.name).toBe('Updated Name');
+      expect(response.body.priceCents).toBe(1999);
+    });
+
+    it('should update product categories', async () => {
+      await request(app.getHttpServer())
+        .post('/api/product')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ sku: 'UPD-CATS', name: 'Category Product', price: 5.0, categoryCodes: ['books'] })
+        .expect(201);
+
+      const response = await request(app.getHttpServer())
+        .put('/api/product/UPD-CATS')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ categoryCodes: ['electronics', 'computers'] })
+        .expect(200);
+
+      const categoryNames = (response.body.categories as Array<{ name: string }>).map(c => c.name);
+      expect(categoryNames).toContain('electronics');
+      expect(categoryNames).toContain('computers');
+      expect(categoryNames).not.toContain('books');
+    });
+
+    it('should return 404 when updating a non-existent product', async () => {
+      await request(app.getHttpServer())
+        .put('/api/product/GHOST-SKU')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ name: 'Should Not Work' })
+        .expect(404);
+    });
+
+    it('should require admin authorization to update product', async () => {
+      const userToken = jwtService.sign({
+        sub: '2',
+        email: 'user@test.com',
+        roles: ['USER'],
+        iss: 'shopease',
+      });
+
+      await request(app.getHttpServer())
+        .put('/api/product/ANY-SKU')
+        .set('Authorization', `Bearer ${userToken}`)
+        .send({ name: 'Sneaky update' })
+        .expect(403);
+    });
+  });
+
+  describe('PATCH /api/product/:sku/stock — boundary conditions', () => {
+    it('should allow stock to reach exactly zero without error', async () => {
+      await request(app.getHttpServer())
+        .post('/api/product')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ sku: 'ZERO-STOCK', name: 'Zero Stock Product', price: 8.0 })
+        .expect(201);
+
+      // Add exactly 5 units then remove exactly 5 — balance should hit zero
+      await request(app.getHttpServer())
+        .patch('/api/product/ZERO-STOCK/stock')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ adjustment: 5 })
+        .expect(200);
+
+      const zeroResponse = await request(app.getHttpServer())
+        .patch('/api/product/ZERO-STOCK/stock')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ adjustment: -5 })
+        .expect(200);
+
+      expect(zeroResponse.body.stock).toBe(0);
+    });
+
+    it('should accumulate stock correctly across multiple sequential adjustments', async () => {
+      await request(app.getHttpServer())
+        .post('/api/product')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ sku: 'MULTI-ADJ', name: 'Multi Adjustment Product', price: 12.0 })
+        .expect(201);
+
+      // +50, +30, -10, +20, -5 → expected net: 85
+      const adjustments = [50, 30, -10, 20, -5];
+      for (const adj of adjustments) {
+        await request(app.getHttpServer())
+          .patch('/api/product/MULTI-ADJ/stock')
+          .set('Authorization', `Bearer ${adminToken}`)
+          .send({ adjustment: adj })
+          .expect(200);
+      }
+
+      const product = await request(app.getHttpServer())
+        .get('/api/product/MULTI-ADJ')
+        .expect(200);
+
+      expect(product.body.stock).toBe(85);
+    });
+
+    it('should reject a zero-quantity adjustment', async () => {
+      await request(app.getHttpServer())
+        .post('/api/product')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ sku: 'ZERO-ADJ', name: 'Zero Adjustment Product', price: 9.0 })
+        .expect(201);
+
+      await request(app.getHttpServer())
+        .patch('/api/product/ZERO-ADJ/stock')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ adjustment: 0 })
+        .expect(400);
+    });
+
+    it('should return 404 when adjusting stock for non-existent SKU', async () => {
+      await request(app.getHttpServer())
+        .patch('/api/product/MISSING-SKU/stock')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ adjustment: 10 })
+        .expect(404);
+    });
+  });
+
+  describe('GET /api/product/inventory', () => {
+    it('should return inventory summary with stock levels', async () => {
+      await request(app.getHttpServer())
+        .post('/api/product')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ sku: 'INV-001', name: 'Inventory Product A', price: 5.0 })
+        .expect(201);
+
+      await request(app.getHttpServer())
+        .patch('/api/product/INV-001/stock')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ adjustment: 25 })
+        .expect(200);
+
+      const response = await request(app.getHttpServer())
+        .get('/api/product/inventory')
+        .expect(200);
+
+      expect(response.body.total).toBeGreaterThanOrEqual(1);
+      expect(response.body.items).toBeInstanceOf(Array);
+      const invItem = (response.body.items as Array<{ sku: string; stock: number }>)
+        .find(i => i.sku === 'INV-001');
+      expect(invItem).toBeDefined();
+      expect(invItem!.stock).toBe(25);
+    });
+  });
 });

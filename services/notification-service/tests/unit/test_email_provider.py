@@ -1,10 +1,6 @@
-"""
-Unit tests for EmailProvider implementations
-
-Tests Console and SMTP email providers in isolation.
-"""
+"""Unit tests for EmailProvider implementations."""
 import pytest
-from unittest.mock import Mock, patch, MagicMock, AsyncMock
+from unittest.mock import Mock, patch, MagicMock
 from app.services.email_provider import (
     ConsoleEmailProvider,
     SMTPEmailProvider,
@@ -84,7 +80,6 @@ class TestSMTPEmailProvider:
     @pytest.mark.asyncio
     async def test_send_email_success(self):
         """Should successfully send email via SMTP"""
-        # Arrange
         provider = SMTPEmailProvider(
             host="smtp.gmail.com",
             port=587,
@@ -93,17 +88,58 @@ class TestSMTPEmailProvider:
             from_email="sender@gmail.com",
             from_name="Sender Name"
         )
-        
-        # Mock the SMTP operations inside the method
-        with patch('app.services.email_provider.logger'):
-            # We can't easily mock imports inside the method, so we'll test actual behavior
-            # or create a simpler test that verifies the structure without deep mocking
-            
-            # Act - this would actually try to connect, so let's just verify the structure exists
-            assert provider.host == "smtp.gmail.com"
-            assert provider.port == 587
-            assert provider.username == "sender@gmail.com"
-            assert provider.from_name == "Sender Name"
+
+        smtp_client = MagicMock()
+        smtp_context = MagicMock()
+        smtp_context.__enter__.return_value = smtp_client
+        smtp_context.__exit__.return_value = None
+
+        with patch('smtplib.SMTP', return_value=smtp_context), \
+             patch('ssl.create_default_context', return_value='ssl-context'), \
+             patch('app.services.email_provider.logger'):
+
+            result = await provider.send_email(
+                to="recipient@example.com",
+                subject="Test",
+                html_body="<p>Test</p>",
+                text_body="Plain text"
+            )
+
+            assert result["status"] == "sent"
+            assert result["recipient"] == "recipient@example.com"
+            smtp_client.starttls.assert_called_once_with(context='ssl-context')
+            smtp_client.login.assert_called_once_with("sender@gmail.com", "secret123")
+            smtp_client.send_message.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_send_email_skips_login_when_credentials_are_blank(self):
+        """Should not call login when SMTP credentials are empty"""
+        provider = SMTPEmailProvider(
+            host="smtp.example.com",
+            port=587,
+            username="",
+            password="",
+            from_email="sender@example.com",
+            from_name="Sender"
+        )
+
+        smtp_client = MagicMock()
+        smtp_context = MagicMock()
+        smtp_context.__enter__.return_value = smtp_client
+        smtp_context.__exit__.return_value = None
+
+        with patch('smtplib.SMTP', return_value=smtp_context), \
+             patch('ssl.create_default_context', return_value='ssl-context'), \
+             patch('app.services.email_provider.logger'):
+
+            result = await provider.send_email(
+                to="recipient@example.com",
+                subject="No Login",
+                html_body="<p>Test</p>"
+            )
+
+            assert result["status"] == "sent"
+            smtp_client.login.assert_not_called()
     
     @pytest.mark.asyncio
     async def test_send_email_error_handling(self):
@@ -203,3 +239,18 @@ class TestGetEmailProvider:
         
         # Assert
         assert isinstance(provider, SendGridEmailProvider)
+
+    def test_get_email_provider_normalizes_provider_name_case(self):
+        """Should resolve providers case-insensitively"""
+        mock_settings = Mock()
+        mock_settings.email_provider = "SMTP"
+        mock_settings.smtp_host = "smtp.gmail.com"
+        mock_settings.smtp_port = 587
+        mock_settings.smtp_username = "user@gmail.com"
+        mock_settings.smtp_password = "password"
+        mock_settings.smtp_from_email = "from@gmail.com"
+        mock_settings.smtp_from_name = "From Name"
+
+        provider = get_email_provider(mock_settings)
+
+        assert isinstance(provider, SMTPEmailProvider)

@@ -75,7 +75,13 @@ public class OrderService {
             throw new IllegalArgumentException("Either userRef or userId must be provided");
         }
         long cents = Math.round(total * 100);
-        Order o = new Order(ref, status, cents);
+            if (status == null || status.isBlank()) {
+                throw new IllegalArgumentException("Order status is required");
+            }
+            if (cents < 0) {
+                throw new IllegalArgumentException("Order total cannot be negative");
+            }
+            Order o = new Order(ref, status, cents);
         
         o.setShippingRecipient(shippingRecipient);
         o.setShippingStreet1(shippingStreet1);

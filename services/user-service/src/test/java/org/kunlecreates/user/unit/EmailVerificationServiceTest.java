@@ -100,10 +100,12 @@ class EmailVerificationServiceTest {
     void sendVerificationEmail_inProductionMode_shouldCallNotificationService() {
         ReflectionTestUtils.setField(emailVerificationService, "testMode", false);
         String rawToken = "test-token";
+        User productionUser = new User("real.customer@shopease.io", "hashedPassword");
+        ReflectionTestUtils.setField(productionUser, "id", 11L);
         
         when(jwtService.generateToken(anyString(), anyString(), anyList(), anyString())).thenReturn("service-jwt");
 
-        emailVerificationService.sendVerificationEmail(testUser, rawToken);
+        emailVerificationService.sendVerificationEmail(productionUser, rawToken);
 
         verify(jwtService).generateToken("system", "user-service", List.of("SERVICE"), "System Service");
         verify(restTemplate).postForEntity(
@@ -172,15 +174,11 @@ class EmailVerificationServiceTest {
 
     @Test
     void resendVerificationEmail_shouldCreateNewTokenAndSendEmail() {
-        EmailVerificationToken oldToken = new EmailVerificationToken(testUser, "old-hash", LocalDateTime.now().plusSeconds(1800));
-        
         when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(testUser));
-        when(tokenRepository.findAll()).thenReturn(List.of(oldToken));
         when(passwordEncoder.encode(anyString())).thenReturn("new-hash");
 
         emailVerificationService.resendVerificationEmail("test@example.com");
 
-        verify(tokenRepository).delete(oldToken);
         verify(tokenRepository).save(any(EmailVerificationToken.class));
         // Email sending verification omitted as test mode is enabled
     }

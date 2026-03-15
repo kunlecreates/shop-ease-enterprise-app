@@ -5,6 +5,7 @@ Tests business logic of email sending methods in isolation from HTTP layer
 and email provider implementations. Uses mocked dependencies.
 """
 import pytest
+from datetime import datetime
 from unittest.mock import AsyncMock, patch, MagicMock
 from app.services.email_service import EmailService
 from app.models.email import (
@@ -119,10 +120,11 @@ class TestEmailServiceSendEmail:
             subject="Test",
             body="Test",
             template="missing_template",
-            template_data={}
+            template_data={"key": "value"}
         )
         
-        mock_provider = AsyncMock()
+        mock_provider = MagicMock()
+        mock_provider.send_email = AsyncMock()
         
         # Mock both template service and provider
         with patch('app.services.email_service.template_service') as mock_template, \
@@ -138,6 +140,8 @@ class TestEmailServiceSendEmail:
             # Assert
             assert result.message_id == "error"
             assert result.status == "failed"
+            mock_template.render_template.assert_called_once_with("missing_template", {"key": "value"})
+            mock_provider.send_email.assert_not_called()
             assert result.recipient == "test@example.com"
     
     @pytest.mark.asyncio
@@ -161,6 +165,27 @@ class TestEmailServiceSendEmail:
             
             # Assert
             assert result.message_id == "error"
+            assert result.status == "failed"
+            assert result.recipient == "test@example.com"
+
+    @pytest.mark.asyncio
+    async def test_send_email_uses_default_response_values_when_provider_omits_them(self):
+        """Should default missing provider fields to unknown/failed"""
+        email_request = EmailRequest(
+            to="test@example.com",
+            subject="Missing Fields",
+            body="Body"
+        )
+
+        mock_provider = AsyncMock()
+        mock_provider.send_email.return_value = {}
+
+        with patch('app.services.email_service.get_email_provider', return_value=mock_provider):
+            service = EmailService()
+
+            result = await service.send_email(email_request)
+
+            assert result.message_id == "unknown"
             assert result.status == "failed"
             assert result.recipient == "test@example.com"
 
@@ -245,6 +270,39 @@ class TestEmailServiceOrderConfirmation:
             # Assert
             assert result.status == "failed"
             assert result.recipient == "customer@example.com"
+
+    @pytest.mark.asyncio
+    async def test_send_order_confirmation_formats_datetime_order_date(self):
+        """Should render datetime order dates using the human-readable format"""
+        order_data = OrderConfirmationData.model_construct(
+            customer_email="customer@example.com",
+            customer_name="John Doe",
+            order_id="ORD-12345",
+            order_date=datetime(2024, 2, 3, 10, 15, 0),
+            order_total=100.00,
+            items=[]
+        )
+
+        mock_provider = AsyncMock()
+        mock_provider.send_email.return_value = {
+            "message_id": "order-124",
+            "status": "sent"
+        }
+
+        with patch('app.services.email_service.template_service') as mock_template, \
+             patch('app.services.email_service.get_email_provider', return_value=mock_provider):
+
+            mock_template.render_template.return_value = (
+                "<html>Order Confirmation</html>",
+                "Order Confirmation"
+            )
+
+            service = EmailService()
+            result = await service.send_order_confirmation(order_data)
+
+            assert result.status == "sent"
+            context = mock_template.render_template.call_args[0][1]
+            assert context["order_date"] == "February 03, 2024"
 
 
 class TestEmailServiceShippingNotification:
@@ -439,6 +497,35 @@ class TestEmailServiceOrderPaid:
             assert result.status == "failed"
             assert result.recipient == "error@example.com"
 
+    @pytest.mark.asyncio
+    async def test_send_order_paid_email_uses_default_order_url_when_none(self):
+        """Should generate a default order URL when none is provided"""
+        paid_data = OrderPaidData(
+            order_id="ORD-DEFAULT-URL",
+            customer_name="Default URL User",
+            customer_email="default-url@example.com",
+            order_total=10.0,
+            order_url=None,
+        )
+
+        mock_provider = AsyncMock()
+        mock_provider.send_email.return_value = {"message_id": "paid-002", "status": "sent"}
+
+        with patch('app.services.email_service.template_service') as mock_template, \
+             patch('app.services.email_service.get_email_provider', return_value=mock_provider):
+
+            mock_template.render_template.return_value = (
+                "<html>Payment Confirmed</html>",
+                "Payment Confirmed",
+            )
+
+            service = EmailService()
+            result = await service.send_order_paid_email(paid_data)
+
+            assert result.status == "sent"
+            context = mock_template.render_template.call_args[0][1]
+            assert context["order_url"] == "https://shopease.com/orders/ORD-DEFAULT-URL"
+
 
 class TestEmailServiceOrderDelivered:
     """Test send_order_delivered_email method"""
@@ -551,6 +638,31 @@ class TestEmailServiceOrderCancelled:
             result = await service.send_order_cancelled_email(cancelled_data)
 
             assert result.status == "failed"
+
+    @pytest.mark.asyncio
+    async def test_send_order_cancelled_email_uses_default_support_url_when_none(self):
+        """Should use default support URL when support_url is not provided"""
+        cancelled_data = OrderCancelledData(
+            order_id="ORD-CNCL-DEFAULT",
+            customer_name="No Support URL",
+            customer_email="nosupport@example.com",
+            support_url=None,
+        )
+
+        mock_provider = AsyncMock()
+        mock_provider.send_email.return_value = {"message_id": "cncl-002", "status": "sent"}
+
+        with patch('app.services.email_service.template_service') as mock_template, \
+             patch('app.services.email_service.get_email_provider', return_value=mock_provider):
+
+            mock_template.render_template.return_value = ("<html>Cancelled</html>", "Cancelled")
+
+            service = EmailService()
+            result = await service.send_order_cancelled_email(cancelled_data)
+
+            assert result.status == "sent"
+            context = mock_template.render_template.call_args[0][1]
+            assert context["support_url"] == "https://shopease.com/support"
 
 
 class TestEmailServiceOrderRefunded:
