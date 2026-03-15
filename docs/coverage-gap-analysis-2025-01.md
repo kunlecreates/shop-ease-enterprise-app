@@ -64,6 +64,29 @@ Statement coverage target (minimum **85%**) is satisfied across all measured mod
 | frontend | **89.90%** | ≥ 85% | ✅ |
 | notification-service | **90.91%** | ≥ 85% | ✅ |
 
+### CI Aggregate Snapshot (coverage-badge branch)
+
+Latest published aggregate from CI (`origin/coverage-badge:aggregate.json`):
+
+- **Overall:** **93%** (2574 / 2776 covered lines)
+
+Per-service contribution to aggregate (based on covered lines in aggregate denominator):
+
+| Service | Service Coverage | Covered / Total | Aggregate Points* | Share of Covered Lines |
+|---------|------------------|-----------------|-------------------|------------------------|
+| order-service | **90.23%** | 785 / 870 | **28.28** | **30.50%** |
+| user-service | **94.92%** | 692 / 729 | **24.93** | **26.88%** |
+| frontend | **92.71%** | 458 / 494 | **16.50** | **17.79%** |
+| notification-service | **90.91%** | 330 / 363 | **11.89** | **12.82%** |
+| product-service | **96.56%** | 309 / 320 | **11.13** | **12.00%** |
+
+\*Aggregate points = `(service covered lines / aggregate total lines) * 100`.
+
+Notes:
+
+- This section is sourced from the CI-published artifact branch, not from a local `coverage/aggregate.json` file in the working tree.
+- Local measured percentages in this document remain valid as session evidence, while the table above is the latest CI authority snapshot.
+
 ### Verified Test Inventory
 
 #### user-service
