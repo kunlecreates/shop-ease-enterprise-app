@@ -1,1 +1,1 @@
-{"service": "product-service", "language": "javascript", "lines": {"total": 320, "covered": 248, "missed": 72, "coverage_pct": 77.5}}
+{"service": "product-service", "language": "javascript", "lines": {"total": 320, "covered": 309, "missed": 11, "coverage_pct": 96.56}}

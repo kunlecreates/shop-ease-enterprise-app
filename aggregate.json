@@ -4,10 +4,10 @@
       "service": "frontend",
       "language": "javascript",
       "lines": {
-        "total": 105,
-        "covered": 75,
-        "missed": 30,
-        "coverage_pct": 71.43
+        "total": 494,
+        "covered": 458,
+        "missed": 36,
+        "coverage_pct": 92.71
       }
     },
     {
@@ -15,19 +15,19 @@
       "language": "python",
       "lines": {
         "total": 363,
-        "covered": 321,
-        "missed": 42,
-        "coverage_pct": 88.43
+        "covered": 330,
+        "missed": 33,
+        "coverage_pct": 90.91
       }
     },
     {
       "service": "order-service",
       "language": "java",
       "lines": {
-        "total": 866,
-        "covered": 435,
-        "missed": 431,
-        "coverage_pct": 50.23
+        "total": 870,
+        "covered": 785,
+        "missed": 85,
+        "coverage_pct": 90.23
       }
     },
     {
@@ -35,9 +35,9 @@
       "language": "javascript",
       "lines": {
         "total": 320,
-        "covered": 248,
-        "missed": 72,
-        "coverage_pct": 77.5
+        "covered": 309,
+        "missed": 11,
+        "coverage_pct": 96.56
       }
     },
     {
@@ -45,16 +45,16 @@
       "language": "java",
       "lines": {
         "total": 729,
-        "covered": 245,
-        "missed": 484,
-        "coverage_pct": 33.61
+        "covered": 692,
+        "missed": 37,
+        "coverage_pct": 94.92
       }
     }
   ],
   "overall": {
-    "total": 2383,
-    "covered": 1324,
-    "missed": 1059,
-    "coverage_pct": 56
+    "total": 2776,
+    "covered": 2574,
+    "missed": 202,
+    "coverage_pct": 93
   }
 }

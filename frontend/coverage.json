@@ -1,1 +1,1 @@
-{"service": "frontend", "language": "javascript", "lines": {"total": 105, "covered": 75, "missed": 30, "coverage_pct": 71.43}}
+{"service": "frontend", "language": "javascript", "lines": {"total": 494, "covered": 458, "missed": 36, "coverage_pct": 92.71}}
