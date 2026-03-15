@@ -3,10 +3,6 @@ name: Coverage Authority (PR)
 on:
   workflow_run:
     workflows:
-      - "CI — User-service Component Tests"
-      - "CI — Order-service Component Tests"  
-      - "CI — Product-service Component Tests"
-      - "CI — Notification-service Component Tests"
       - "CI — Frontend Component Tests"
     types:
       - completed
@@ -21,7 +17,7 @@ jobs:
   check-completion:
     name: Check if all service tests completed
     runs-on: ubuntu-latest
-    if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.name == 'CI — Frontend Component Tests'
+    if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success'
     outputs:
       all_completed: ${{ steps.check.outputs.all_completed }}
       all_successful: ${{ steps.check.outputs.all_successful }}
@@ -47,96 +43,86 @@ jobs:
             
             const headSha = context.payload.workflow_run.head_sha;
             const repo = context.repo;
+            const maxAttempts = 60;
+            const delayMs = 20000;
+
+            const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
             
             console.log(`Checking workflows for commit: ${headSha}`);
             
-            // Get all workflow runs for this commit
-            const { data: workflowRuns } = await github.rest.actions.listWorkflowRunsForRepo({
-              owner: repo.owner,
-              repo: repo.repo,
-              head_sha: headSha,
-              event: 'pull_request'
-            });
-            
-            console.log(`Found ${workflowRuns.workflow_runs.length} workflow runs for this commit`);
-            
-            // Filter for required workflows
-            const relevantRuns = workflowRuns.workflow_runs.filter(run => 
-              requiredWorkflows.includes(run.name)
-            );
-            
-            console.log(`Relevant workflow runs: ${relevantRuns.length}`);
-            
-            // Group by workflow name and get latest run for each
-            const latestRunsByWorkflow = {};
-            for (const run of relevantRuns) {
-              if (!latestRunsByWorkflow[run.name] || 
-                  new Date(run.created_at) > new Date(latestRunsByWorkflow[run.name].created_at)) {
-                latestRunsByWorkflow[run.name] = run;
-              }
-            }
-            
-            // Check if all required workflows have started and completed
-            const startedWorkflows = Object.keys(latestRunsByWorkflow);
-            console.log(`Started workflows (${startedWorkflows.length}): ${startedWorkflows.join(', ')}`);
-            
-            // Check completion status
-            const completedWorkflows = startedWorkflows.filter(name => {
-              const run = latestRunsByWorkflow[name];
-              const isCompleted = ['completed', 'success', 'failure', 'cancelled', 'skipped'].includes(run.status) || run.conclusion !== null;
-              console.log(`${name}: status=${run.status}, conclusion=${run.conclusion}, completed=${isCompleted}`);
-              return isCompleted;
-            });
-            
-            console.log(`Completed workflows (${completedWorkflows.length}): ${completedWorkflows.join(', ')}`);
+            core.setOutput('all_completed', 'false');
+            core.setOutput('all_successful', 'false');
 
-            const successfulWorkflows = requiredWorkflows.filter(name => {
-              const run = latestRunsByWorkflow[name];
-              const isSuccessful = run?.conclusion === 'success';
-              console.log(`${name}: success=${isSuccessful}`);
-              return isSuccessful;
-            });
+            for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+              const { data: workflowRuns } = await github.rest.actions.listWorkflowRunsForRepo({
+                owner: repo.owner,
+                repo: repo.repo,
+                head_sha: headSha,
+                event: 'pull_request',
+                per_page: 100,
+              });
 
-            console.log(`Successful workflows (${successfulWorkflows.length}): ${successfulWorkflows.join(', ')}`);
-            
-            // Check if all required workflows are completed and successful
-            const allCompleted = startedWorkflows.length === requiredWorkflows.length &&
-                                completedWorkflows.length === requiredWorkflows.length;
-            const allSuccessful = successfulWorkflows.length === requiredWorkflows.length;
-            
-            console.log(`All workflows completed: ${allCompleted}`);
-            console.log(`All workflows successful: ${allSuccessful}`);
-            
-            core.setOutput('all_completed', allCompleted.toString());
-            core.setOutput('all_successful', allSuccessful.toString());
-            
-            // Set individual run IDs for artifact download
-            if (allCompleted) {
-              const runIdMap = {
-                'CI — User-service Component Tests': 'user_run_id',
-                'CI — Order-service Component Tests': 'order_run_id',
-                'CI — Product-service Component Tests': 'product_run_id',
-                'CI — Notification-service Component Tests': 'notification_run_id',
-                'CI — Frontend Component Tests': 'frontend_run_id'
-              };
-              
-              for (const [workflowName, outputKey] of Object.entries(runIdMap)) {
-                const run = latestRunsByWorkflow[workflowName];
-                if (run) {
-                  console.log(`Setting ${outputKey} = ${run.id}`);
-                  core.setOutput(outputKey, run.id.toString());
+              console.log(`Attempt ${attempt}/${maxAttempts} - Found ${workflowRuns.workflow_runs.length} workflow runs for this commit`);
+
+              const relevantRuns = workflowRuns.workflow_runs.filter(run =>
+                requiredWorkflows.includes(run.name)
+              );
+
+              const latestRunsByWorkflow = {};
+              for (const run of relevantRuns) {
+                if (!latestRunsByWorkflow[run.name] ||
+                    new Date(run.created_at) > new Date(latestRunsByWorkflow[run.name].created_at)) {
+                  latestRunsByWorkflow[run.name] = run;
                 }
               }
+
+              const startedWorkflows = Object.keys(latestRunsByWorkflow);
+              const allStarted = requiredWorkflows.length === startedWorkflows.length;
+              const completedWorkflows = startedWorkflows.filter(name => latestRunsByWorkflow[name].conclusion !== null);
+              const allCompleted = allStarted && completedWorkflows.length === requiredWorkflows.length;
+              const successfulWorkflows = requiredWorkflows.filter(name => latestRunsByWorkflow[name]?.conclusion === 'success');
+              const allSuccessful = allCompleted && successfulWorkflows.length === requiredWorkflows.length;
+
+              console.log(`Started workflows (${startedWorkflows.length}): ${startedWorkflows.join(', ')}`);
+              for (const name of requiredWorkflows) {
+                const run = latestRunsByWorkflow[name];
+                console.log(`${name}: status=${run?.status ?? 'not-started'}, conclusion=${run?.conclusion ?? 'n/a'}`);
+              }
+
+              if (allSuccessful) {
+                console.log('✅ All required component workflows have completed successfully.');
+                core.setOutput('all_completed', 'true');
+                core.setOutput('all_successful', 'true');
+
+                const runIdMap = {
+                  'CI — User-service Component Tests': 'user_run_id',
+                  'CI — Order-service Component Tests': 'order_run_id',
+                  'CI — Product-service Component Tests': 'product_run_id',
+                  'CI — Notification-service Component Tests': 'notification_run_id',
+                  'CI — Frontend Component Tests': 'frontend_run_id'
+                };
+
+                for (const [workflowName, outputKey] of Object.entries(runIdMap)) {
+                  const run = latestRunsByWorkflow[workflowName];
+                  core.setOutput(outputKey, run.id.toString());
+                  console.log(`Setting ${outputKey} = ${run.id}`);
+                }
+
+                return;
+              }
+
+              if (allCompleted && !allSuccessful) {
+                console.log('❌ At least one required component workflow completed unsuccessfully. Coverage aggregation will be skipped.');
+                return;
+              }
+
+              if (attempt < maxAttempts) {
+                console.log(`⏳ Waiting ${delayMs / 1000}s for remaining component workflows...`);
+                await sleep(delayMs);
+              }
             }
-            
-            if (!allCompleted) {
-              console.log('⏳ Waiting for other workflows to complete...');
-              console.log(`Started: ${startedWorkflows.length}, Completed: ${completedWorkflows.length}`);
-            } else if (!allSuccessful) {
-              console.log('❌ Not all required workflows succeeded. Coverage aggregation will be skipped.');
-            } else {
-              console.log('✅ All service workflows have completed!');
-            }
+
+            console.log('⏰ Timed out waiting for all required component workflows to complete successfully.');
 
   aggregate:
     name: Aggregate and enforce coverage policy
