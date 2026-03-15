@@ -9,6 +9,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.kunlecreates.order.application.OrderService;
 import org.kunlecreates.order.application.PaymentService;
 import org.kunlecreates.order.domain.Order;
+import org.kunlecreates.order.domain.OrderItem;
 import org.kunlecreates.order.domain.OrderStatus;
 import org.kunlecreates.order.domain.OrderEvent;
 import org.kunlecreates.order.repository.OrderRepository;
@@ -146,6 +147,38 @@ class OrderServiceTest {
                 .hasMessage("Payment failed");
 
         verify(orderRepository, never()).save(any());
+    }
+
+    @Test
+    void processCheckout_whenPaymentServiceThrows_shouldPropagateAndNotSaveOrder() {
+        when(paymentService.charge(201L, 110.00)).thenThrow(new RuntimeException("gateway timeout"));
+
+        assertThatThrownBy(() -> orderService.processCheckout(201L, 110.00, null,
+                "Chris Gray", "88 Front St", null, "Winnipeg",
+                "MB", "R3C 1A1", "Canada", "+1-204-555-0700",
+                "CREDIT_CARD", "1212", "Visa",
+                "chris@example.com", "Chris Gray"))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("gateway timeout");
+
+        verify(orderRepository, never()).save(any());
+    }
+
+    @Test
+    void processCheckout_whenOrderSaveFailsAfterPayment_shouldPropagateAndSkipNotification() {
+        when(paymentService.charge(202L, 130.00)).thenReturn(true);
+        when(orderRepository.save(any(Order.class))).thenThrow(new RuntimeException("database unavailable"));
+
+        assertThatThrownBy(() -> orderService.processCheckout(202L, 130.00, "jwt-token",
+                "Drew Black", "12 King St", null, "Edmonton",
+                "AB", "T5J 0N3", "Canada", "+1-780-555-0800",
+                "PAYPAL", null, null,
+                "drew@example.com", "Drew Black"))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("database unavailable");
+
+        verify(paymentService).charge(202L, 130.00);
+        verify(notificationClient, never()).sendOrderConfirmation(any(), anyString());
     }
 
     @Test
@@ -310,5 +343,79 @@ class OrderServiceTest {
         assertThat(result.getStatus()).isEqualTo("CANCELLED");
         verify(notificationClient).sendOrderCancelledNotification(any(Order.class), eq("jwt-token"));
         verify(orderEventRepository).saveAll(anyList());
+    }
+
+    @Test
+    void updateStatus_toPaid_shouldDecrementStockForEachOrderItem() {
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(testOrder));
+        when(orderRepository.save(any(Order.class))).thenReturn(testOrder);
+
+        OrderItem itemA = mock(OrderItem.class);
+        when(itemA.getProductRef()).thenReturn("SKU-001");
+        when(itemA.getQuantity()).thenReturn(2);
+        OrderItem itemB = mock(OrderItem.class);
+        when(itemB.getProductRef()).thenReturn("SKU-002");
+        when(itemB.getQuantity()).thenReturn(1);
+        when(orderItemRepository.findByOrderId(1L)).thenReturn(List.of(itemA, itemB));
+
+        Order result = orderService.updateStatus(1L, OrderStatus.PAID, null);
+
+        assertThat(result.getStatus()).isEqualTo("PAID");
+        verify(productServiceClient).adjustStock("SKU-001", -2, "Order #1 paid");
+        verify(productServiceClient).adjustStock("SKU-002", -1, "Order #1 paid");
+        verify(notificationClient, never()).sendOrderPaidNotification(any(Order.class), anyString());
+    }
+
+    @Test
+    void updateStatus_toCancelled_fromPaid_shouldRestoreStock() {
+        Order paidOrder = new Order("user-123", "PAID", 10000L);
+        ReflectionTestUtils.setField(paidOrder, "id", 10L);
+        when(orderRepository.findById(10L)).thenReturn(Optional.of(paidOrder));
+        when(orderRepository.save(any(Order.class))).thenReturn(paidOrder);
+
+        OrderItem item = mock(OrderItem.class);
+        when(item.getProductRef()).thenReturn("SKU-RESTORE");
+        when(item.getQuantity()).thenReturn(3);
+        when(orderItemRepository.findByOrderId(10L)).thenReturn(List.of(item));
+
+        Order result = orderService.updateStatus(10L, OrderStatus.CANCELLED, null);
+
+        assertThat(result.getStatus()).isEqualTo("CANCELLED");
+        verify(productServiceClient).adjustStock("SKU-RESTORE", 3, "Order #10 cancelled");
+    }
+
+    @Test
+    void updateStatus_toCancelled_fromPending_shouldNotRestoreStock() {
+        Order pendingOrder = new Order("user-123", "PENDING", 10000L);
+        ReflectionTestUtils.setField(pendingOrder, "id", 11L);
+        when(orderRepository.findById(11L)).thenReturn(Optional.of(pendingOrder));
+        when(orderRepository.save(any(Order.class))).thenReturn(pendingOrder);
+
+        OrderItem item = mock(OrderItem.class);
+        when(orderItemRepository.findByOrderId(11L)).thenReturn(List.of(item));
+
+        Order result = orderService.updateStatus(11L, OrderStatus.CANCELLED, null);
+
+        assertThat(result.getStatus()).isEqualTo("CANCELLED");
+        verify(productServiceClient, never()).adjustStock(anyString(), anyInt(), anyString());
+    }
+
+    @Test
+    void updateStatus_toRefunded_fromPaid_withJwt_shouldRestoreStockAndNotify() {
+        Order paidOrder = new Order("user-123", "PAID", 10000L);
+        ReflectionTestUtils.setField(paidOrder, "id", 12L);
+        when(orderRepository.findById(12L)).thenReturn(Optional.of(paidOrder));
+        when(orderRepository.save(any(Order.class))).thenReturn(paidOrder);
+
+        OrderItem item = mock(OrderItem.class);
+        when(item.getProductRef()).thenReturn("SKU-REFUND");
+        when(item.getQuantity()).thenReturn(1);
+        when(orderItemRepository.findByOrderId(12L)).thenReturn(List.of(item));
+
+        Order result = orderService.updateStatus(12L, OrderStatus.REFUNDED, "jwt-token");
+
+        assertThat(result.getStatus()).isEqualTo("REFUNDED");
+        verify(productServiceClient).adjustStock("SKU-REFUND", 1, "Order #12 refunded");
+        verify(notificationClient).sendOrderRefundedNotification(any(Order.class), eq("jwt-token"));
     }
 }

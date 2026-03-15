@@ -105,6 +105,60 @@ describe('ProductService', () => {
       expect(createMovementSpy).not.toHaveBeenCalled();
     });
 
+    it('should not create stock movement when initialStock is zero', async () => {
+      const mockProduct = { id: 3, sku: 'TEST-003', name: 'Zero Stock Product', priceCents: 1200 } as Product;
+
+      jest.spyOn(productRepo, 'create').mockReturnValue(mockProduct);
+      jest.spyOn(productRepo, 'save').mockResolvedValue(mockProduct);
+      jest.spyOn(productRepo, 'findOne').mockResolvedValue({ ...mockProduct, categories: [], movements: [] } as any);
+      const createMovementSpy = jest.spyOn(stockMovementRepo, 'create');
+
+      const result = await service.createProduct({
+        sku: 'TEST-003',
+        name: 'Zero Stock Product',
+        price: 12.0,
+        initialStock: 0,
+      });
+
+      expect(result?.movements).toHaveLength(0);
+      expect(createMovementSpy).not.toHaveBeenCalled();
+    });
+
+    it('should not create stock movement when initialStock is not an integer', async () => {
+      const mockProduct = { id: 4, sku: 'TEST-004', name: 'Float Stock Product', priceCents: 1300 } as Product;
+
+      jest.spyOn(productRepo, 'create').mockReturnValue(mockProduct);
+      jest.spyOn(productRepo, 'save').mockResolvedValue(mockProduct);
+      jest.spyOn(productRepo, 'findOne').mockResolvedValue({ ...mockProduct, categories: [], movements: [] } as any);
+      const createMovementSpy = jest.spyOn(stockMovementRepo, 'create');
+
+      await service.createProduct({
+        sku: 'TEST-004',
+        name: 'Float Stock Product',
+        price: 13.0,
+        initialStock: 1.5,
+      });
+
+      expect(createMovementSpy).not.toHaveBeenCalled();
+    });
+
+    it('should propagate category save failures before saving the product', async () => {
+      jest.spyOn(categoryRepo, 'findOne').mockResolvedValue(null);
+      jest.spyOn(categoryRepo, 'create').mockReturnValue({ id: 7, name: 'Broken' } as Category);
+      jest.spyOn(categoryRepo, 'save').mockRejectedValue(new Error('category save failed'));
+      const saveProductSpy = jest.spyOn(productRepo, 'save');
+
+      await expect(
+        service.createProduct({
+          sku: 'FAIL-001',
+          name: 'Broken Category Product',
+          categoryCodes: ['Broken'],
+        }),
+      ).rejects.toThrow('category save failed');
+
+      expect(saveProductSpy).not.toHaveBeenCalled();
+    });
+
     it('should auto-provision new categories', async () => {
       const mockCategory1 = { id: 1, name: 'Books' } as Category;
       const mockCategory2 = { id: 2, name: 'Fiction' } as Category;
@@ -195,6 +249,20 @@ describe('ProductService', () => {
       expect(result).toEqual({ sku: 'TEST-001', previous: 50, new: 45, stock: 45, reason: 'Sale' });
     });
 
+    it('should allow decrementing stock to exactly zero', async () => {
+      const mockProduct = { id: 2, sku: 'ZERO-001' } as Product;
+      const mockMovement = { id: 2, product: mockProduct, quantity: -5, reason: 'Final sale' } as StockMovement;
+
+      jest.spyOn(productRepo, 'findOne').mockResolvedValue(mockProduct);
+      jest.spyOn(service, 'getStock').mockResolvedValue(5);
+      jest.spyOn(stockMovementRepo, 'create').mockReturnValue(mockMovement);
+      jest.spyOn(stockMovementRepo, 'save').mockResolvedValue(mockMovement);
+
+      const result = await service.adjustStock('ZERO-001', -5, 'Final sale');
+
+      expect(result).toEqual({ sku: 'ZERO-001', previous: 5, new: 0, stock: 0, reason: 'Final sale' });
+    });
+
     it('should throw BadRequestException when stock would go negative', async () => {
       const mockProduct = { id: 1, sku: 'TEST-001' } as Product;
 
@@ -202,6 +270,18 @@ describe('ProductService', () => {
       jest.spyOn(service, 'getStock').mockResolvedValue(5);
 
       await expect(service.adjustStock('TEST-001', -10, 'Sale')).rejects.toThrow('Insufficient stock for decrement');
+    });
+
+    it('should propagate movement persistence failures after stock validation passes', async () => {
+      const mockProduct = { id: 3, sku: 'SAVE-FAIL-001' } as Product;
+      const mockMovement = { id: 3, product: mockProduct, quantity: 4, reason: 'Restock' } as StockMovement;
+
+      jest.spyOn(productRepo, 'findOne').mockResolvedValue(mockProduct);
+      jest.spyOn(service, 'getStock').mockResolvedValue(6);
+      jest.spyOn(stockMovementRepo, 'create').mockReturnValue(mockMovement);
+      jest.spyOn(stockMovementRepo, 'save').mockRejectedValue(new Error('movement save failed'));
+
+      await expect(service.adjustStock('SAVE-FAIL-001', 4, 'Restock')).rejects.toThrow('movement save failed');
     });
 
     it('should throw BadRequestException for zero or non-integer quantity', async () => {
@@ -316,6 +396,21 @@ describe('ProductService', () => {
       expect(categoryRepo.create).toHaveBeenCalledWith({ name: 'NewCat' });
       expect(result?.categories).toContainEqual(newCategory);
     });
+
+    it('should prioritize priceCents over price when both are provided', async () => {
+      const mockProduct = { id: 8, sku: 'PRICE-BOTH-001', priceCents: 500, categories: [] } as unknown as Product;
+      const updatedProduct = { ...mockProduct, priceCents: 1999 };
+
+      jest.spyOn(productRepo, 'findOne')
+        .mockResolvedValueOnce(mockProduct)
+        .mockResolvedValueOnce(updatedProduct as any);
+      jest.spyOn(productRepo, 'save').mockResolvedValue(updatedProduct as any);
+
+      const result = await service.updateProduct('PRICE-BOTH-001', { price: 5.55, priceCents: 1999 });
+
+      expect(result?.priceCents).toBe(1999);
+      expect(productRepo.save).toHaveBeenCalledWith(expect.objectContaining({ priceCents: 1999 }));
+    });
   });
 
   // getProductBySku() tests
@@ -383,6 +478,24 @@ describe('ProductService', () => {
 
       expect(mockQueryBuilder.skip).toHaveBeenCalledWith(5);
       expect(mockQueryBuilder.take).toHaveBeenCalledWith(5);
+    });
+
+    it('should not apply skip/take when pagination is not provided', async () => {
+      const mockQueryBuilder = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        setParameter: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue([]),
+      };
+      jest.spyOn(productRepo, 'createQueryBuilder').mockReturnValue(mockQueryBuilder as any);
+
+      await service.searchProducts('no-pagination');
+
+      expect(mockQueryBuilder.skip).not.toHaveBeenCalled();
+      expect(mockQueryBuilder.take).not.toHaveBeenCalled();
     });
   });
 
@@ -471,6 +584,25 @@ describe('ProductService', () => {
       await service.listProducts({ page: 1, limit: 10 });
 
       expect(mockQb.orderBy).toHaveBeenCalledWith('p.name', 'ASC');
+    });
+
+    it('should apply inStock filter using stock subquery when inStock is true', async () => {
+      const mockQb = buildMockQb();
+      const movementQb = {
+        select: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        getQuery: jest.fn().mockReturnValue('SELECT SUM(m.change_qty) FROM stock_movements m WHERE m.product_id = p.id'),
+      };
+
+      jest.spyOn(productRepo, 'createQueryBuilder').mockReturnValue(mockQb as any);
+      jest.spyOn(stockMovementRepo, 'createQueryBuilder').mockReturnValue(movementQb as any);
+
+      await service.listProducts({ inStock: true });
+
+      expect(stockMovementRepo.createQueryBuilder).toHaveBeenCalledWith('m');
+      expect(mockQb.andWhere).toHaveBeenCalledWith(
+        '(SELECT SUM(m.change_qty) FROM stock_movements m WHERE m.product_id = p.id) > 0'
+      );
     });
   });
 });
